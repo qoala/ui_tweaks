@@ -6,27 +6,27 @@ local aiplayer = include('sim/aiplayer')
 local simquery = include('sim/simquery')
 
 local function createGuard(originalFunction, self, sim,unitType)
-    local unit = originalFunction(self, sim, unitType)
+	local unit = originalFunction(self, sim, unitType)
 
-    if not unit:getTraits().isDrone and unit:getTraits().cashOnHand == 0 then
+	if not unit:getTraits().isDrone and unit:getTraits().cashOnHand == 0 then
 	unit:getTraits().cashOnHand = 1
-    end
+	end
 
-    return unit
+	return unit
 end
 
 local function calculateCashOnHand( originalFunction, sim, unit )
-    local value = unit:getTraits().cashOnHand
-    if value == 1 then
+	local value = unit:getTraits().cashOnHand
+	if value == 1 then
 	return value
-    else
+	else
 	return originalFunction(sim, unit)
-    end
+	end
 end
 
 local patches = {
-    { package = aiplayer,   name = 'createGuard',   f = createGuard },
-    { package = simquery,   name = 'calculateCashOnHand', f = calculateCashOnHand }
+	{ package = aiplayer, name = 'createGuard', f = createGuard },
+	{ package = simquery, name = 'calculateCashOnHand', f = calculateCashOnHand }
 
 }
 

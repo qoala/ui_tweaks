@@ -1,8 +1,8 @@
 local UI_TWEAKS_STRINGS =
 {
-        OPTIONS = {
-                PRECISE_AP = "PRECISE AP",
-                PRECISE_AP_TIP = "Round AP to .5 instead of whole number",
+	OPTIONS = {
+		PRECISE_AP = "PRECISE AP",
+		PRECISE_AP_TIP = "Round AP to .5 instead of whole number",
 		EMPTY_POCKETS = "THEIR POCKETS WERE EMPTY",
 		EMPTY_POCKETS_TIP = "Agents can attempt to steal if it would newly reveal that the target isn't carrying anything.\nAllows marking targets as Searched and Expertly Searched.",
 		INV_DRAGDROP = "INVENTORY DRAG/DROP REORDERING",

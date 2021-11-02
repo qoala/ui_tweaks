@@ -37,7 +37,7 @@ local function lootPanelRefresh( originalFunction, self, ... )
 			modalDialog.show(
 			  util.sformat( STRINGS.MOD_UI_TWEAKS.UI.DIALOGS.NO_LOOT_BODY, self._unit:getName() ),
 			  STRINGS.MOD_UI_TWEAKS.UI.DIALOGS.NO_LOOT_TITLE
-		    )
+			)
 			return
 		end
 	end

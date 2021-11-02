@@ -81,9 +81,9 @@ end
 
 
 local patches = {
-    { package = astar.AStar, name = '_tracePath',   f = aStarTracePath },
-    { package = astar_handlers.handler, name = 'getNode',   f = getNode },
-    { package = astar_handlers.handler, name = '_handleNode',   f = handleNode },
+	{ package = astar.AStar, name = '_tracePath', f = aStarTracePath },
+	{ package = astar_handlers.handler, name = 'getNode', f = getNode },
+	{ package = astar_handlers.handler, name = '_handleNode', f = handleNode },
 }
 
 return monkeyPatch(patches)
