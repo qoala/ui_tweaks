@@ -21,6 +21,7 @@ local function init( modApi )
 	local dataPath = modApi:getDataPath()
 	KLEIResourceMgr.MountPackage( dataPath .. "/gui.kwad", "data" )
 
+	include( modApi:getScriptPath() .. "/empty_pockets" )
 	include( modApi:getScriptPath() .. "/step_carefully" )
 end
 
@@ -37,13 +38,11 @@ end
 local function load( modApi, options, params )
 	local precise_ap = include( modApi:getScriptPath() .. "/precise_ap" )
 	local i_need_a_dollar = include( modApi:getScriptPath() .. "/need_a_dollar" )
-	local empty_pockets = include( modApi:getScriptPath() .. "/empty_pockets" )
 	local item_dragdrop = include( modApi:getScriptPath() .. "/item_dragdrop" )
 	local precise_icons = include( modApi:getScriptPath() .. "/precise_icons" )
 	local doors_while_dragging = include( modApi:getScriptPath() .. "/doors_while_dragging" )
 	local tracks = include( modApi:getScriptPath() .. "/tracks" )
 
-	autoEnable(options, "empty_pockets")
 	autoEnable(options, "inv_drag_drop")
 	autoEnable(options, "precise_icons")
 	autoEnable(options, "doors_while_dragging")
@@ -56,7 +55,6 @@ local function load( modApi, options, params )
 	-- `need_a_dollar` changes the sim state, so retain behavior for existing saves.
 	i_need_a_dollar( options["need_a_dollar"] and options["need_a_dollar"].enabled )
 
-	empty_pockets( options["empty_pockets"].enabled )
 	precise_icons( options["precise_icons"].enabled )
 	item_dragdrop( options["inv_drag_drop"].enabled )
 	doors_while_dragging( options["doors_while_dragging"].enabled )
@@ -66,6 +64,7 @@ local function load( modApi, options, params )
 	if params then
 		params.uiTweaks = {}
 
+		params.uiTweaks.emptyPockets = options["empty_pockets"] and options["empty_pockets"].enabled
 		params.uiTweaks.stepCarefully = options["step_carefully"] and options["step_carefully"].enabled
 	end
 end

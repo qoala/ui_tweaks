@@ -10,12 +10,20 @@ local simquery = include( "sim/simquery" )
 -- client/hud/items_panel
 -- ======================
 
-local function lootPanelInit( originalFunction, self, ... )
-	originalFunction( self, ... )
-	self._uit_firstRefresh = true
+local oldLootPanelInit = items_panel.loot.init
+
+function items_panel.loot:init( ... )
+	oldLootPanelInit( self, ... )
+	local uiTweaks = self._hud._game.simCore:getParams().difficultyOptions.uiTweaks
+	if uiTweaks and uiTweaks.emptyPockets then
+		self._uit_firstRefresh = true
+	end
 end
 
-local function lootPanelRefresh( originalFunction, self, ... )
+-- { package = items_panel.loot, name = 'refresh', f = lootPanelRefresh },
+local oldLootPanelRefresh = items_panel.loot.refresh
+
+function items_panel.loot:refresh( ... )
 	if self._uit_firstRefresh then
 		self._uit_firstRefresh = nil
 
@@ -42,7 +50,7 @@ local function lootPanelRefresh( originalFunction, self, ... )
 		end
 	end
 
-	originalFunction( self, ... )
+	oldLootPanelRefresh( self, ... )
 end
 
 -- ============
@@ -50,7 +58,7 @@ end
 -- ============
 
 -- Searching the target will either produce lootable goods or new information on its absence.
-local function searchIsValuable( sim, unit, targetUnit )
+function simquery._uit_searchIsValuable( sim, unit, targetUnit )
 	if simquery.isAgent( targetUnit ) or targetUnit:getTraits().iscorpse then
 		-- Player expects the target to potentially have an inventory.
 		-- Has target never been searched?
@@ -87,9 +95,16 @@ local function searchIsValuable( sim, unit, targetUnit )
 			or inventoryCount > 0)
 end
 
+local oldCanLoot = simquery.canLoot
+
 -- Modified copy of vanilla simquery.canLoot
 -- Changes at 'UIT:'
-local function canLoot( originalFunction, sim, unit, targetUnit )
+function simquery.canLoot( sim, unit, targetUnit, ... )
+	local uiTweaks = sim:getParams().difficultyOptions.uiTweaks
+	if not uiTweaks or not uiTweaks.emptyPockets then
+		return oldCanLoot( sim, unit, targetUnit, ... )
+	end
+
 	if unit:getTraits().isDrone then
 		return false
 	end
@@ -123,7 +138,7 @@ local function canLoot( originalFunction, sim, unit, targetUnit )
 	end
 
 	-- UIT: Extracted method. Considers additional factors valuable to search.
-	if not searchIsValuable( sim, unit, targetUnit ) then
+	if not simquery._uit_searchIsValuable( sim, unit, targetUnit ) then
 		return false
 	end
 
@@ -140,11 +155,3 @@ local function canLoot( originalFunction, sim, unit, targetUnit )
 
 	return true
 end
-
-local patches = {
-	{ package = items_panel.loot, name = 'init', f = lootPanelInit },
-	{ package = items_panel.loot, name = 'refresh', f = lootPanelRefresh },
-	{ package = simquery, name = 'canLoot', f = canLoot },
-}
-
-return monkeyPatch(patches)
