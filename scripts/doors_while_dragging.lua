@@ -2,14 +2,21 @@ local simquery = include ( "sim/simquery" )
 local simactions = include ( "sim/simactions" )
 local moveBody = include ( "sim/abilities/moveBody" )
 
-local canModifyExit = function( oldFunction, unit, exitop, cell, dir )
-	local canModify, reason = oldFunction(unit, exitop, cell, dir )
+local oldCanModifyExit = simquery.canModifyExit
+
+function simquery.canModifyExit( unit, exitop, cell, dir )
+	local canModify, reason = oldCanModifyExit(unit, exitop, cell, dir )
+
+	local uiTweaks = unit:getSim():getParams().difficultyOptions.uiTweaks
+	if not uiTweaks or not uiTweaks.doorsWhileDragging then
+		return canModify, reason
+	end
 
 	if canModify == false and reason == STRINGS.UI.DOORS.DROP_BODY then
 		if moveBody:canUseAbility( unit._sim, unit, unit, unit:getTraits().movingBody:getID() ) then
 			local body = unit:getTraits().movingBody
 			unit:getTraits().movingBody = nil
-			canModify, reason = oldFunction( unit, exitop, cell, dir )
+			canModify, reason = oldCanModifyExit( unit, exitop, cell, dir )
 			unit:getTraits().movingBody = body
 		end
 	end
@@ -17,7 +24,14 @@ local canModifyExit = function( oldFunction, unit, exitop, cell, dir )
 	return canModify, reason
 end
 
-local doUseDoorAction = function ( oldFunction, sim, exitOp, unitID, x0, y0, facing )
+local oldUseDoorAction = simactions.useDoorAction
+
+function simactions.useDoorAction( sim, exitOp, unitID, x0, y0, facing )
+	local uiTweaks = sim:getParams().difficultyOptions.uiTweaks
+	if not uiTweaks or not uiTweaks.doorsWhileDragging then
+		return oldUseDoorAction(sim, exitOp, unitID, x0, y0, facing)
+	end
+
 	local unit = sim:getUnit( unitID )
 	local body = unit:getTraits().movingBody
 
@@ -27,7 +41,7 @@ local doUseDoorAction = function ( oldFunction, sim, exitOp, unitID, x0, y0, fac
 	end
 
 	-- open door
-	local retVal = oldFunction(sim, exitOp, unitID, x0, y0, facing)
+	local retVal = oldUseDoorAction(sim, exitOp, unitID, x0, y0, facing)
 
 	if body then
 		-- pick up again
@@ -36,10 +50,3 @@ local doUseDoorAction = function ( oldFunction, sim, exitOp, unitID, x0, y0, fac
 
 	return retVal
 end
-
-local patches = {
-	{ package = simquery,	name = 'canModifyExit',  f = canModifyExit },
-	{ package = simactions, name = 'useDoorAction', f = doUseDoorAction }
-}
-
-return monkeyPatch(patches)

@@ -21,6 +21,7 @@ local function init( modApi )
 	local dataPath = modApi:getDataPath()
 	KLEIResourceMgr.MountPackage( dataPath .. "/gui.kwad", "data" )
 
+	include( modApi:getScriptPath() .. "/doors_while_dragging" )
 	include( modApi:getScriptPath() .. "/empty_pockets" )
 	include( modApi:getScriptPath() .. "/step_carefully" )
 end
@@ -40,12 +41,10 @@ local function load( modApi, options, params )
 	local i_need_a_dollar = include( modApi:getScriptPath() .. "/need_a_dollar" )
 	local item_dragdrop = include( modApi:getScriptPath() .. "/item_dragdrop" )
 	local precise_icons = include( modApi:getScriptPath() .. "/precise_icons" )
-	local doors_while_dragging = include( modApi:getScriptPath() .. "/doors_while_dragging" )
 	local tracks = include( modApi:getScriptPath() .. "/tracks" )
 
 	autoEnable(options, "inv_drag_drop")
 	autoEnable(options, "precise_icons")
-	autoEnable(options, "doors_while_dragging")
 	autoEnable(options, "colored_tracks")
 
 	-- On new campaign, clear `need_a_dollar` in case Generation Presets preserved it from an earlier version.
@@ -57,13 +56,13 @@ local function load( modApi, options, params )
 
 	precise_icons( options["precise_icons"].enabled )
 	item_dragdrop( options["inv_drag_drop"].enabled )
-	doors_while_dragging( options["doors_while_dragging"].enabled )
 	precise_ap( options["precise_ap"].enabled )
 	tracks( options["colored_tracks"].enabled )
 
 	if params then
 		params.uiTweaks = {}
 
+		params.uiTweaks.doorsWhileDragging = options["doors_while_dragging"] and options["doors_while_dragging"].enabled
 		params.uiTweaks.emptyPockets = options["empty_pockets"] and options["empty_pockets"].enabled
 		params.uiTweaks.stepCarefully = options["step_carefully"] and options["step_carefully"].enabled
 	end
