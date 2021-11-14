@@ -1,3 +1,11 @@
+local function earlyInit( modApi )
+	modApi.requirements =
+	{
+		-- step_carefully must wrap the frost grenade astar_handler changes.
+		"Neptune Corporation",
+	}
+end
+
 -- init will be called once
 local function init( modApi )
 	include( modApi:getScriptPath() .. "/monkey_patch" )
@@ -12,6 +20,8 @@ local function init( modApi )
 
 	local dataPath = modApi:getDataPath()
 	KLEIResourceMgr.MountPackage( dataPath .. "/gui.kwad", "data" )
+
+	include( modApi:getScriptPath() .. "/step_carefully" )
 end
 
 -- if older version of ui-tweaks was installed, auto-enable functions for which we
@@ -32,15 +42,12 @@ local function load( modApi, options, params )
 	local precise_icons = include( modApi:getScriptPath() .. "/precise_icons" )
 	local doors_while_dragging = include( modApi:getScriptPath() .. "/doors_while_dragging" )
 	local tracks = include( modApi:getScriptPath() .. "/tracks" )
-	local step_carefully = include( modApi:getScriptPath() .. "/step_carefully" )
-
 
 	autoEnable(options, "empty_pockets")
 	autoEnable(options, "inv_drag_drop")
 	autoEnable(options, "precise_icons")
 	autoEnable(options, "doors_while_dragging")
 	autoEnable(options, "colored_tracks")
-	autoEnable(options, "step_carefully")
 
 	-- On new campaign, clear `need_a_dollar` in case Generation Presets preserved it from an earlier version.
 	if params and options["need_a_dollar"] then
@@ -55,7 +62,12 @@ local function load( modApi, options, params )
 	doors_while_dragging( options["doors_while_dragging"].enabled )
 	precise_ap( options["precise_ap"].enabled )
 	tracks( options["colored_tracks"].enabled )
-	step_carefully( options["step_carefully"].enabled )
+
+	if params then
+		params.uiTweaks = {}
+
+		params.uiTweaks.stepCarefully = options["step_carefully"] and options["step_carefully"].enabled
+	end
 end
 
 function _reload_tweaks()
@@ -72,6 +84,7 @@ local function initStrings( modApi )
 end
 
 return {
+	earlyInit = earlyInit,
 	init = init,
 	load = load,
 	initStrings = initStrings,
