@@ -16,6 +16,7 @@ local UI_TWEAKS_STRINGS =
 		DOORS_WHILE_DRAGGING_TIP = "Allow door manipulation while dragging bodies",
 		COLORED_TRACKS = "YES, WE ARE ALL INDIVIDUALS!",
 		COLORED_TRACKS_TIP = "Guards get uniquely colored tracks and interest points",
+		COLORED_TRACKS_A = "PALETTE A",
 		STEP_CAREFULLY = "STEP CAREFULLY, NOW",
 		STEP_CAREFULLY_TIP = "Agents prefer to avoid watched/noticed tiles, while still choosing a path with the shortest distance",
 	},

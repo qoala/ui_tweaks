@@ -4,12 +4,12 @@ local agentrig = include( "gameplay/agentrig" )
 local util = include( "modules/util" )
 
 PATH_COLORS = {
-	color(0,     1,     0.1,   1.0),
-	color(1,     1,     0.1,   1.0),
-	color(1,     0.7,   0.1,   1.0),
-	color(1,     1,     0.6,   1.0),
-	color(0.5,   1,     0.7,   1.0),
-	color(0,     0.7,   0.7,   1.0),
+	color(0,     1,     0.1,   1.0), -- Green
+	color(1,     1,     0.1,   1.0), -- Yellow
+	color(1,     0.7,   0.1,   1.0), -- Orange
+	color(1,     1,     0.6,   1.0), -- Pale Yellow
+	color(0.5,   1,     0.7,   1.0), -- Pale Green
+	color(0,     0.7,   0.7,   1.0), -- Teal
 }
 
 local path_color_idx = 0
@@ -57,10 +57,13 @@ local function calculatePathColors( self, unitID, pathPoints )
 	return colors
 end
 
-local function refreshPlannedPath( originalFunction, self, unitID )
-	originalFunction( self, unitID )
+local oldRefreshPlannedPath = pathrig.rig.refreshPlannedPath
+function pathrig.rig:refreshPlannedPath( unitID )
+	oldRefreshPlannedPath( self, unitID )
 
-	if self._plannedPaths[ unitID ] then
+	local sim = self._boardRig:getSim()
+	local uiTweaks = sim:getParams().difficultyOptions.uiTweaks
+	if uiTweaks and uiTweaks.coloredTracks and self._plannedPaths[ unitID ] then
 		local pathCellColors = calculatePathColors( self, unitID, self._plannedPaths[ unitID ] )
 
 		for i, prop in ipairs(self._plannedPathProps[ unitID ]) do
@@ -69,32 +72,37 @@ local function refreshPlannedPath( originalFunction, self, unitID )
 	end
 end
 
-local function refreshAllTracks( originalFunction, self )
-	self._pathCollisions = {}
+	--{ package = pathrig.rig,  name = 'refreshAllTracks',   f = refreshAllTracks },
+local oldRefreshAllTracks = pathrig.rig.refreshAllTracks
+function pathrig.rig:refreshAllTracks( )
+	local sim = self._boardRig:getSim()
+	local uiTweaks = sim:getParams().difficultyOptions.uiTweaks
+	if uiTweaks and uiTweaks.coloredTracks then
+		self._pathCollisions = {}
 
-	if not self._pathColors then
-		self._pathColors = {}
+		if not self._pathColors then
+			self._pathColors = {}
+		end
 	end
 
-	return originalFunction( self )
+	return oldRefreshAllTracks( self )
 end
 
 
-local function drawInterest( originalFunction, self, interest, alerted )
-   originalFunction( self, interest, alerted )
-   if self.interestProp then
-	   local color = assignColor( self:getUnit() )
-	   self.interestProp:setSymbolModulate("interest_border", color:unpack() )
-	   self.interestProp:setSymbolModulate("down_line", color:unpack() )
-	   self.interestProp:setSymbolModulate("down_line_moving", color:unpack() )
-	   self.interestProp:setSymbolModulate("interest_line_moving", color:unpack() )
-   end
+	--{ package = agentrig.rig, name = 'drawInterest',       f = drawInterest }
+local oldDrawInterest = agentrig.rig.drawInterest
+function agentrig.rig:drawInterest( interest, alerted )
+	oldDrawInterest( self, interest, alerted )
+
+	local sim = self._boardRig:getSim()
+	local uiTweaks = sim:getParams().difficultyOptions.uiTweaks
+	if uiTweaks and uiTweaks.coloredTracks and self.interestProp then
+		local color = assignColor( self:getUnit() )
+		self.interestProp:setSymbolModulate("interest_border", color:unpack() )
+		self.interestProp:setSymbolModulate("down_line", color:unpack() )
+		self.interestProp:setSymbolModulate("down_line_moving", color:unpack() )
+		self.interestProp:setSymbolModulate("interest_line_moving", color:unpack() )
+	end
 end
 
 
-local patches = {
-	{ package = pathrig.rig,  name = 'refreshPlannedPath', f = refreshPlannedPath },
-	{ package = pathrig.rig,  name = 'refreshAllTracks',   f = refreshAllTracks },
-	{ package = agentrig.rig, name = 'drawInterest',       f = drawInterest }
-}
-return monkeyPatch(patches)
