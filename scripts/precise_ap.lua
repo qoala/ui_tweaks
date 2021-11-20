@@ -1,5 +1,5 @@
 local flagui = include('hud/flag_ui')
-local panel = include('hud/home_panel').panel
+local home_panel = include('hud/home_panel')
 
 local function roundToPointFive( ap )
 	ap = math.max(0, ap)
@@ -22,8 +22,15 @@ local function adjustAgentAPWidgets(panel)
 	end
 end
 
-local function refreshAgent( originalFunction, self, unit )
-	originalFunction( self, unit )
+local oldRefreshAgent = home_panel.panel.refreshAgent
+
+function home_panel.panel:refreshAgent( unit, ... )
+	oldRefreshAgent( self, unit, ... )
+
+	local uiTweaks = self._hud._game.simCore:getParams().difficultyOptions.uiTweaks
+	if not uiTweaks or not uiTweaks.preciseAP then
+		return
+	end
 
 	adjustAgentAPWidgets(self._panel)
 
@@ -41,11 +48,17 @@ local function refreshAgent( originalFunction, self, unit )
 	widget.binder.apNum:setText( roundToPointFive(ap) )
 end
 
-local function refreshFlag( originalFunction, self, unit, isSelected )
-	unit = unit or self._rig:getUnit()
-	local ret = originalFunction( self, unit, isSelected )
+local oldRefreshFlag = flagui.refreshFlag
 
+function flagui:refreshFlag( unit, isSelected )
 	local sim = self._rig._boardRig:getSim()
+	local uiTweaks = sim:getParams().difficultyOptions.uiTweaks
+	if not uiTweaks or not uiTweaks.preciseAp then
+		return oldRefreshFlag( self, unit, isSelected )
+	end
+
+	unit = unit or self._rig:getUnit()
+	local ret = oldRefreshFlag( self, unit, isSelected )
 
 	if not(unit:getPlayerOwner():isNPC() or unit:isKO() or unit:getTraits().takenDrone) then
 		if sim:getCurrentPlayer() == unit:getPlayerOwner() then
@@ -54,11 +67,4 @@ local function refreshFlag( originalFunction, self, unit, isSelected )
 		end
 	end
 end
-
-local patches = {
-		{ package = panel,   name = 'refreshAgent', f = refreshAgent },
-		{ package = flagui,  name = 'refreshFlag',  f = refreshFlag }
-}
-
-return monkeyPatch(patches)
 
