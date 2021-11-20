@@ -50,17 +50,9 @@ end
 -- load may be called multiple times with different options enabled
 -- params is present iff Sim Constructor is installed and this is a new campaign.
 local function load( modApi, options, params )
-	local i_need_a_dollar = include( modApi:getScriptPath() .. "/need_a_dollar" )
 	local precise_icons = include( modApi:getScriptPath() .. "/precise_icons" )
 
 	autoEnable(options, "precise_icons")
-
-	-- On new campaign, clear `need_a_dollar` in case Generation Presets preserved it from an earlier version.
-	if params and options["need_a_dollar"] then
-		options["need_a_dollar"] = nil
-	end
-	-- `need_a_dollar` changes the sim state, so retain behavior for existing saves.
-	i_need_a_dollar( options["need_a_dollar"] and options["need_a_dollar"].enabled )
 
 	precise_icons( options["precise_icons"].enabled )
 
