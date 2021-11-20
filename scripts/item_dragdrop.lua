@@ -182,9 +182,19 @@ local function onDragCommon( self, upgrade, item )
 	self.screen:findWidget( "dragAugment" ).onDragDrop = function() util.coDelegate( self.onDragToAugments, self, upgrade, item ) end
 end
 
-local newFunctions = {}
+-- =========
+-- Overrides
+-- =========
 
-local function onDragInventory( _, self, upgrade, item, oldOnDragDrop )
+local oldOnDragInventory = upgradeScreen.onDragInventory
+function upgradeScreen:onDragInventory( upgrade, item, oldOnDragDrop )
+	local user = savefiles.getCurrentGame()
+	local campaign = user.data.saveSlots[ user.data.currentSaveSlot]
+	local uiTweaks = campaign.difficultyOptions.uiTweaks
+	if not uiTweaks or not uiTweaks.invDragDrop then
+		return oldOnDragInventory( self, upgrade, item, oldOnDragDrop )
+	end
+
 	onDragCommon( self, upgrade, item )
 
 	local unit, unitDef, itemIndex = oldOnDragDrop[2], oldOnDragDrop[3], oldOnDragDrop[6]
@@ -195,7 +205,15 @@ local function onDragInventory( _, self, upgrade, item, oldOnDragDrop )
 	return true
 end
 
-local function onDragStorage( _, self, upgrade, item, oldOnDragDrop )
+local oldOnDragStorage = upgradeScreen.onDragStorage
+function upgradeScreen:onDragStorage( upgrade, item, oldOnDragDrop )
+	local user = savefiles.getCurrentGame()
+	local campaign = user.data.saveSlots[ user.data.currentSaveSlot]
+	local uiTweaks = campaign.difficultyOptions.uiTweaks
+	if not uiTweaks or not uiTweaks.invDragDrop then
+		return oldOnDragStorage( self, upgrade, item, oldOnDragDrop )
+	end
+
 	onDragCommon( self, upgrade, item )
 
 	local unit, unitDef, itemIndex = oldOnDragDrop[2], oldOnDragDrop[3], oldOnDragDrop[6]
@@ -205,20 +223,21 @@ local function onDragStorage( _, self, upgrade, item, oldOnDragDrop )
 	return true
 end
 
-local function refreshInventory( originalFunction, self, unitDef, index )
-	originalFunction( self, unitDef, index )
+--	{ package = upgradeScreen, name = 'refreshInventory', f = refreshInventory }
+local oldRefreshInventory = upgradeScreen.refreshInventory
+function upgradeScreen:refreshInventory( unitDef, index )
+	oldRefreshInventory( self, unitDef, index )
+	
+	local user = savefiles.getCurrentGame()
+	local campaign = user.data.saveSlots[ user.data.currentSaveSlot]
+	local uiTweaks = campaign.difficultyOptions.uiTweaks
+	if not uiTweaks or not uiTweaks.invDragDrop then
+		return
+	end
 
 	self._saved_inventory = {}
 	local dragWidget = self.screen:findWidget( "drag" )
 	dragWidget.onDragEnter = util.makeDelegate( nil, onDragEnterInventory, dragWidget )
 	dragWidget.onDragLeave = util.makeDelegate( nil, onDragLeaveInventory, self, dragWidget )
 end
-
-local patches = {
-	{ package = upgradeScreen, name = 'onDragInventory',  f = onDragInventory },
-	{ package = upgradeScreen, name = 'onDragStorage',    f = onDragStorage },
-	{ package = upgradeScreen, name = 'refreshInventory', f = refreshInventory }
-}
-
-return monkeyPatch( patches )
 

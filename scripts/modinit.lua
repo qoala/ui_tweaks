@@ -28,6 +28,7 @@ local function init( modApi )
 
 	include( modApi:getScriptPath() .. "/doors_while_dragging" )
 	include( modApi:getScriptPath() .. "/empty_pockets" )
+	include( modApi:getScriptPath() .. "/item_dragdrop" )
 	include( modApi:getScriptPath() .. "/precise_ap" )
 	include( modApi:getScriptPath() .. "/step_carefully" )
 end
@@ -44,11 +45,9 @@ end
 -- params is present iff Sim Constructor is installed and this is a new campaign.
 local function load( modApi, options, params )
 	local i_need_a_dollar = include( modApi:getScriptPath() .. "/need_a_dollar" )
-	local item_dragdrop = include( modApi:getScriptPath() .. "/item_dragdrop" )
 	local precise_icons = include( modApi:getScriptPath() .. "/precise_icons" )
 	local tracks = include( modApi:getScriptPath() .. "/tracks" )
 
-	autoEnable(options, "inv_drag_drop")
 	autoEnable(options, "precise_icons")
 	autoEnable(options, "colored_tracks")
 
@@ -60,7 +59,6 @@ local function load( modApi, options, params )
 	i_need_a_dollar( options["need_a_dollar"] and options["need_a_dollar"].enabled )
 
 	precise_icons( options["precise_icons"].enabled )
-	item_dragdrop( options["inv_drag_drop"].enabled )
 	tracks( options["colored_tracks"].enabled )
 
 	if params then
@@ -68,6 +66,7 @@ local function load( modApi, options, params )
 
 		params.uiTweaks.doorsWhileDragging = options["doors_while_dragging"] and options["doors_while_dragging"].enabled
 		params.uiTweaks.emptyPockets = options["empty_pockets"] and options["empty_pockets"].enabled
+		params.uiTweaks.invDragDrop = options["inv_drag_drop"] and options["inv_drag_drop"].enabled
 		params.uiTweaks.preciseAp = options["precise_ap"] and options["precise_ap"].value
 		params.uiTweaks.stepCarefully = options["step_carefully"] and options["step_carefully"].enabled
 	end
