@@ -31,7 +31,7 @@ local patches = {
 	'item_tazer', 'item_tazer_2', 'item_tazer_3'
 }
 
-local function precise_icons(enabled)
+local function patchItems(enabled)
 	for i, p in ipairs(patches) do
 		patchItem(p, nil, enabled)
 	end
@@ -40,4 +40,6 @@ local function precise_icons(enabled)
 	patchItem('item_shocktrap_3_17_9', 'item_shocktrap_3', enabled)
 end
 
-return precise_icons
+return {
+	patchItems = patchItems,
+}

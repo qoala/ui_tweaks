@@ -39,22 +39,12 @@ local function init( modApi )
 	include( modApi:getScriptPath() .. "/tracks" )
 end
 
--- if older version of ui-tweaks was installed, auto-enable functions for which we
--- have no user state.
-local function autoEnable( options, option )
-	if not options[option] then
-		options[option] = { enabled = true }
-	end
-end
-
 -- load may be called multiple times with different options enabled
 -- params is present iff Sim Constructor is installed and this is a new campaign.
 local function load( modApi, options, params )
 	local precise_icons = include( modApi:getScriptPath() .. "/precise_icons" )
 
-	autoEnable(options, "precise_icons")
-
-	precise_icons( options["precise_icons"].enabled )
+	precise_icons.patchItems( options["precise_icons"] and options["precise_icons"].enabled )
 
 	if params then
 		params.uiTweaks = {}
