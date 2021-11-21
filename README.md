@@ -1,6 +1,9 @@
-# UI Tweaks - A mod for Invisible Inc. by KLEI Entertainment
+# UI Tweaks Reloaded - A mod for Invisible Inc. by KLEI Entertainment
 
-https://steamcommunity.com/sharedfiles/filedetails/?id=581951281
+On Steam Workshop: https://steamcommunity.com/sharedfiles/filedetails/?id=2660875942
+
+Forked from osheroff's UI Tweaks ([github](https:/github.com/osheroff/ui_tweaks)
+[steam](https://steamcommunity.com/sharedfiles/filedetails/?id=581951281))
 
 
 ## Build From Source

@@ -1,2 +1,3 @@
-name = UI Tweaks
-author = osheroff
+name = UI Tweaks Reloaded
+author = osheroff,qoalabear
+version = 2.0
