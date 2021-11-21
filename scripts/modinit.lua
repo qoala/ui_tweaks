@@ -58,11 +58,6 @@ local function load( modApi, options, params )
 	end
 end
 
-function _reload_tweaks()
-	package.loaded[ 'workshop-581951281/tracks' ] = nil
-	return mod_manager:mountContentMod('workshop-581951281')
-end
-
 -- gets called before localization occurs and before content is loaded
 local function initStrings( modApi )
 	local scriptPath = modApi:getScriptPath()
