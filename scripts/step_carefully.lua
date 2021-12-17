@@ -29,7 +29,7 @@ local oldHandlerGetNode = astar_handlers.handler.getNode
 function astar_handlers.handler:getNode( cell, parentNode, ... )
 	local n = oldHandlerGetNode( self, cell, parentNode, ... )
 	local uiTweaks = self._sim:getParams().difficultyOptions.uiTweaks
-	if n and uiTweaks and uiTweaks.stepCarefully then
+	if n and uiTweaks and uiTweaks.stepCarefully and self._unit and self._unit:isPC() then
 		-- mCost: algorithmic cost of the move (includes avoidance penalties)
 		-- realCost: true MP cost of the move
 		n.realCost = 0
@@ -40,7 +40,7 @@ end
 local oldHandlerHandleNode = astar_handlers.handler._handleNode
 function astar_handlers.handler:_handleNode( to_cell, from_node, goal_cell, ... )
 	local uiTweaks = self._sim:getParams().difficultyOptions.uiTweaks
-	if not uiTweaks or not uiTweaks.stepCarefully or not self._unit:isPC() then
+	if not uiTweaks or not uiTweaks.stepCarefully or not self._unit or not self._unit:isPC() then
 		return oldHandlerHandleNode( self, to_cell, from_node, goal_cell, ... )
 	end
 
