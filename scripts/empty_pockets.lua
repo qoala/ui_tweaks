@@ -27,6 +27,13 @@ function items_panel.loot:refresh( ... )
 	if self._uit_firstRefresh then
 		self._uit_firstRefresh = nil
 
+		if not self._screen then
+			-- Another mod may have already caused the panel to be destroyed.
+			-- We don't know why, so don't display the "no loot" notification.
+			log:write("UITR-WARNING: Loot Panel destroyed before first refresh.")
+			return
+		end
+
 		-- Upon first displaying the loot panel, check for any loot.
 		local screen = self._screen
 		local lootWidget = screen:findWidget( "inventory" )
