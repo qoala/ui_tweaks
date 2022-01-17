@@ -27,6 +27,7 @@ local function init( modApi )
 		strings={ STRINGS.MOD_UI_TWEAKS.OPTIONS.VANILLA, STRINGS.MOD_UI_TWEAKS.OPTIONS.COLORED_TRACKS_A },
 	})
 	modApi:addGenerationOption("step_carefully", STRINGS.MOD_UI_TWEAKS.OPTIONS.STEP_CAREFULLY, STRINGS.MOD_UI_TWEAKS.OPTIONS.STEP_CAREFULLY_TIP, { noUpdate=true })
+	modApi:addGenerationOption("xu_shank", STRINGS.MOD_UI_TWEAKS.OPTIONS.XU_SHANK, STRINGS.MOD_UI_TWEAKS.OPTIONS.XU_SHANK_TIP, { noUpdate=true })
 
 	local dataPath = modApi:getDataPath()
 	KLEIResourceMgr.MountPackage( dataPath .. "/gui.kwad", "data" )
@@ -37,6 +38,7 @@ local function init( modApi )
 	include( modApi:getScriptPath() .. "/precise_ap" )
 	include( modApi:getScriptPath() .. "/step_carefully" )
 	include( modApi:getScriptPath() .. "/tracks" )
+	include( modApi:getScriptPath() .. "/xu_shank" )
 end
 
 -- load may be called multiple times with different options enabled
@@ -55,6 +57,7 @@ local function load( modApi, options, params )
 		params.uiTweaks.invDragDrop = options["inv_drag_drop"] and options["inv_drag_drop"].enabled
 		params.uiTweaks.preciseAp = options["precise_ap"] and options["precise_ap"].value
 		params.uiTweaks.stepCarefully = options["step_carefully"] and options["step_carefully"].enabled
+        params.uiTweaks.xuShank = options["xu_shank"] and options["xu_shank"].enabled
 	end
 end
 

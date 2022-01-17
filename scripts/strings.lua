@@ -19,6 +19,8 @@ local UI_TWEAKS_STRINGS =
 		COLORED_TRACKS_A = "PALETTE A",
 		STEP_CAREFULLY = "STEP CAREFULLY, NOW",
 		STEP_CAREFULLY_TIP = "Agents prefer to avoid watched/noticed tiles, while still choosing a path with the shortest distance",
+		XU_SHANK = "XU SHANK",
+		XU_SHANK_TIP = "Tony jabs devices with his arm instead of pulling out a laptop, to better match the augment icon. (animation change)",
 	},
 
 	UI =
