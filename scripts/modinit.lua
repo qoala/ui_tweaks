@@ -3,6 +3,8 @@ local function earlyInit( modApi )
 	{
 		-- step_carefully must wrap the frost grenade astar_handler changes.
 		"Neptune Corporation",
+		-- RRNI (precise icons) overrides NIAA icons when available.
+		"New Items And Augments",
 	}
 end
 
@@ -30,7 +32,7 @@ local function init( modApi )
 	modApi:addGenerationOption("xu_shank", STRINGS.MOD_UI_TWEAKS.OPTIONS.XU_SHANK, STRINGS.MOD_UI_TWEAKS.OPTIONS.XU_SHANK_TIP, { noUpdate=true })
 
 	local dataPath = modApi:getDataPath()
-	KLEIResourceMgr.MountPackage( dataPath .. "/gui.kwad", "data" )
+	KLEIResourceMgr.MountPackage( dataPath .. "/rrni_gui.kwad", "data" )
 
 	include( modApi:getScriptPath() .. "/doors_while_dragging" )
 	include( modApi:getScriptPath() .. "/empty_pockets" )
@@ -44,9 +46,6 @@ end
 -- load may be called multiple times with different options enabled
 -- params is present iff Sim Constructor is installed and this is a new campaign.
 local function load( modApi, options, params )
-	local precise_icons = include( modApi:getScriptPath() .. "/precise_icons" )
-
-	precise_icons.patchItems( options["precise_icons"] and options["precise_icons"].enabled )
 
 	if params then
 		params.uiTweaks = {}
@@ -61,6 +60,35 @@ local function load( modApi, options, params )
 	end
 end
 
+local function lateLoad( modApi, options, params, mod_options )
+
+	-- "Precise Icons" uses RolandJ's Roman Numeral Icons
+	-- Check our options and NIAA options, to determine which icons to replace
+	local RRNI_OPTIONS = {
+		RRNI_ENABLED = options["precise_icons"] and options["precise_icons"].enabled ,
+		RRNI_DART_RIFLE_ICON = false,
+		RRNI_RANGED_TIERS = false,
+	}
+	local niaa = mod_manager.findModByName and mod_manager:findModByName( "New Items And Augments" )
+	if niaa and mod_options[niaa.id] and mod_options[niaa.id].enabled then
+		local niaaOptions = mod_options[niaa.id].options
+		RRNI_OPTIONS.NIAA = {
+			AUGMENTS = niaaOptions["enable_augments"] and niaaOptions["enable_augments"].enabled,
+			ITEMS = niaaOptions["enable_items"] and niaaOptions["enable_items"].enabled,
+			WEAPONS = niaaOptions["enable_weapons"] and niaaOptions["enable_weapons"].enabled,
+		}
+	else
+		RRNI_OPTIONS.NIAA = {}
+	end
+
+	local scriptPath = modApi:getScriptPath()
+	local rrni_itemdefs = include( scriptPath .. "/rrni_itemdefs" )
+	rrni_itemdefs.swapIcons(RRNI_OPTIONS)
+end
+
+local function lateUnload( modApi, options )
+end
+
 -- gets called before localization occurs and before content is loaded
 local function initStrings( modApi )
 	local scriptPath = modApi:getScriptPath()
@@ -73,5 +101,7 @@ return {
 	earlyInit = earlyInit,
 	init = init,
 	load = load,
+	lateLoad = lateLoad,
+	lateUnload = lateUnload,
 	initStrings = initStrings,
 }
