@@ -66,7 +66,7 @@ end
 
 -- Searching the target will either produce lootable goods or new information on its absence.
 function simquery._uit_searchIsValuable( sim, unit, targetUnit )
-	if simquery.isAgent( targetUnit ) or targetUnit:getTraits().iscorpse then
+	if (simquery.isAgent( targetUnit ) or targetUnit:getTraits().iscorpse) and not targetUnit:getTraits().MM_unsearchable then
 		-- Player expects the target to potentially have an inventory.
 		-- Has target never been searched?
 		if not targetUnit:getTraits().searched then
