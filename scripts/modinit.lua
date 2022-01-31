@@ -87,6 +87,9 @@ local function lateLoad( modApi, options, params, mod_options )
 end
 
 local function lateUnload( modApi, options )
+	local scriptPath = modApi:getScriptPath()
+	local rrni_itemdefs = include( scriptPath .. "/rrni_itemdefs" )
+	rrni_itemdefs.swapIcons({ RRNI_ENABLED = false })
 end
 
 -- gets called before localization occurs and before content is loaded
