@@ -1,64 +1,41 @@
-
-local items_panel = include( "hud/items_panel" )
-local modalDialog = include( "states/state-modal-dialog" )
 local array = include( "modules/array" )
 local util = include( "modules/util" )
+local simactions = include( "sim/simactions" )
 local simdefs = include( "sim/simdefs" )
 local simquery = include( "sim/simquery" )
 
--- ======================
--- client/hud/items_panel
--- ======================
+-- ==============
+-- sim/simactions
+-- ==============
 
-local oldLootPanelInit = items_panel.loot.init
+local oldSearch = simactions.search
 
-function items_panel.loot:init( ... )
-	oldLootPanelInit( self, ... )
-	local uiTweaks = self._hud._game.simCore:getParams().difficultyOptions.uiTweaks
+function simactions.search( sim, unitID, searchTypeAnarchy5, ... )
+	oldSearch( sim, unitID, searchTypeAnarchy5, ... )
+
+	local uiTweaks = sim:getParams().difficultyOptions.uiTweaks
 	if uiTweaks and uiTweaks.emptyPockets then
-		self._uit_firstRefresh = true
-	end
-end
+		local unit = sim:getUnit(unitID)
 
--- { package = items_panel.loot, name = 'refresh', f = lootPanelRefresh },
-local oldLootPanelRefresh = items_panel.loot.refresh
-
-function items_panel.loot:refresh( ... )
-	if self._uit_firstRefresh then
-		self._uit_firstRefresh = nil
-
-		if not self._screen then
-			-- Another mod may have already caused the panel to be destroyed.
-			-- We don't know why, so don't display the "no loot" notification.
-			log:write("UITR-WARNING: Loot Panel destroyed before first refresh.")
-			return
-		end
-
-		-- Upon first displaying the loot panel, check for any loot.
-		local screen = self._screen
-		local lootWidget = screen:findWidget( "inventory" )
-		local hasItem = false
-		for i, widget in lootWidget.binder:forEach( "item" ) do
-			if self:refreshItem( widget, i, "item" ) then
-				hasItem = true
+		-- Repeat the check for stealable items
+		local inventoryCount = unit:getInventoryCount()
+		if searchTypeAnarchy5 then
+			for i,child in ipairs(unit:getChildren()) do
+				if child:getTraits().anarchySpecialItem and child:hasAbility( "carryable" ) then
+					inventoryCount = inventoryCount -1
+				end
 			end
 		end
+		local hasLoot = (simquery.calculateCashOnHand( sim, unit ) > 0
+				or simquery.calculatePWROnHand( sim, unit ) > 0
+				or inventoryCount > 0)
 
-		if not hasItem then
-			-- Instead notify the user that there was no loot.
-			MOAIFmodDesigner.playSound( simdefs.SOUND_HUD_INCIDENT_NEGATIVE.path )
-			local game = self._hud._game
-			self:destroy()
-			modalDialog.show(
-			  util.sformat( STRINGS.MOD_UI_TWEAKS.UI.DIALOGS.NO_LOOT_BODY, self._unit:getName() ),
-			  STRINGS.MOD_UI_TWEAKS.UI.DIALOGS.NO_LOOT_TITLE
-			)
-			return
+		if not hasLoot then
+			sim:dispatchEvent(simdefs.EV_UNIT_FLOAT_TXT, {txt=STRINGS.MOD_UI_TWEAKS.UI.NO_LOOT,unit=unit,color={r=1,g=1,b=1,a=1}})
 		end
 	end
-
-	oldLootPanelRefresh( self, ... )
 end
+
 
 -- ============
 -- sim/simquery

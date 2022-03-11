@@ -25,11 +25,7 @@ local UI_TWEAKS_STRINGS =
 
 	UI =
 	{
-		DIALOGS =
-		{
-			NO_LOOT_TITLE = "NOTHING FOUND",
-			NO_LOOT_BODY = "{1} found no valuables on the target.",
-		},
+		NO_LOOT = "NO LOOT",
 	},
 }
 
