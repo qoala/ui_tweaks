@@ -10,8 +10,6 @@ end
 
 -- init will be called once
 local function init( modApi )
-	include( modApi:getScriptPath() .. "/monkey_patch" )
-
 	modApi:addGenerationOption("precise_ap", STRINGS.UITWEAKSR.OPTIONS.PRECISE_AP, STRINGS.UITWEAKSR.OPTIONS.PRECISE_AP_TIP, {
 		noUpdate=true,
 		values={ false, 0.5 },
