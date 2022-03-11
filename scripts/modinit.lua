@@ -12,24 +12,24 @@ end
 local function init( modApi )
 	include( modApi:getScriptPath() .. "/monkey_patch" )
 
-	modApi:addGenerationOption("precise_ap", STRINGS.MOD_UI_TWEAKS.OPTIONS.PRECISE_AP, STRINGS.MOD_UI_TWEAKS.OPTIONS.PRECISE_AP_TIP, {
+	modApi:addGenerationOption("precise_ap", STRINGS.UITWEAKSR.OPTIONS.PRECISE_AP, STRINGS.UITWEAKSR.OPTIONS.PRECISE_AP_TIP, {
 		noUpdate=true,
 		values={ false, 0.5 },
 		value=0.5,
-		strings={ STRINGS.MOD_UI_TWEAKS.OPTIONS.VANILLA, STRINGS.MOD_UI_TWEAKS.OPTIONS.PRECISE_AP_HALF },
+		strings={ STRINGS.UITWEAKSR.OPTIONS.VANILLA, STRINGS.UITWEAKSR.OPTIONS.PRECISE_AP_HALF },
 	})
-	modApi:addGenerationOption("empty_pockets", STRINGS.MOD_UI_TWEAKS.OPTIONS.EMPTY_POCKETS, STRINGS.MOD_UI_TWEAKS.OPTIONS.EMPTY_POCKETS_TIP, { noUpdate=true })
-	modApi:addGenerationOption("inv_drag_drop", STRINGS.MOD_UI_TWEAKS.OPTIONS.INV_DRAGDROP, STRINGS.MOD_UI_TWEAKS.OPTIONS.INV_DRAGDROP_TIP, { noUpdate=true })
-	modApi:addGenerationOption("precise_icons", STRINGS.MOD_UI_TWEAKS.OPTIONS.PRECISE_ICONS, STRINGS.MOD_UI_TWEAKS.OPTIONS.PRECISE_ICONS_TIP, { noUpdate=true })
-	modApi:addGenerationOption("doors_while_dragging", STRINGS.MOD_UI_TWEAKS.OPTIONS.DOORS_WHILE_DRAGGING, STRINGS.MOD_UI_TWEAKS.OPTIONS.DOORS_WHILE_DRAGGING_TIP, { noUpdate=true })
-	modApi:addGenerationOption("colored_tracks", STRINGS.MOD_UI_TWEAKS.OPTIONS.COLORED_TRACKS, STRINGS.MOD_UI_TWEAKS.OPTIONS.COLORED_TRACKS_TIP, {
+	modApi:addGenerationOption("empty_pockets", STRINGS.UITWEAKSR.OPTIONS.EMPTY_POCKETS, STRINGS.UITWEAKSR.OPTIONS.EMPTY_POCKETS_TIP, { noUpdate=true })
+	modApi:addGenerationOption("inv_drag_drop", STRINGS.UITWEAKSR.OPTIONS.INV_DRAGDROP, STRINGS.UITWEAKSR.OPTIONS.INV_DRAGDROP_TIP, { noUpdate=true })
+	modApi:addGenerationOption("precise_icons", STRINGS.UITWEAKSR.OPTIONS.PRECISE_ICONS, STRINGS.UITWEAKSR.OPTIONS.PRECISE_ICONS_TIP, { noUpdate=true })
+	modApi:addGenerationOption("doors_while_dragging", STRINGS.UITWEAKSR.OPTIONS.DOORS_WHILE_DRAGGING, STRINGS.UITWEAKSR.OPTIONS.DOORS_WHILE_DRAGGING_TIP, { noUpdate=true })
+	modApi:addGenerationOption("colored_tracks", STRINGS.UITWEAKSR.OPTIONS.COLORED_TRACKS, STRINGS.UITWEAKSR.OPTIONS.COLORED_TRACKS_TIP, {
 		noUpdate=true,
 		values={ false, 1 },
 		value=1,
-		strings={ STRINGS.MOD_UI_TWEAKS.OPTIONS.VANILLA, STRINGS.MOD_UI_TWEAKS.OPTIONS.COLORED_TRACKS_A },
+		strings={ STRINGS.UITWEAKSR.OPTIONS.VANILLA, STRINGS.UITWEAKSR.OPTIONS.COLORED_TRACKS_A },
 	})
-	modApi:addGenerationOption("step_carefully", STRINGS.MOD_UI_TWEAKS.OPTIONS.STEP_CAREFULLY, STRINGS.MOD_UI_TWEAKS.OPTIONS.STEP_CAREFULLY_TIP, { noUpdate=true })
-	modApi:addGenerationOption("xu_shank", STRINGS.MOD_UI_TWEAKS.OPTIONS.XU_SHANK, STRINGS.MOD_UI_TWEAKS.OPTIONS.XU_SHANK_TIP, { noUpdate=true })
+	modApi:addGenerationOption("step_carefully", STRINGS.UITWEAKSR.OPTIONS.STEP_CAREFULLY, STRINGS.UITWEAKSR.OPTIONS.STEP_CAREFULLY_TIP, { noUpdate=true })
+	modApi:addGenerationOption("xu_shank", STRINGS.UITWEAKSR.OPTIONS.XU_SHANK, STRINGS.UITWEAKSR.OPTIONS.XU_SHANK_TIP, { noUpdate=true })
 
 	local dataPath = modApi:getDataPath()
 	KLEIResourceMgr.MountPackage( dataPath .. "/rrni_gui.kwad", "data" )
@@ -97,7 +97,7 @@ local function initStrings( modApi )
 	local scriptPath = modApi:getScriptPath()
 
 	local strings = include( scriptPath .. "/strings" )
-	modApi:addStrings( modApi:getDataPath(), "MOD_UI_TWEAKS", strings )
+	modApi:addStrings( modApi:getDataPath(), "UITWEAKSR", strings )
 end
 
 return {

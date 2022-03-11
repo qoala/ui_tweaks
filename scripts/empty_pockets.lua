@@ -31,7 +31,7 @@ function simactions.search( sim, unitID, searchTypeAnarchy5, ... )
 				or inventoryCount > 0)
 
 		if not hasLoot then
-			sim:dispatchEvent(simdefs.EV_UNIT_FLOAT_TXT, {txt=STRINGS.MOD_UI_TWEAKS.UI.NO_LOOT,unit=unit,color={r=1,g=1,b=1,a=1}})
+			sim:dispatchEvent(simdefs.EV_UNIT_FLOAT_TXT, {txt=STRINGS.UITWEAKSR.UI.NO_LOOT,unit=unit,color={r=1,g=1,b=1,a=1}})
 		end
 	end
 end
