@@ -39,6 +39,9 @@ local function init( modApi )
 	include( modApi:getScriptPath() .. "/step_carefully" )
 	include( modApi:getScriptPath() .. "/tracks" )
 	include( modApi:getScriptPath() .. "/xu_shank" )
+
+	include( modApi:getScriptPath() .. "/agent_actions" )
+	include( modApi:getScriptPath() .. "/hud" )
 end
 
 -- load may be called multiple times with different options enabled
@@ -56,6 +59,9 @@ local function load( modApi, options, params )
 		params.uiTweaks.stepCarefully = options["step_carefully"] and options["step_carefully"].enabled
         params.uiTweaks.xuShank = options["xu_shank"] and options["xu_shank"].enabled
 	end
+
+	local scriptPath = modApi:getScriptPath()
+	modApi:insertUIElements( include( scriptPath.."/screen_inserts" ) )
 end
 
 local function lateLoad( modApi, options, params, mod_options )
