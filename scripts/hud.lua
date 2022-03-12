@@ -7,7 +7,9 @@ local function onClickVisionToggle( hud )
 end
 
 function visionModeTooltip( doEnable )
-	return mui_tooltip( "VISION MODE", doEnable and "Disable vision mode" or "Enable vision mode", "UITR_VISIONMODE" )
+	return mui_tooltip( STRINGS.UITWEAKSR.UI.BTN_VISIONMODE_HEADER,
+			doEnable and STRINGS.UITWEAKSR.UI.BTN_VISIONMODE_DISABLE_TXT or STRINGS.UITWEAKSR.UI.BTN_VISIONMODE_ENABLE_TXT,
+			"UITR_VISIONMODE" )
 end
 
 function hud_uitr_setVisionMode( hud, doEnable )
@@ -32,7 +34,7 @@ hud.createHud = function( ... )
 		hudObject._uitr_isVisionMode = false
 		hudObject.uitr_setVisionMode = hud_uitr_setVisionMode
 
-		btnToggleVisionMode:setTooltip( visionModeTooltip( true ) )
+		btnToggleVisionMode:setTooltip( visionModeTooltip( false ) )
 		btnToggleVisionMode.onClick = util.makeDelegate( nil, onClickVisionToggle, hudObject )
 		btnToggleVisionMode:setHotkey( "UITR_VISIONMODE" )
 	end

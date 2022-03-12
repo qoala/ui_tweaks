@@ -1,5 +1,6 @@
 local agent_actions = include( "hud/agent_actions" )
 local mui_tooltip = include( "mui/mui_tooltip" )
+local util = include( "modules/util" )
 local simquery = include( "sim/simquery" )
 
 -- ====
@@ -7,7 +8,7 @@ local simquery = include( "sim/simquery" )
 local vision_tooltip = class( mui_tooltip )
 
 function vision_tooltip:init( hud, unit )
-	mui_tooltip.init( self, "VISION: " .. unit:getName(), nil, nil )
+	mui_tooltip.init( self, util.sformat(STRINGS.UITWEAKSR.UI.HOVER_VISION, util.toupper(unit:getName())), nil, nil )
 	self._game = hud._game
 	self._unit = unit
 end
@@ -36,7 +37,7 @@ end
 local explode_tooltip = class( mui_tooltip )
 
 function explode_tooltip:init( hud, unit )
-	mui_tooltip.init( self, "EFFECT: " .. unit:getName(), nil, nil )
+	mui_tooltip.init( self, util.sformat(STRINGS.UITWEAKSR.UI.HOVER_EFFECT, util.toupper(unit:getName())), nil, nil )
 	self._game = hud._game
 	self._unit = unit
 end
@@ -106,7 +107,9 @@ local function addVisionActionsForUnit( hud, actions, targetUnit )
 			x = x, y = y,
 			enabled = true,
 			layoutID = targetUnit:getID(),
-			tooltip = string.format( "<ttheader>%s\n<ttbody>%s</>", "TOGGLE VISION", (doEnable and "Hide" or "Show") .. " this unit's vision." ),
+			tooltip = string.format( "<ttheader>%s\n<ttbody>%s</>",
+					STRINGS.UITWEAKSR.UI.BTN_UNITVISION_HEADER,
+					(doEnable and STRINGS.UITWEAKSR.UI.BTN_UNITVISION_HIDE_TXT or STRINGS.UITWEAKSR.UI.BTN_UNITVISION_SHOW_TXT) ),
 			priority = -5,
 			onClick =
 				function()
