@@ -1,5 +1,6 @@
 local agent_actions = include( "hud/agent_actions" )
-local mui_tooltip = include( "mui/mui_tooltip")
+local mui_tooltip = include( "mui/mui_tooltip" )
+local simquery = include( "sim/simquery" )
 
 -- ====
 
@@ -30,7 +31,37 @@ function vision_tooltip:deactivate()
 	self._hiliteID = nil
 end
 
+-- ====
 
+local explode_tooltip = class( mui_tooltip )
+
+function explode_tooltip:init( hud, unit )
+	mui_tooltip.init( self, "EFFECT: " .. unit:getName(), nil, nil )
+	self._game = hud._game
+	self._unit = unit
+end
+
+function explode_tooltip:activate( screen )
+	mui_tooltip.activate( self, screen )
+
+	local cells
+	local unit = self._unit
+	if unit:getUnitData().type == "simemppack" and not unit:getTraits().flash_pack then
+		local sim = self._game.simCore
+		local x0,y0 = unit:getLocation()
+		cells = simquery.rasterCircle( sim, x0, y0, unit:getTraits().range )
+	else
+		cells = unit:getExplodeCells()
+	end
+
+	self._hiliteID = self._game.boardRig:hiliteCells( cells )
+end
+
+function explode_tooltip:deactivate()
+	mui_tooltip.deactivate( self )
+	self._game.boardRig:unhiliteCells( self._hiliteID )
+	self._hiliteID = nil
+end
 
 -- ====
 
@@ -45,7 +76,7 @@ local function addVisionActionsForUnit( hud, actions, targetUnit )
 	if targetUnit:hasTrait("hasSight") then
 		table.insert( actions,
 		{
-			txt = STRINGS.UI.ACTIONS.LOOT_BODY.NAME,
+			txt = "",
 			icon = "gui/items/icon-action_peek.png",
 			x = x, y = y,
 			enabled = false,
@@ -56,10 +87,24 @@ local function addVisionActionsForUnit( hud, actions, targetUnit )
 				end
 		})
 	end
+	if targetUnit.getExplodeCells and not targetUnit:hasAbility( "carryable" ) then
+		table.insert( actions,
+		{
+			txt = "",
+			icon = "gui/items/icon-emp.png",
+			x = x, y = y,
+			enabled = false,
+			layoutID = targetUnit:getID(),
+			tooltip = explode_tooltip( hud, targetUnit ),
+			onClick =
+				function()
+				end
+		})
+	end
 	if targetUnit:hasTrait("hasSight") and targetUnit:getPlayerOwner() ~= localPlayer then
 		table.insert( actions,
 		{
-			txt = STRINGS.UI.ACTIONS.LOOT_BODY.NAME,
+			txt = "",
 			icon = "gui/items/icon-action_peek.png",
 			x = x, y = y,
 			enabled = true,
