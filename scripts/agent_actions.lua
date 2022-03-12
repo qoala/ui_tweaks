@@ -82,6 +82,7 @@ local function addVisionActionsForUnit( hud, actions, targetUnit )
 			enabled = false,
 			layoutID = targetUnit:getID(),
 			tooltip = vision_tooltip( hud, targetUnit ),
+			priority = -10,
 			onClick =
 				function()
 				end
@@ -96,6 +97,7 @@ local function addVisionActionsForUnit( hud, actions, targetUnit )
 			enabled = false,
 			layoutID = targetUnit:getID(),
 			tooltip = explode_tooltip( hud, targetUnit ),
+			priority = -9,
 			onClick =
 				function()
 				end
@@ -110,6 +112,7 @@ local function addVisionActionsForUnit( hud, actions, targetUnit )
 			enabled = true,
 			layoutID = targetUnit:getID(),
 			tooltip = string.format( "<ttheader>%s\n<ttbody>%s</>", "TOGGLE VISION", "Hide this unit's vision from tactical view." ),
+			priority = -5,
 			onClick =
 				function()
 				end
