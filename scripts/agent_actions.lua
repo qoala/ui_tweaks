@@ -116,7 +116,9 @@ function agent_actions.generatePotentialActions( hud, actions, unit, cellx, cell
 
 	-- Non-proxy abilities (copied from vanilla. All other abilities are suppressed)
 	for j, ability in ipairs( unit:getAbilities() ) do
-		if agent_actions.shouldShowAbility( hud._game, ability, unit, unit ) then
+		if agent_actions.shouldShowAbility( hud._game, ability, unit, unit )
+				-- Only show untargetted abilities (that go in the bottom-left panel)
+				and not ability.acquireTargets then
 			table.insert( actions, { ability = ability, abilityOwner = unit, abilityUser = unit, priority = ability.HUDpriority } )
 		end
 	end
