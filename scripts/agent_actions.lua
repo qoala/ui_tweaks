@@ -38,6 +38,10 @@ local function addVisionActionsForUnit( hud, actions, targetUnit )
 	local localPlayer = hud._game:getLocalPlayer()
 	local x,y = targetUnit:getLocation()
 
+	if targetUnit:getUnitData().type == "eyeball" then
+		return
+	end
+
 	if targetUnit:hasTrait("hasSight") then
 		table.insert( actions,
 		{
