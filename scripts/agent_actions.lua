@@ -102,7 +102,7 @@ local function addVisionActionsForUnit( hud, actions, targetUnit )
 		table.insert( actions,
 		{
 			txt = "",
-			icon = "gui/items/icon-action_peek.png",
+			icon = doEnable and "gui/items/icon-action_peek.png" or "gui/items/uitr-icon-action_unpeek.png",
 			x = x, y = y,
 			enabled = true,
 			layoutID = targetUnit:getID(),

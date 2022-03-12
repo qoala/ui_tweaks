@@ -9,19 +9,21 @@ include makeconfig.mk
 
 .PHONY: build
 
-build: out/modinfo.txt out/scripts.zip out/rrni_gui.kwad
+build: out/modinfo.txt out/scripts.zip out/gui.kwad out/rrni_gui.kwad
 
 install: build
 	mkdir -p $(INSTALL_PATH)
 	rm -f $(INSTALL_PATH)/*.kwad $(INSTALL_PATH)/*.zip
 	cp out/modinfo.txt $(INSTALL_PATH)/
 	cp out/scripts.zip $(INSTALL_PATH)/
+	cp out/gui.kwad $(INSTALL_PATH)/
 	cp out/rrni_gui.kwad $(INSTALL_PATH)/
 ifneq ($(INSTALL_PATH2),)
 	mkdir -p $(INSTALL_PATH2)
 	rm -f $(INSTALL_PATH2)/*.kwad $(INSTALL_PATH2)/*.zip
 	cp out/modinfo.txt $(INSTALL_PATH2)/
 	cp out/scripts.zip $(INSTALL_PATH2)/
+	cp out/gui.kwad $(INSTALL_PATH2)/
 	cp out/rrni_gui.kwad $(INSTALL_PATH2)/
 endif
 

@@ -11,9 +11,9 @@ function uitr_setVisionMode( hud, doEnable )
 
 	local btnToggleVisionMode = hud._screen.binder.topPnl.binder.btnToggleVisionMode
 	btnToggleVisionMode:setTooltip( mui_tooltip( "VISION MODE", doEnable and "Disable vision mode" or "Enable vision mode", nil ) )
-	btnToggleVisionMode:setInactiveImage(doEnable and "gui/hud3/UserButtons/userbtn_rotate_right.png" or "gui/hud3/UserButtons/userbtn_rotate_left.png")
-	btnToggleVisionMode:setActiveImage(doEnable and "gui/hud3/UserButtons/userbtn_rotate_right_hl.png" or "gui/hud3/UserButtons/userbtn_rotate_left_hl.png")
-	btnToggleVisionMode:setHoverImage(doEnable and "gui/hud3/UserButtons/userbtn_rotate_right_hl.png" or "gui/hud3/UserButtons/userbtn_rotate_left_hl.png")
+	btnToggleVisionMode:setInactiveImage(doEnable and "gui/hud3/UserButtons/uitr_btn_disable_visionmode.png" or "gui/hud3/UserButtons/uitr_btn_enable_visionmode.png")
+	btnToggleVisionMode:setActiveImage(doEnable and "gui/hud3/UserButtons/uitr_btn_disable_visionmode_hl.png" or "gui/hud3/UserButtons/uitr_btn_enable_visionmode_hl.png")
+	btnToggleVisionMode:setHoverImage(doEnable and "gui/hud3/UserButtons/uitr_btn_disable_visionmode_hl.png" or "gui/hud3/UserButtons/uitr_btn_enable_visionmode_hl.png")
 
 	hud:refreshHud()
 end

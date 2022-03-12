@@ -11,11 +11,11 @@ local inserts =
 			rotation = 0,
 			x = -122,
 			xpx = true,
-			y = -34,
+			y = -21,
 			ypx = true,
 			w = 45,
 			wpx = true,
-			h = 36,
+			h = 40,
 			hpx = true,
 			sx = 1,
 			sy = 1,
@@ -29,15 +29,15 @@ local inserts =
 			images =
 			{
 				{
-					file = [[gui/hud3/UserButtons/userbtn_rotate_left.png]],
+					file = [[gui/hud3/UserButtons/uitr_btn_enable_visionmode.png]],
 					name = [[inactive]],
 				},
 				{
-					file = [[gui/hud3/UserButtons/userbtn_rotate_left_hl.png]],
+					file = [[gui/hud3/UserButtons/uitr_btn_enable_visionmode_hl.png]],
 					name = [[hover]],
 				},
 				{
-					file = [[gui/hud3/UserButtons/userbtn_rotate_left_hl.png]],
+					file = [[gui/hud3/UserButtons/uitr_btn_enable_visionmode_hl.png]],
 					name = [[active]],
 				},
 			},

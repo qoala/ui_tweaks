@@ -30,6 +30,7 @@ local function init( modApi )
 	modApi:addGenerationOption("xu_shank", STRINGS.UITWEAKSR.OPTIONS.XU_SHANK, STRINGS.UITWEAKSR.OPTIONS.XU_SHANK_TIP, { noUpdate=true })
 
 	local dataPath = modApi:getDataPath()
+	KLEIResourceMgr.MountPackage( dataPath .. "/gui.kwad", "data" )
 	KLEIResourceMgr.MountPackage( dataPath .. "/rrni_gui.kwad", "data" )
 
 	include( modApi:getScriptPath() .. "/doors_while_dragging" )
