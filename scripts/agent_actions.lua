@@ -83,9 +83,6 @@ local function addVisionActionsForUnit( hud, actions, targetUnit )
 			layoutID = targetUnit:getID(),
 			tooltip = vision_tooltip( hud, targetUnit ),
 			priority = -10,
-			onClick =
-				function()
-				end
 		})
 	end
 	if targetUnit.getExplodeCells and not targetUnit:hasAbility( "carryable" ) then
@@ -98,12 +95,10 @@ local function addVisionActionsForUnit( hud, actions, targetUnit )
 			layoutID = targetUnit:getID(),
 			tooltip = explode_tooltip( hud, targetUnit ),
 			priority = -9,
-			onClick =
-				function()
-				end
 		})
 	end
 	if targetUnit:hasTrait("hasSight") and targetUnit:getPlayerOwner() ~= localPlayer then
+		local doEnable = not targetUnit:getTraits().uitr_hideVision
 		table.insert( actions,
 		{
 			txt = "",
@@ -111,10 +106,13 @@ local function addVisionActionsForUnit( hud, actions, targetUnit )
 			x = x, y = y,
 			enabled = true,
 			layoutID = targetUnit:getID(),
-			tooltip = string.format( "<ttheader>%s\n<ttbody>%s</>", "TOGGLE VISION", "Hide this unit's vision from tactical view." ),
+			tooltip = string.format( "<ttheader>%s\n<ttbody>%s</>", "TOGGLE VISION", (doEnable and "Hide" or "Show") .. " this unit's vision." ),
 			priority = -5,
 			onClick =
 				function()
+					targetUnit:getTraits().uitr_hideVision = not targetUnit:getTraits().uitr_hideVision 
+					hud._game.boardRig:refresh()
+					hud:refreshHud()
 				end
 		})
 	end

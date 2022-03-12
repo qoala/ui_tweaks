@@ -42,6 +42,7 @@ local function init( modApi )
 
 	include( modApi:getScriptPath() .. "/agent_actions" )
 	include( modApi:getScriptPath() .. "/hud" )
+	include( modApi:getScriptPath() .. "/simquery" )
 end
 
 -- load may be called multiple times with different options enabled
