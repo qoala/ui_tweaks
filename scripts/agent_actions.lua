@@ -6,7 +6,7 @@ local mui_tooltip = include( "mui/mui_tooltip")
 local vision_tooltip = class( mui_tooltip )
 
 function vision_tooltip:init( hud, unit )
-	mui_tooltip.init( self, "VISION HOVER: " .. unit:getName(), "Hover to highlight seen tiles, ignoring cover. (Equivalent to SHIFT, but for only this unit)", nil )
+	mui_tooltip.init( self, "VISION: " .. unit:getName(), nil, nil )
 	self._game = hud._game
 	self._unit = unit
 end
@@ -38,20 +38,6 @@ local function addVisionActionsForUnit( hud, actions, targetUnit )
 	local localPlayer = hud._game:getLocalPlayer()
 	local x,y = targetUnit:getLocation()
 
-	if targetUnit:hasTrait("hasSight") and targetUnit:getPlayerOwner() ~= localPlayer then
-		table.insert( actions,
-		{
-			txt = STRINGS.UI.ACTIONS.LOOT_BODY.NAME,
-			icon = "gui/items/icon-action_peek.png",
-			x = x, y = y,
-			enabled = true,
-			layoutID = targetUnit:getID(),
-			tooltip = string.format( "<ttheader>%s\n<ttbody>%s</>", "TOGGLE VISION: " .. targetUnit:getName(), "Hide this unit's vision from tactical view." ),
-			onClick =
-				function()
-				end
-		})
-	end
 	if targetUnit:hasTrait("hasSight") then
 		table.insert( actions,
 		{
@@ -61,6 +47,20 @@ local function addVisionActionsForUnit( hud, actions, targetUnit )
 			enabled = false,
 			layoutID = targetUnit:getID(),
 			tooltip = vision_tooltip( hud, targetUnit ),
+			onClick =
+				function()
+				end
+		})
+	end
+	if targetUnit:hasTrait("hasSight") and targetUnit:getPlayerOwner() ~= localPlayer then
+		table.insert( actions,
+		{
+			txt = STRINGS.UI.ACTIONS.LOOT_BODY.NAME,
+			icon = "gui/items/icon-action_peek.png",
+			x = x, y = y,
+			enabled = true,
+			layoutID = targetUnit:getID(),
+			tooltip = string.format( "<ttheader>%s\n<ttbody>%s</>", "TOGGLE VISION", "Hide this unit's vision from tactical view." ),
 			onClick =
 				function()
 				end
@@ -97,14 +97,23 @@ function agent_actions.generatePotentialActions( hud, actions, unit, cellx, cell
 	local sim = hud._game.simCore
 	local localPlayer = hud._game:getLocalPlayer()
 
+	-- Vision actions for seen units
 	for i,targetUnit in ipairs( localPlayer:getSeenUnits() ) do
 		addVisionActionsForUnit( hud, actions, targetUnit )
 	end
 
+	-- Vision actions for known ghosts
 	for unitID,ghostUnit in pairs( localPlayer._ghost_units ) do
 		local targetUnit = resolveGhost( sim, unitID, ghostUnit )
 		if targetUnit then
 			addVisionActionsForUnit( hud, actions, targetUnit )
+		end
+	end
+
+	-- Non-proxy abilities (copied from vanilla. All other abilities are suppressed)
+	for j, ability in ipairs( unit:getAbilities() ) do
+		if agent_actions.shouldShowAbility( hud._game, ability, unit, unit ) then
+			table.insert( actions, { ability = ability, abilityOwner = unit, abilityUser = unit, priority = ability.HUDpriority } )
 		end
 	end
 end
