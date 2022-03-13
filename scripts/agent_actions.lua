@@ -70,13 +70,14 @@ local function addVisionActionsForUnit( hud, actions, targetUnit, isSeen )
 	local localPlayer = hud._game:getLocalPlayer()
 	local x,y = targetUnit:getLocation()
 	local sim = hud._game.simCore
+	local unitCanSee = simquery.couldUnitSee( sim, targetUnit )
 	local canNormallySeeLOS = sim:getParams().difficultyOptions.dangerZones or isSeen
 
 	if targetUnit:getUnitData().type == "eyeball" then
 		return
 	end
 
-	if targetUnit:hasTrait("hasSight") then
+	if unitCanSee then
 		table.insert( actions,
 		{
 			txt = "",
@@ -100,7 +101,7 @@ local function addVisionActionsForUnit( hud, actions, targetUnit, isSeen )
 			priority = -9,
 		})
 	end
-	if canNormallySeeLOS and targetUnit:hasTrait("hasSight") and targetUnit:getPlayerOwner() ~= localPlayer then
+	if canNormallySeeLOS and unitCanSee and targetUnit:getPlayerOwner() ~= localPlayer then
 		local doEnable = not targetUnit:getTraits().uitr_hideVision
 		table.insert( actions,
 		{
