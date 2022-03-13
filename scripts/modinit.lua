@@ -62,6 +62,9 @@ local function load( modApi, options, params )
 		params.uiTweaks.preciseAp = options["precise_ap"] and options["precise_ap"].value
 		params.uiTweaks.stepCarefully = options["step_carefully"] and options["step_carefully"].enabled
         params.uiTweaks.xuShank = options["xu_shank"] and options["xu_shank"].enabled
+
+		-- Save a fake option, in case this gets a campaign toggle later
+		options["vision_mode"] = { enabled=true }
 	end
 
 	local scriptPath = modApi:getScriptPath()
