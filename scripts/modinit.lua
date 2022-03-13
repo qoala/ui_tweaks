@@ -44,6 +44,7 @@ local function init( modApi )
 	include( modApi:getScriptPath() .. "/client_defs" )
 	include( modApi:getScriptPath() .. "/agent_actions" )
 	include( modApi:getScriptPath() .. "/hud" )
+	include( modApi:getScriptPath() .. "/engine" )
 	include( modApi:getScriptPath() .. "/simquery" )
 end
 

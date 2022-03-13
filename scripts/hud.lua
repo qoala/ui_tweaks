@@ -1,6 +1,7 @@
 local hud = include( "hud/hud" )
 local mui_tooltip = include( "mui/mui_tooltip")
 local util = include( "client_util" )
+local simdefs = include( "sim/simdefs" )
 
 local function onClickVisionToggle( hud )
 	hud:uitr_setVisionMode( not hud._uitr_isVisionMode )
@@ -33,6 +34,17 @@ hud.createHud = function( ... )
 	if btnToggleVisionMode and not btnToggleVisionMode.isnull then
 		hudObject._uitr_isVisionMode = false
 		hudObject.uitr_setVisionMode = hud_uitr_setVisionMode
+
+		local oldOnSimEvent = hudObject.onSimEvent
+		function hudObject:onSimEvent( ev, ... )
+			local result = oldOnSimEvent( self, ev, ... )
+
+			if ev.eventType == simdefs.EV_TURN_END then
+				self._game.simCore:uitr_resetAllUnitVision()
+			end
+
+			return result
+		end
 
 		btnToggleVisionMode:setTooltip( visionModeTooltip( false ) )
 		btnToggleVisionMode.onClick = util.makeDelegate( nil, onClickVisionToggle, hudObject )
