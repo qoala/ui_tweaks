@@ -66,9 +66,11 @@ end
 
 -- ====
 
-local function addVisionActionsForUnit( hud, actions, targetUnit )
+local function addVisionActionsForUnit( hud, actions, targetUnit, isSeen )
 	local localPlayer = hud._game:getLocalPlayer()
 	local x,y = targetUnit:getLocation()
+	local sim = hud._game.simCore
+	local canNormallySeeLOS = sim:getParams().difficultyOptions.dangerZones or isSeen
 
 	if targetUnit:getUnitData().type == "eyeball" then
 		return
@@ -98,7 +100,7 @@ local function addVisionActionsForUnit( hud, actions, targetUnit )
 			priority = -9,
 		})
 	end
-	if targetUnit:hasTrait("hasSight") and targetUnit:getPlayerOwner() ~= localPlayer then
+	if canNormallySeeLOS and targetUnit:hasTrait("hasSight") and targetUnit:getPlayerOwner() ~= localPlayer then
 		local doEnable = not targetUnit:getTraits().uitr_hideVision
 		table.insert( actions,
 		{
@@ -152,14 +154,14 @@ function agent_actions.generatePotentialActions( hud, actions, unit, cellx, cell
 
 	-- Vision actions for seen units
 	for i,targetUnit in ipairs( localPlayer:getSeenUnits() ) do
-		addVisionActionsForUnit( hud, actions, targetUnit )
+		addVisionActionsForUnit( hud, actions, targetUnit, true )
 	end
 
 	-- Vision actions for known ghosts
 	for unitID,ghostUnit in pairs( localPlayer._ghost_units ) do
 		local targetUnit = resolveGhost( sim, unitID, ghostUnit )
 		if targetUnit then
-			addVisionActionsForUnit( hud, actions, targetUnit )
+			addVisionActionsForUnit( hud, actions, targetUnit, false )
 		end
 	end
 
