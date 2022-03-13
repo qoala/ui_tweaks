@@ -33,7 +33,7 @@ function hud_updateVisionTooltip( hud )
 
 	if localPlayer and hud._tooltipX and hud._tooltipY then
 		local prevOneCellVision = sim:getTags().uitr_oneCellVision
-		if util.isKeyBindingDown( "UITR_ONECELLVISION" ) then
+		if util.isKeyBindingDown( "UITR_VISIONMODE" ) then
 			sim:getTags().uitr_oneCellVision = simquery.toCellID(hud._tooltipX, hud._tooltipY)
 		else
 			sim:getTags().uitr_oneCellVision = nil
