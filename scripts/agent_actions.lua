@@ -47,7 +47,7 @@ function explode_tooltip:activate( screen )
 
 	local cells
 	local unit = self._unit
-	if unit:getUnitData().type == "simemppack" and not unit:getTraits().flash_pack then
+	if (unit:getUnitData().type == "simemppack" and not unit:getTraits().flash_pack) or unit:getTraits().targeting_ignoreLOS then
 		local sim = self._game.simCore
 		local x0,y0 = unit:getLocation()
 		cells = simquery.rasterCircle( sim, x0, y0, unit:getTraits().range )
@@ -89,7 +89,12 @@ local function addVisionActionsForUnit( hud, actions, targetUnit, isSeen )
 			priority = -10,
 		})
 	end
-	if targetUnit.getExplodeCells and not targetUnit:hasAbility( "carryable" ) then
+	-- getExplodeCells = grenade or EMP pack.
+	-- has range = not stickycam/holo cover/transport beacon
+	-- not has carryable or deployed = planted EMP or deployed grenade, not dropped item
+	if targetUnit.getExplodeCells
+			and targetUnit:hasTrait("range")
+			and (not targetUnit:hasAbility( "carryable" ) or targetUnit:getTraits().deployed) then
 		table.insert( actions,
 		{
 			txt = "",
