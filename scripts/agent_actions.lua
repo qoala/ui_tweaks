@@ -66,6 +66,36 @@ end
 
 -- ====
 
+function showvision_tooltip( unit )
+	return string.format( "<ttheader>%s\n<ttbody>%s</>", util.sformat(STRINGS.UITWEAKSR.UI.BTN_UNITVISION_HEADER, util.toupper(unit:getName())), STRINGS.UITWEAKSR.UI.BTN_UNITVISION_HIDE_TXT )
+end
+
+local hidevision_tooltip = class( mui_tooltip )
+
+function hidevision_tooltip:init( hud, unit )
+	mui_tooltip.init( self, util.sformat(STRINGS.UITWEAKSR.UI.BTN_UNITVISION_HEADER, util.toupper(unit:getName())), STRINGS.UITWEAKSR.UI.BTN_UNITVISION_HIDE_TXT, nil )
+	self._game = hud._game
+	self._unit = unit
+end
+
+function hidevision_tooltip:activate( screen )
+	mui_tooltip.activate( self, screen )
+
+	local sim = self._game.simCore
+	sim:getTags().uitr_oneVision = self._unit:getID()
+	self._game.boardRig:refresh()
+end
+
+function hidevision_tooltip:deactivate()
+	mui_tooltip.deactivate( self )
+
+	local sim = self._game.simCore
+	sim:getTags().uitr_oneVision = nil
+	self._game.boardRig:refresh()
+end
+
+-- ====
+
 local function addVisionActionsForUnit( hud, actions, targetUnit, isSeen )
 	local localPlayer = hud._game:getLocalPlayer()
 	local x,y = targetUnit:getLocation()
@@ -77,7 +107,7 @@ local function addVisionActionsForUnit( hud, actions, targetUnit, isSeen )
 		return
 	end
 
-	if unitCanSee then
+	if unitCanSee and not isSeen then
 		table.insert( actions,
 		{
 			txt = "",
@@ -115,9 +145,7 @@ local function addVisionActionsForUnit( hud, actions, targetUnit, isSeen )
 			x = x, y = y,
 			enabled = true,
 			layoutID = targetUnit:getID(),
-			tooltip = string.format( "<ttheader>%s\n<ttbody>%s</>",
-					STRINGS.UITWEAKSR.UI.BTN_UNITVISION_HEADER,
-					(doEnable and STRINGS.UITWEAKSR.UI.BTN_UNITVISION_HIDE_TXT or STRINGS.UITWEAKSR.UI.BTN_UNITVISION_SHOW_TXT) ),
+			tooltip = doEnable and hidevision_tooltip( hud, targetUnit ) or showvision_tooltip( targetUnit ),
 			priority = -5,
 			onClick =
 				function()
