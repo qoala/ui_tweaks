@@ -1,7 +1,9 @@
 local hud = include( "hud/hud" )
+local mui_defs = include( "mui/mui_defs")
 local mui_tooltip = include( "mui/mui_tooltip")
 local util = include( "client_util" )
 local simdefs = include( "sim/simdefs" )
+local simquery = include( "sim/simquery" )
 
 local function onClickVisionToggle( hud )
 	hud:uitr_setVisionMode( not hud._uitr_isVisionMode )
@@ -25,6 +27,24 @@ function hud_uitr_setVisionMode( hud, doEnable )
 	hud:refreshHud()
 end
 
+function hud_updateVisionTooltip( hud )
+	local sim = hud._game.simCore
+	local localPlayer = hud._game:getLocalPlayer()
+
+	if localPlayer and hud._tooltipX and hud._tooltipY then
+		local prevOneCellVision = sim:getTags().uitr_oneCellVision
+		if util.isKeyBindingDown( "UITR_ONECELLVISION" ) then
+			sim:getTags().uitr_oneCellVision = simquery.toCellID(hud._tooltipX, hud._tooltipY)
+		else
+			sim:getTags().uitr_oneCellVision = nil
+		end
+
+		if prevOneCellVision ~= sim:getTags().uitr_oneCellVision then
+			hud._game.boardRig:refresh()
+		end
+	end
+end
+
 local oldCreateHud = hud.createHud
 
 hud.createHud = function( ... )
@@ -44,6 +64,13 @@ hud.createHud = function( ... )
 			end
 
 			return result
+		end
+
+		local oldUpdateHud = hudObject.updateHud
+		function hudObject:updateHud( ... )
+			hud_updateVisionTooltip( self )
+
+			return oldUpdateHud( self, ... )
 		end
 
 		btnToggleVisionMode:setTooltip( visionModeTooltip( false ) )
