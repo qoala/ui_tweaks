@@ -133,7 +133,7 @@ local function addVisionActionsForUnit( hud, actions, targetUnit, isSeen )
 		return
 	end
 
-	if unitCanSee and not isSeen then
+	if unitCanSee and (not isSeen or targetUnit:getPlayerOwner() == localPlayer) then
 		table.insert( actions,
 		{
 			txt = "",
@@ -162,7 +162,7 @@ local function addVisionActionsForUnit( hud, actions, targetUnit, isSeen )
 			priority = -9,
 		})
 	end
-	if canNormallySeeLOS and unitCanSee and targetUnit:getPlayerOwner() ~= localPlayer then
+	if unitCanSee and canNormallySeeLOS and targetUnit:getPlayerOwner() ~= localPlayer then
 		local doEnable = not targetUnit:getTraits().uitr_hideVision
 		table.insert( actions,
 		{
