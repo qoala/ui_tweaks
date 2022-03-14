@@ -27,6 +27,10 @@ function hud_uitr_setVisionMode( hud, doEnable )
 	hud:refreshHud()
 end
 
+function hud_refreshTooltip( hud )
+	hud._forceTooltipRefresh = true
+end
+
 function hud_updateVision( hud )
 	local sim = hud._game.simCore
 	local localPlayer = hud._game:getLocalPlayer()
@@ -45,6 +49,7 @@ function hud_updateVision( hud )
 	end
 	if prevOneCellVision ~= sim:getTags().uitr_oneCellVision then
 		hud._game.boardRig:refresh()
+		hud_refreshTooltip( hud )
 	end
 end
 
