@@ -99,6 +99,7 @@ end
 local function addVisionActionsForUnit( hud, actions, targetUnit, isSeen )
 	local localPlayer = hud._game:getLocalPlayer()
 	local x,y = targetUnit:getLocation()
+	local z = targetUnit:getTraits().breakIceOffset -- nil for most units. Z offset for cameras.
 	local sim = hud._game.simCore
 	local unitCanSee = simquery.couldUnitSee( sim, targetUnit )
 	local canNormallySeeLOS = sim:getParams().difficultyOptions.dangerZones or isSeen
@@ -112,7 +113,7 @@ local function addVisionActionsForUnit( hud, actions, targetUnit, isSeen )
 		{
 			txt = "",
 			icon = "gui/items/icon-action_peek.png",
-			x = x, y = y,
+			x = x, y = y, z = z,
 			enabled = false,
 			layoutID = targetUnit:getID(),
 			tooltip = vision_tooltip( hud, targetUnit ),
@@ -129,7 +130,7 @@ local function addVisionActionsForUnit( hud, actions, targetUnit, isSeen )
 		{
 			txt = "",
 			icon = "gui/items/icon-emp.png",
-			x = x, y = y,
+			x = x, y = y, z = z,
 			enabled = false,
 			layoutID = targetUnit:getID(),
 			tooltip = explode_tooltip( hud, targetUnit ),
@@ -142,7 +143,7 @@ local function addVisionActionsForUnit( hud, actions, targetUnit, isSeen )
 		{
 			txt = "",
 			icon = doEnable and "gui/items/icon-action_peek.png" or "gui/items/uitr-icon-action_unpeek.png",
-			x = x, y = y,
+			x = x, y = y, z = z,
 			enabled = true,
 			layoutID = targetUnit:getID(),
 			tooltip = doEnable and hidevision_tooltip( hud, targetUnit ) or showvision_tooltip( targetUnit ),
