@@ -27,21 +27,24 @@ function hud_uitr_setVisionMode( hud, doEnable )
 	hud:refreshHud()
 end
 
-function hud_updateVisionTooltip( hud )
+function hud_updateVision( hud )
 	local sim = hud._game.simCore
 	local localPlayer = hud._game:getLocalPlayer()
 
-	if localPlayer and hud._tooltipX and hud._tooltipY then
-		local prevOneCellVision = sim:getTags().uitr_oneCellVision
-		if util.isKeyBindingDown( "UITR_VISIONMODE" ) then
-			sim:getTags().uitr_oneCellVision = simquery.toCellID(hud._tooltipX, hud._tooltipY)
-		else
-			sim:getTags().uitr_oneCellVision = nil
-		end
+	local keyBindingDown = util.isKeyBindingDown( "UITR_VISIONMODE" )
+	if keyBindingDown ~= hud._uitr_visionKeyBindingDown then
+		hud._uitr_visionKeyBindingDown = keyBindingDown
+		hud:uitr_setVisionMode( keyBindingDown )
+	end
 
-		if prevOneCellVision ~= sim:getTags().uitr_oneCellVision then
-			hud._game.boardRig:refresh()
-		end
+	local prevOneCellVision = sim:getTags().uitr_oneCellVision
+	if localPlayer and hud._tooltipX and hud._tooltipY and keyBindingDown and sim:getCurrentPlayer() == localPlayer then
+		sim:getTags().uitr_oneCellVision = simquery.toCellID(hud._tooltipX, hud._tooltipY)
+	else
+		sim:getTags().uitr_oneCellVision = nil
+	end
+	if prevOneCellVision ~= sim:getTags().uitr_oneCellVision then
+		hud._game.boardRig:refresh()
 	end
 end
 
@@ -68,14 +71,15 @@ hud.createHud = function( ... )
 
 		local oldUpdateHud = hudObject.updateHud
 		function hudObject:updateHud( ... )
-			hud_updateVisionTooltip( self )
+			oldUpdateHud( self, ... )
 
-			return oldUpdateHud( self, ... )
+			hud_updateVision( self )
 		end
 
 		btnToggleVisionMode:setTooltip( visionModeTooltip( false ) )
 		btnToggleVisionMode.onClick = util.makeDelegate( nil, onClickVisionToggle, hudObject )
-		btnToggleVisionMode:setHotkey( "UITR_VISIONMODE" )
+		-- Implemented as press-and-hold in hud_updateVision
+		-- btnToggleVisionMode:setHotkey( "UITR_VISIONMODE" )
 	end
 
 	return hudObject
