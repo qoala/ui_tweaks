@@ -42,8 +42,14 @@ function hud_updateVision( hud )
 	end
 
 	local prevOneCellVision = sim:getTags().uitr_oneCellVision
-	if localPlayer and hud._tooltipX and hud._tooltipY and keyBindingDown and sim:getCurrentPlayer() == localPlayer then
-		sim:getTags().uitr_oneCellVision = simquery.toCellID(hud._tooltipX, hud._tooltipY)
+	local x,y = hud._tooltipX, hud._tooltipY
+	if keyBindingDown and localPlayer and sim:getCurrentPlayer() == localPlayer then
+		if x and y and sim:canPlayerSee( localPlayer, x, y ) then
+			sim:getTags().uitr_oneCellVision = simquery.toCellID(x, y)
+		else
+			-- Match no vision sources.
+			sim:getTags().uitr_oneCellVision = true
+		end
 	else
 		sim:getTags().uitr_oneCellVision = nil
 	end
