@@ -81,16 +81,41 @@ end
 function hidevision_tooltip:activate( screen )
 	mui_tooltip.activate( self, screen )
 
+	-- Enable one-unit-vision.
 	local sim = self._game.simCore
 	sim:getTags().uitr_oneVision = self._unit:getID()
+
+	-- Show player-unseen cells that are seen by this unit (because normal vision won't).
+	-- So that tooltip on a seen unit isn't worse than on a ghost.
+	local localPlayer = self._game:getLocalPlayer()
+	local losCoords, cells = {}, {}
+	sim:getLOS():getVizCells( self._unit:getID(), losCoords )
+	for i = 1, #losCoords, 2 do
+		local x, y = losCoords[i], losCoords[i+1]
+		if not sim:canPlayerSee( localPlayer, x, y ) then
+			table.insert( cells, sim:getCell( x, y ))
+		end
+	end
+	if #cells > 0 then
+		self._hiliteID = self._game.boardRig:hiliteCells( cells )
+	end
+
 	self._game.boardRig:refresh()
 end
 
 function hidevision_tooltip:deactivate()
 	mui_tooltip.deactivate( self )
 
+	-- Reset one-unit-vision.
 	local sim = self._game.simCore
 	sim:getTags().uitr_oneVision = nil
+
+	-- Reset unseen highlighted cells.
+	if self._hiliteID then
+		self._game.boardRig:unhiliteCells( self._hiliteID )
+		self._hiliteID = nil
+	end
+
 	self._game.boardRig:refresh()
 end
 
