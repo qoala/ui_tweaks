@@ -5,6 +5,8 @@ local function earlyInit( modApi )
 		"Neptune Corporation",
 		-- RRNI (precise icons) overrides NIAA icons when available.
 		"New Items And Augments",
+		-- Disable Action Camera overwrites client/gameplay/boardrig.
+		"Disable Action Camera",
 	}
 end
 
@@ -31,7 +33,10 @@ local function init( modApi )
 
 	local dataPath = modApi:getDataPath()
 	KLEIResourceMgr.MountPackage( dataPath .. "/gui.kwad", "data" )
+	KLEIResourceMgr.MountPackage( dataPath .. "/images.kwad", "data" )
 	KLEIResourceMgr.MountPackage( dataPath .. "/rrni_gui.kwad", "data" )
+
+	include( modApi:getScriptPath() .. "/resources" ).initUitrResources()
 
 	include( modApi:getScriptPath() .. "/doors_while_dragging" )
 	include( modApi:getScriptPath() .. "/empty_pockets" )
@@ -42,6 +47,7 @@ local function init( modApi )
 	include( modApi:getScriptPath() .. "/xu_shank" )
 
 	include( modApi:getScriptPath() .. "/client_defs" )
+	include( modApi:getScriptPath() .. "/board_rig" )
 	include( modApi:getScriptPath() .. "/agent_actions" )
 	include( modApi:getScriptPath() .. "/hud" )
 	include( modApi:getScriptPath() .. "/engine" )

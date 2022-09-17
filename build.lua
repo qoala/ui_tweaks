@@ -41,12 +41,12 @@ function CreatePackage()
 	local options = CreateOptionsTBL( TF.RGBA8, 1.0, true, true, false )
 
 	-- IMAGES
-	-- local package = Package:new( "images", MaxPackageSize, options )
-	-- package:CreateAtlas( TF.BC3, MaxTextureWidth, MaxTextureHeight, AtlasStyle.Increasing )
-	-- PackageFolder( package, "./images", true, function(srcpath)
-	-- 	return string.find(srcpath, ".png", -4) ~= nil
-	-- end )
-	-- package:Save( build_options.outputpath, "images.kwad" )
+	local package = Package:new( "images", MaxPackageSize, options )
+	package:CreateAtlas( TF.BC3, MaxTextureWidth, MaxTextureHeight, AtlasStyle.Increasing )
+	PackageFolder( package, "./images", true, function(srcpath)
+		return string.find(srcpath, ".png", -4) ~= nil
+	end )
+	package:Save( build_options.outputpath, "images.kwad" )
 
 	-- GUI
 	local package = Package:new( "gui", MaxPackageSize, options )
