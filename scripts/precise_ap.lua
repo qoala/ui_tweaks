@@ -28,7 +28,7 @@ function home_panel.panel:refreshAgent( unit, ... )
 	oldRefreshAgent( self, unit, ... )
 
 	local uiTweaks = self._hud._game.simCore:getParams().difficultyOptions.uiTweaks
-	if not uiTweaks or not uiTweaks.preciseAP then
+	if not uiTweaks or not uiTweaks.preciseAp then
 		return
 	end
 
