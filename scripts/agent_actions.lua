@@ -66,6 +66,31 @@ end
 
 -- ====
 
+local pulse_scan_tooltip = class( mui_tooltip )
+
+function pulse_scan_tooltip:init( hud, unit )
+	mui_tooltip.init( self, util.sformat(STRINGS.UITWEAKSR.UI.PULSE_EFFECT, util.toupper(unit:getName())), nil, nil )
+	self._game = hud._game
+	self._unit = unit
+end
+
+function pulse_scan_tooltip:activate( screen )
+	mui_tooltip.activate( self, screen )
+
+	local unit = self._unit
+	local cells = unit:getAreaCells()
+
+	self._hiliteID = self._game.boardRig:hiliteCells( cells )
+end
+
+function pulse_scan_tooltip:deactivate()
+	mui_tooltip.deactivate( self )
+	self._game.boardRig:unhiliteCells( self._hiliteID )
+	self._hiliteID = nil
+end
+
+-- ====
+
 function showvision_tooltip( unit )
 	return string.format( "<ttheader>%s\n<ttbody>%s</>", util.sformat(STRINGS.UITWEAKSR.UI.BTN_UNITVISION_HEADER, util.toupper(unit:getName())), STRINGS.UITWEAKSR.UI.BTN_UNITVISION_HIDE_TXT )
 end
@@ -160,6 +185,18 @@ local function addVisionActionsForUnit( hud, actions, targetUnit, isSeen )
 			layoutID = targetUnit:getID(),
 			tooltip = explode_tooltip( hud, targetUnit ),
 			priority = -9,
+		})
+	end
+	if targetUnit:getTraits().pulseScan and targetUnit:getTraits().range > 0 then
+		table.insert( actions,
+		{
+			txt = "",
+			icon = "gui/items/icon-emp.png",
+			x = x, y = y, z = z,
+			enabled = false,
+			layoutID = targetUnit:getID(),
+			tooltip = pulse_scan_tooltip( hud, targetUnit ),
+			priority = -8,
 		})
 	end
 	if unitCanSee and canNormallySeeLOS and targetUnit:getPlayerOwner() ~= localPlayer then
