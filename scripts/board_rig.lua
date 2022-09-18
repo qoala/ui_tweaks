@@ -117,7 +117,7 @@ local function isTrackingWatched(sim, trackingThreats, selectedUnit, cell, prevC
 		if not tracker.lost then
 			-- Threat will turn to face immediately.
 			watchedCells = tracker:predictLos(facing)
-		elseif couldSee and tracker:predictPeripheralLos(tracker.facing)[cell.id] and not simquery.checkCover(sim, threat, prevCell.x, prevCell.y) then
+		elseif couldSee and prevCell and tracker:predictPeripheralLos(tracker.facing)[cell.id] and not simquery.checkCover(sim, threat, prevCell.x, prevCell.y) then
 			-- We just stepped into peripheral from a visible cell.
 			-- Threat will turn to face the previous cell.
 			tracker.facing = simquery.getDirectionFromDelta(prevCell.x-tx, prevCell.y-ty)
@@ -132,18 +132,46 @@ local function isTrackingWatched(sim, trackingThreats, selectedUnit, cell, prevC
 			tracker.lost = false
 			tracker.facing = facing
 			foundThreat = foundThreat or threat
-			simlog("UITR: %s %d,%d facing=%d SHOT", threat:getName(), cell.x, cell.y, tracker.facing)
 		elseif not tracker.lost or (couldSee and tracker:predictPeripheralLos(tracker.facing)[cell.id]) then
 			-- We just left sight, or we are stepping through peripheral.
 			-- Threat will turn to track.
 			tracker.lost = true
 			tracker.facing = facing
-			simlog("UITR: %s %d,%d facing=%d TURN", threat:getName(), cell.x, cell.y, tracker.facing)
-		else
-			simlog("UITR: %s %d,%d facing=%d", threat:getName(), cell.x, cell.y, tracker.facing)
 		end
 	end
 	return foundThreat
+end
+
+local function clearLosCache(trackingThreats)
+	for _,tracker in ipairs(trackingThreats) do
+		-- Clear LOS cache
+		tracker._losByFacing = {}
+		tracker._peripheralLosByFacing = {}
+	end
+end
+
+local function predictDoorOpening(sim, tempDoors, prevCell, cell)
+	local dir = simquery.getDirectionFromDelta(cell.x-prevCell.x, cell.y-prevCell.y)
+	local willOpen = (prevCell.exits[dir] and prevCell.exits[dir].door and prevCell.exits[dir].closed)
+
+	if willOpen then
+		local rdir = simquery.getReverseDirection(dir)
+		table.insert(tempDoors, {prevCell=prevCell, dir=dir, cell=cell, rdir=rdir})
+
+		sim:getLOS():removeSegments(prevCell, dir, cell, rdir)
+		prevCell.exits[dir].closed = nil
+		cell.exits[rdir].closed = nil
+	end
+
+	return willOpen
+end
+
+local function restoreDoors(sim, tempDoors)
+	for _,door in ipairs(tempDoors) do
+		sim:getLOS():insertSegments(door.prevCell, door.dir, door.cell, door.rdir)
+		door.prevCell.exits[door.dir].closed = true
+		door.cell.exits[door.rdir].closed = true
+	end
 end
 
 local function newShootProp(self, cell, color)
@@ -184,18 +212,36 @@ function boardrig:chainCells( cells, color, ... )
 
 	-- Mark movement cells that get us shot.
 	local fgProps = {}
+	local tempDoors = {}
 	local prevCell = nil
+	local prevCellThreat = nil
 	for i,coord in ipairs(cells) do
 		local cell = sim:getCell(coord.x, coord.y)
+		if prevCell and predictDoorOpening(sim, tempDoors, prevCell, cell) then
+			clearLosCache(trackingThreats)
+
+			if not prevCellThreat and isWatchedByThreat(sim, threats, selectedUnit, prevCell) then
+				table.insert(fgProps, newShootProp(self, prevCell, color))
+			elseif not prevCellThreat and  isTrackingWatched(sim, trackingThreats, selectedUnit, prevCell, nil) then
+				table.insert(fgProps, newShootProp(self, prevCell, color))
+			end
+		end
+
 		if not prevCell then
 			-- Skip the origin cell of the path.
+			prevCellThreat = false
 		elseif isWatchedByThreat(sim, threats, selectedUnit, cell) then
 			table.insert(fgProps, newShootProp(self, cell, color))
+			prevCellThreat = true
 		elseif isTrackingWatched(sim, trackingThreats, selectedUnit, cell, prevCell) then
 			table.insert(fgProps, newShootProp(self, cell, color))
+			prevCellThreat = true
+		else
+			prevCellThreat = false
 		end
 		prevCell = cell
 	end
+	restoreDoors(sim, tempDoors)
 
 	local layer = self:getLayer("ceiling")
 	for _,prop in ipairs(fgProps) do
