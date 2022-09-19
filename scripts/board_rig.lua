@@ -5,6 +5,8 @@ local array = include( "modules/array" )
 local simdefs = include( "sim/simdefs" )
 local simquery = include( "sim/simquery" )
 
+local cbf_util = SCRIPT_PATHS and SCRIPT_PATHS.qoala_commbugfix and include( SCRIPT_PATHS.qoala_commbugfix .. "/cbf_util" )
+
 -- ===
 
 local function predictLOS(sim, unit, facing)
@@ -15,19 +17,21 @@ local function predictLOS(sim, unit, facing)
 
 	local cells = sim:getLOS():calculateLOS(startCell, facingRads, halfArc, distance)
 
+	local cbfFixMagic = cbf_util and cbf_util.simCheckFlag(sim, "cbf_fixmagicsight")
+
 	-- (magic vision)
-	if unit:getTraits().LOSrads == nil and facing % 2 == 1 then
+	if unit:getTraits().LOSrads == nil and facing % 2 == 1 and (not cbfFixMagic or not unit:isPC()) then
 		-- MAGICAL SIGHT.  On a diagonal facing, see the adjacent two cells.
 		local exit1 = startCell.exits[ (facing + 1) % simdefs.DIR_MAX ]
-		if simquery.isOpenExit( exit1 ) then
+		if simquery.isOpenExit( exit1 ) and (not cbfFixMagic or simquery.couldUnitSeeCell(sim, unit, exit1.cell)) then
 			cells[ simquery.toCellID( exit1.cell.x, exit1.cell.y ) ] = exit1.cell
 		end
 		local exit2 = startCell.exits[ (facing - 1) % simdefs.DIR_MAX ]
-		if simquery.isOpenExit( exit2 ) then
+		if simquery.isOpenExit( exit2 ) and (not cbfFixMagic or simquery.couldUnitSeeCell(sim, unit, exit2.cell)) then
 			cells[ simquery.toCellID( exit2.cell.x, exit2.cell.y ) ] = exit2.cell
 		end
 
-	elseif unit:getTraits().LOSarc and unit:getTraits().LOSarc >= 2 * math.pi then
+	elseif unit:getTraits().LOSarc and unit:getTraits().LOSarc >= 2 * math.pi and (not cbfFixMagic or unit:isPC()) then
 		for i, dir in ipairs( simdefs.DIR_SIDES ) do
 			local exit1 = startCell.exits[ dir ]
 			if simquery.isOpenExit( exit1 ) then
