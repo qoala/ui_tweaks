@@ -2,23 +2,47 @@ local boardrig = include( "gameplay/boardrig" )
 local cdefs = include( "client_defs" )
 local resources = include( "resources" )
 local array = include( "modules/array" )
+local simdefs = include( "sim/simdefs" )
 local simquery = include( "sim/simquery" )
 
 -- ===
 
-local function predictLOS(sim, unit, predictedFacing)
+local function predictLOS(sim, unit, facing)
 	local startCell = sim:getCell(unit:getLocation())
-    local halfArc = simquery.getLOSArc( unit ) / 2
-    local distance = unit:getTraits().LOSrange
-	local facingRads = unit:getTraits().LOSrads or (math.pi / 4 * predictedFacing)
+	local halfArc = simquery.getLOSArc( unit ) / 2
+	local distance = unit:getTraits().LOSrange
+	local facingRads = unit:getTraits().LOSrads or (math.pi / 4 * facing)
 
-	return sim:getLOS():calculateLOS(startCell, facingRads, halfArc, distance)
+	local cells = sim:getLOS():calculateLOS(startCell, facingRads, halfArc, distance)
+
+	-- (magic vision)
+	if unit:getTraits().LOSrads == nil and facing % 2 == 1 then
+		-- MAGICAL SIGHT.  On a diagonal facing, see the adjacent two cells.
+		local exit1 = startCell.exits[ (facing + 1) % simdefs.DIR_MAX ]
+		if simquery.isOpenExit( exit1 ) then
+			cells[ simquery.toCellID( exit1.cell.x, exit1.cell.y ) ] = exit1.cell
+		end
+		local exit2 = startCell.exits[ (facing - 1) % simdefs.DIR_MAX ]
+		if simquery.isOpenExit( exit2 ) then
+			cells[ simquery.toCellID( exit2.cell.x, exit2.cell.y ) ] = exit2.cell
+		end
+
+	elseif unit:getTraits().LOSarc and unit:getTraits().LOSarc >= 2 * math.pi then
+		for i, dir in ipairs( simdefs.DIR_SIDES ) do
+			local exit1 = startCell.exits[ dir ]
+			if simquery.isOpenExit( exit1 ) then
+				cells[ simquery.toCellID( exit1.cell.x, exit1.cell.y ) ] = exit1.cell
+			end
+		end
+	end
+
+	return cells
 end
 
 local function predictPeripheralLOS(sim, unit, predictedFacing)
 	local startCell = sim:getCell(unit:getLocation())
-    local halfArc = unit:getTraits().LOSperipheralArc / 2
-    local distance = unit:getTraits().LOSperipheralRange
+	local halfArc = unit:getTraits().LOSperipheralArc / 2
+	local distance = unit:getTraits().LOSperipheralRange
 	local facingRads = unit:getTraits().LOSrads or (math.pi / 4 * predictedFacing)
 
 	return sim:getLOS():calculateLOS(startCell, facingRads, halfArc, distance)
@@ -261,8 +285,10 @@ function boardrig:chainCells( cells, color, ... )
 		end
 
 		if not prevCell then
-			-- Skip the origin cell of the path.
+			-- Don't mark the origin cell of the path, even if it's obviously watched.
 			prevCellThreat = false
+			-- We still want to update possible peripheral rotations though.
+			isWatchedByGuard(sim, guardThreats, selectedUnit, cell, nil)
 		elseif isWatchedByGuard(sim, guardThreats, selectedUnit, cell, prevCell) then
 			table.insert(fgProps, newShootProp(self, cell, color))
 			prevCellThreat = true
