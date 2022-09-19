@@ -47,66 +47,90 @@ local function trackerPredictPeripheralLos(self, facing)
 end
 
 local function findThreats(sim, selectedUnit)
-	local threats = {}
-	local trackingThreats = {}
+	local turretThreats = {}
+	local guardThreats = {}
 	for _,unit in pairs(sim:getAllUnits()) do
 		if simquery.isEnemyAgent(unit:getPlayerOwner(), selectedUnit) and (unit:isAiming() or unit:getTraits().skipOverwatch) and not unit:getTraits().pacifist then
-			local tracking = false
-			-- Note: This is just for guards/drones. Turrets don't actually track around the edge of their vision!
+			-- Note: Most logic is just for guards/drones. Turrets don't actually track around the edge of their vision!
 			if unit:getBrain() then
 				local senses = unit:getBrain():getSenses()
 				if senses:hasTarget(selectedUnit) then
-					local facing = unit:getFacing()
 					local tracker = {
 						threat=unit,
-						facing=facing,
-						lost=false,
+						facing=unit:getFacing(),
+						tracking=true,
+						inSight=true,
 						_sim=sim,
 						_losByFacing={},
 						_peripheralLosByFacing={},
 						predictLos=trackerPredictLos,
 						predictPeripheralLos=trackerPredictPeripheralLos,
 					}
-					table.insert(trackingThreats, tracker)
-					tracking = true
+					table.insert(guardThreats, tracker)
 				elseif senses:hasLostTarget(selectedUnit) then
-					local facing = unit:getFacing()
 					local tracker = {
 						threat=unit,
-						facing=facing,
-						lost=true,
+						facing=unit:getFacing(),
+						tracking=true,
+						inSight=false,
 						_sim=sim,
 						_losByFacing={},
 						_peripheralLosByFacing={},
 						predictLos=trackerPredictLos,
 						predictPeripheralLos=trackerPredictPeripheralLos,
 					}
-					table.insert(trackingThreats, tracker)
-					tracking = true
+					table.insert(guardThreats, tracker)
+				else
+					local tracker = {
+						threat=unit,
+						facing=unit:getFacing(),
+						tracking=false,
+						inSight=false,
+						_sim=sim,
+						_losByFacing={},
+						_peripheralLosByFacing={},
+						predictLos=trackerPredictLos,
+						predictPeripheralLos=trackerPredictPeripheralLos,
+					}
+					table.insert(guardThreats, tracker)
 				end
-			end
-			if not tracking then
-				table.insert(threats, unit)
+			else
+				local tracker = {
+					threat=unit,
+					facing=unit:getFacing(),
+					_sim=sim,
+					_losByFacing={},
+					_peripheralLosByFacing={},
+					predictLos=trackerPredictLos,
+					predictPeripheralLos=trackerPredictPeripheralLos,
+				}
+				table.insert(turretThreats, tracker)
 			end
 		end
 	end
 
-	return threats, trackingThreats
+	return guardThreats, turretThreats
 end
 
-local function isWatchedByThreat(sim, threats, selectedUnit, cell)
-	local seers = sim:getLOS():getSeers(cell.x, cell.y)
-	for _,seerID in ipairs(seers) do
-		local threat = array.findIf(threats, function(threat) return threat:getID() == seerID end)
-		if threat and simquery.couldUnitSee(sim, threat, selectedUnit, false, cell) then
-			return threat
-		end
-	end
-end
-
-local function isTrackingWatched(sim, trackingThreats, selectedUnit, cell, prevCell)
+local function isWatchedByTurret(sim, turretThreats, selectedUnit, cell)
 	local foundThreat = nil
-	for _,tracker in ipairs(trackingThreats) do
+	for _,tracker in ipairs(turretThreats) do
+		local threat = tracker.threat
+		local watchedCells = tracker:predictLos(tracker.facing)
+		local couldSee = simquery.couldUnitSee(sim, threat, selectedUnit, false, cell)
+
+		if couldSee and watchedCells[cell.id] then
+			local tx,ty = threat:getLocation()
+			tracker.facing = simquery.getDirectionFromDelta(cell.x-tx, cell.y-ty)
+			foundThreat = threat
+		end
+	end
+	return foundThreat
+end
+
+local function isWatchedByGuard(sim, guardThreats, selectedUnit, cell, prevCell)
+	local foundThreat = nil
+	for _,tracker in ipairs(guardThreats) do
 		local threat = tracker.threat
 		local tx,ty = threat:getLocation()
 		local facing = simquery.getDirectionFromDelta(cell.x-tx, cell.y-ty)
@@ -114,10 +138,10 @@ local function isTrackingWatched(sim, trackingThreats, selectedUnit, cell, prevC
 		local couldSee = simquery.couldUnitSee(sim, threat, selectedUnit, false, cell)
 
 		local watchedCells
-		if not tracker.lost then
+		if tracker.inSight then
 			-- Threat will turn to face immediately.
 			watchedCells = tracker:predictLos(facing)
-		elseif couldSee and prevCell and tracker:predictPeripheralLos(tracker.facing)[cell.id] and not simquery.checkCover(sim, threat, prevCell.x, prevCell.y) then
+		elseif tracker.tracking and couldSee and prevCell and tracker:predictPeripheralLos(tracker.facing)[cell.id] and not simquery.checkCover(sim, threat, prevCell.x, prevCell.y) then
 			-- We just stepped into peripheral from a visible cell.
 			-- Threat will turn to face the previous cell.
 			tracker.facing = simquery.getDirectionFromDelta(prevCell.x-tx, prevCell.y-ty)
@@ -129,21 +153,27 @@ local function isTrackingWatched(sim, trackingThreats, selectedUnit, cell, prevC
 
 		if couldSee and watchedCells[cell.id] then
 			-- Threat will see us.
-			tracker.lost = false
+			tracker.tracking = true
+			tracker.inSight = true
 			tracker.facing = facing
 			foundThreat = foundThreat or threat
-		elseif not tracker.lost or (couldSee and tracker:predictPeripheralLos(tracker.facing)[cell.id]) then
+		elseif tracker.inSight or (tracker.tracking and couldSee and tracker:predictPeripheralLos(tracker.facing)[cell.id]) then
 			-- We just left sight, or we are stepping through peripheral.
 			-- Threat will turn to track.
-			tracker.lost = true
+			tracker.inSight = false
 			tracker.facing = facing
 		end
 	end
 	return foundThreat
 end
 
-local function clearLosCache(trackingThreats)
-	for _,tracker in ipairs(trackingThreats) do
+local function clearLosCache(guardThreats, turretThreats)
+	for _,tracker in ipairs(guardThreats) do
+		-- Clear LOS cache
+		tracker._losByFacing = {}
+		tracker._peripheralLosByFacing = {}
+	end
+	for _,tracker in ipairs(turretThreats) do
 		-- Clear LOS cache
 		tracker._losByFacing = {}
 		tracker._peripheralLosByFacing = {}
@@ -205,8 +235,8 @@ function boardrig:chainCells( cells, color, ... )
 	end
 
 	-- Identify threats that could shoot us.
-	local threats, trackingThreats = findThreats(sim, selectedUnit)
-	if not next(threats) and not next(trackingThreats) then
+	local guardThreats, turretThreats = findThreats(sim, selectedUnit)
+	if not next(guardThreats) and not next(turretThreats) then
 		return id
 	end
 
@@ -218,11 +248,11 @@ function boardrig:chainCells( cells, color, ... )
 	for i,coord in ipairs(cells) do
 		local cell = sim:getCell(coord.x, coord.y)
 		if prevCell and predictDoorOpening(sim, tempDoors, prevCell, cell) then
-			clearLosCache(trackingThreats)
+			clearLosCache(guardThreats, turretThreats)
 
-			if not prevCellThreat and isWatchedByThreat(sim, threats, selectedUnit, prevCell) then
+			if not prevCellThreat and  isWatchedByGuard(sim, guardThreats, selectedUnit, prevCell, nil) then
 				table.insert(fgProps, newShootProp(self, prevCell, color))
-			elseif not prevCellThreat and  isTrackingWatched(sim, trackingThreats, selectedUnit, prevCell, nil) then
+			elseif not prevCellThreat and isWatchedByTurret(sim, turretThreats, selectedUnit, prevCell) then
 				table.insert(fgProps, newShootProp(self, prevCell, color))
 			end
 		end
@@ -230,10 +260,10 @@ function boardrig:chainCells( cells, color, ... )
 		if not prevCell then
 			-- Skip the origin cell of the path.
 			prevCellThreat = false
-		elseif isWatchedByThreat(sim, threats, selectedUnit, cell) then
+		elseif isWatchedByGuard(sim, guardThreats, selectedUnit, cell, prevCell) then
 			table.insert(fgProps, newShootProp(self, cell, color))
 			prevCellThreat = true
-		elseif isTrackingWatched(sim, trackingThreats, selectedUnit, cell, prevCell) then
+		elseif isWatchedByTurret(sim, turretThreats, selectedUnit, cell) then
 			table.insert(fgProps, newShootProp(self, cell, color))
 			prevCellThreat = true
 		else
