@@ -141,6 +141,9 @@ local function isWatchedByGuard(sim, guardThreats, selectedUnit, cell, prevCell)
 		if tracker.inSight then
 			-- Threat will turn to face immediately.
 			watchedCells = tracker:predictLos(facing)
+		elseif tracker:predictLos(tracker.facing)[cell.id] then
+			-- We just stepped into main vision.
+			watchedCells = tracker:predictLos(tracker.facing)
 		elseif tracker.tracking and couldSee and prevCell and tracker:predictPeripheralLos(tracker.facing)[cell.id] and not simquery.checkCover(sim, threat, prevCell.x, prevCell.y) then
 			-- We just stepped into peripheral from a visible cell.
 			-- Threat will turn to face the previous cell.
