@@ -12,6 +12,9 @@ end
 
 -- init will be called once
 local function init( modApi )
+	-- (This mod doesn't set its own script path, but relies on checking if other mods have done so)
+	rawset(_G,"SCRIPT_PATHS",rawget(_G,"SCRIPT_PATHS") or {})
+
 	modApi:addGenerationOption("precise_ap", STRINGS.UITWEAKSR.OPTIONS.PRECISE_AP, STRINGS.UITWEAKSR.OPTIONS.PRECISE_AP_TIP, {
 		noUpdate=true,
 		values={ false, 0.5 },
