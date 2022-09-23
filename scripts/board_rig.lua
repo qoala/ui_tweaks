@@ -44,6 +44,9 @@ local function predictLOS(sim, unit, facing)
 end
 
 local function predictPeripheralLOS(sim, unit, predictedFacing)
+	if not unit:getTraits().LOSperipheralArc then
+		return {}
+	end
 	local startCell = sim:getCell(unit:getLocation())
 	local halfArc = unit:getTraits().LOSperipheralArc / 2
 	local distance = unit:getTraits().LOSperipheralRange
