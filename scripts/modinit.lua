@@ -33,6 +33,22 @@ local function init( modApi )
 	})
 	modApi:addGenerationOption("step_carefully", STRINGS.UITWEAKSR.OPTIONS.STEP_CAREFULLY, STRINGS.UITWEAKSR.OPTIONS.STEP_CAREFULLY_TIP, { noUpdate=true })
 	modApi:addGenerationOption("xu_shank", STRINGS.UITWEAKSR.OPTIONS.XU_SHANK, STRINGS.UITWEAKSR.OPTIONS.XU_SHANK_TIP, { noUpdate=true })
+	
+	-- OLD: for agent filtering
+	-- modApi:addGenerationOption("selection_filter", STRINGS.UITWEAKSR.OPTIONS.SELECTION_FILTER, STRINGS.UITWEAKSR.OPTIONS.SELECTION_FILTER_TIP, {
+		-- noUpdate=true,
+		-- values={ false, "CYAN_SHADE", "CYAN_HILITE", "BLUE_SHADE", "BLUE_HILITE", },
+		-- value="CYAN_SHADE",
+		-- strings= STRINGS.UITWEAKSR.OPTIONS.SELECTION_FILTER_COLORS,
+	-- })	
+	
+	-- NEW: for ring filtering
+	modApi:addGenerationOption("selection_filter", STRINGS.UITWEAKSR.OPTIONS.SELECTION_FILTER, STRINGS.UITWEAKSR.OPTIONS.SELECTION_FILTER_TIP, {
+		noUpdate=true,
+		values={ false, "CYAN_SHADE", "WHITE_SHADE", "BLUE_SHADE",},
+		value="WHITE_SHADE",
+		strings= STRINGS.UITWEAKSR.OPTIONS.SELECTION_FILTER_COLORS,
+	})		
 
 	local dataPath = modApi:getDataPath()
 	KLEIResourceMgr.MountPackage( dataPath .. "/gui.kwad", "data" )
@@ -55,6 +71,8 @@ local function init( modApi )
 	include( modApi:getScriptPath() .. "/hud" )
 	include( modApi:getScriptPath() .. "/engine" )
 	include( modApi:getScriptPath() .. "/simquery" )
+	include( modApi:getScriptPath() .. "/agentrig" )
+	include( modApi:getScriptPath() .. "/hud_select_hilite" )
 end
 
 -- load may be called multiple times with different options enabled
@@ -71,6 +89,7 @@ local function load( modApi, options, params )
 		params.uiTweaks.preciseAp = options["precise_ap"] and options["precise_ap"].value
 		params.uiTweaks.stepCarefully = options["step_carefully"] and options["step_carefully"].enabled
         params.uiTweaks.xuShank = options["xu_shank"] and options["xu_shank"].enabled
+		params.uiTweaks.selectionFilter = options["selection_filter"] and options["selection_filter"].value
 
 		-- Save a fake option, in case this gets a campaign toggle later
 		options["vision_mode"] = { enabled=true }
