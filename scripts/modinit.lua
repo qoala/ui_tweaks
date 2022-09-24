@@ -45,7 +45,7 @@ local function init( modApi )
 	-- NEW: for ring filtering
 	modApi:addGenerationOption("selection_filter", STRINGS.UITWEAKSR.OPTIONS.SELECTION_FILTER, STRINGS.UITWEAKSR.OPTIONS.SELECTION_FILTER_TIP, {
 		noUpdate=true,
-		values={ false, "CYAN_SHADE", "WHITE_SHADE", "BLUE_SHADE",},
+		values={ false, "WHITE_SHADE", "CYAN_SHADE", "BLUE_SHADE",},
 		value="WHITE_SHADE",
 		strings= STRINGS.UITWEAKSR.OPTIONS.SELECTION_FILTER_COLORS,
 	})		
