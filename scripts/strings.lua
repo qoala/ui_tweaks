@@ -21,6 +21,16 @@ local UI_TWEAKS_STRINGS =
 		STEP_CAREFULLY_TIP = "Agents prefer to avoid watched/noticed tiles, while still choosing a path with the shortest distance",
 		XU_SHANK = "XU SHANK",
 		XU_SHANK_TIP = "Tony jabs devices with his arm instead of pulling out a laptop, to better match the augment icon. (animation change)",
+		
+		-- OLD: for unit filter
+		-- SELECTION_FILTER = "SELECTED AGENT HIGHLIGHT",
+		-- SELECTION_FILTER_TIP = "Selected agent is highlighted in a bright color of your choice.",
+		-- SELECTION_FILTER_COLORS = {"OFF/VANILLA","CYAN SHADER", "CYAN HIGHLIGHT","BLUE SHADER", "BLUE HIGHLIGHT"},
+		
+		-- NEW: for ring filter
+		SELECTION_FILTER = "SELECTED AGENT HIGHLIGHT",
+		SELECTION_FILTER_TIP = "Selected agent's tile is highlighted in a bright color of your choice.",
+		SELECTION_FILTER_COLORS = {"OFF/VANILLA","CYAN", "BLUE", "WHITE"},		
 	},
 
 	UI =
