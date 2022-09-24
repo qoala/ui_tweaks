@@ -72,7 +72,6 @@ local function init( modApi )
 	include( modApi:getScriptPath() .. "/engine" )
 	include( modApi:getScriptPath() .. "/simquery" )
 	include( modApi:getScriptPath() .. "/agentrig" )
-	include( modApi:getScriptPath() .. "/hud_select_hilite" )
 end
 
 -- load may be called multiple times with different options enabled

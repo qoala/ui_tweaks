@@ -1,7 +1,18 @@
 local agentrig = include( "gameplay/agentrig" ).rig
-local refresh_old = agentrig.refreshRenderFilter
 local cdefs = include( "client_defs" )
 local util = include( "modules/util" )
+
+-- Credit for selected highlights to Hekateras and Sizzlefrost.
+
+
+local oldSelectedToggle = agentrig.selectedToggle
+function agentrig:selectedToggle(toggle, ...)
+	oldSelectedToggle(self, toggle, ...)
+
+	self._uitrSelected = toggle
+	self:refreshRenderFilter()
+end
+
 
 
 -- FOR FILTERING THE RING
@@ -16,19 +27,31 @@ local FILTER_COLORS = {
 
 -- this version colours the HUD circle at the agent's feet instead of the agent. In the table above, I have marked with *** the filters I think look best here. The others were all picked for agent filtering. - Hek
 
-function agentrig.refreshRenderFilter(self)
-	refresh_old(self)
-	
+local oldRefreshRenderFilter = agentrig.refreshRenderFilter
+function agentrig:refreshRenderFilter(...)
+	oldRefreshRenderFilter(self, ...)
+
+	local uiTweaks = self._boardRig:getSim():getParams().difficultyOptions.uiTweaks
+	if not uiTweaks or uiTweaks.selectionFilter == false then
+		return
+	end
+
 	if self._renderFilterOverride then
-		self._prop:setRenderFilter( self._renderFilterOverride )
+		-- (override is for the prop. Reset circle to default)
+		if self._HUDteamCircle then
+			self._HUDteamCircle:setRenderFilter(cdefs.RENDER_FILTERS["default"])
+		end
+	elseif self._uitrSelected then
+		-- Apply selection filters
+		if self._HUDteamCircle then
+			local paramsColor = uiTweaks.selectionFilter or "CYAN_SHADE"
+			local filter = FILTER_COLORS[paramsColor] or cdefs.RENDER_FILTERS["default"]
+			self._HUDteamCircle:setRenderFilter( filter )
+		end
 	else
-		local unit = self._boardRig:getLastKnownUnit( self._unitID )
-		if unit then
-			self._prop:setPlayMode( self._playMode )
-			if unit:getTraits().selectedFilter and  self._HUDteamCircle then
-				local filter = FILTER_COLORS[unit:getTraits().selectedFilter] or cdefs.RENDER_FILTERS["default"]
-				self._HUDteamCircle:setRenderFilter( filter )
-			end
+		-- Not selected. Reset filters.
+		if self._HUDteamCircle then
+			self._HUDteamCircle:setRenderFilter(cdefs.RENDER_FILTERS["default"])
 		end
 	end
 
@@ -69,7 +92,7 @@ end
 
 -- function agentrig.refreshRenderFilter(self)
 	-- refresh_old(self)
-	
+
 	-- if self._renderFilterOverride then
 		-- self._prop:setRenderFilter( self._renderFilterOverride )
 	-- else
