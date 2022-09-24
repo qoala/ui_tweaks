@@ -30,7 +30,7 @@ local UI_TWEAKS_STRINGS =
 		-- NEW: for ring filter
 		SELECTION_FILTER = "SELECTED AGENT HIGHLIGHT",
 		SELECTION_FILTER_TIP = "Selected agent's tile is highlighted in a bright color of your choice.",
-		SELECTION_FILTER_COLORS = {"OFF/VANILLA","CYAN", "BLUE", "WHITE"},		
+		SELECTION_FILTER_COLORS = {"OFF/VANILLA", "WHITE", "CYAN", "BLUE"},		
 	},
 
 	UI =
