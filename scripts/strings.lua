@@ -5,7 +5,7 @@ local UI_TWEAKS_STRINGS =
 		PRECISE_AP = "PRECISE AP",
 		PRECISE_AP_TIP = "Round AP to .5 instead of whole number",
 		PRECISE_AP_HALF = "0.5",
-		
+
 		EMPTY_POCKETS = "THEIR POCKETS WERE EMPTY",
 		EMPTY_POCKETS_TIP = "Agents can attempt to steal if it would newly reveal that the target isn't carrying anything.\nAllows marking targets as Searched and Expertly Searched.",
 		INV_DRAGDROP = "INVENTORY DRAG/DROP REORDERING",
@@ -21,16 +21,16 @@ local UI_TWEAKS_STRINGS =
 		STEP_CAREFULLY_TIP = "Agents prefer to avoid watched/noticed tiles, while still choosing a path with the shortest distance",
 		XU_SHANK = "XU SHANK",
 		XU_SHANK_TIP = "Tony jabs devices with his arm instead of pulling out a laptop, to better match the augment icon. (animation change)",
-		
-		-- OLD: for unit filter
-		-- SELECTION_FILTER = "SELECTED AGENT HIGHLIGHT",
-		-- SELECTION_FILTER_TIP = "Selected agent is highlighted in a bright color of your choice.",
-		-- SELECTION_FILTER_COLORS = {"OFF/VANILLA","CYAN SHADER", "CYAN HIGHLIGHT","BLUE SHADER", "BLUE HIGHLIGHT"},
-		
-		-- NEW: for ring filter
-		SELECTION_FILTER = "SELECTED AGENT HIGHLIGHT",
-		SELECTION_FILTER_TIP = "Selected agent's tile is highlighted in a bright color of your choice.",
-		SELECTION_FILTER_COLORS = {"OFF/VANILLA", "WHITE", "CYAN", "BLUE"},		
+
+		SELECTION_FILTER_AGENT = "SELECTED AGENT HIGHLIGHT",
+		SELECTION_FILTER_AGENT_TIP = "Selected agent is highlighted in a bright color of your choice.",
+		SELECTION_FILTER_AGENT_COLORS = {"OFF/VANILLA", "CYAN", "BLUE","GREEN", "PURPLE", "SOLID CYAN", "SOLID BLUE","SOLID GREEN", "SOLID PURPLE"},
+		SELECTION_FILTER_AGENT_TACTICAL = "    TACTICAL ONLY",
+		SELECTION_FILTER_AGENT_TACTICAL_TIP = "Selected agent highlight is only applied in tactical view.",
+
+		SELECTION_FILTER_TILE = "SELECTED AGENT FLOOR HIGHLIGHT",
+		SELECTION_FILTER_TILE_TIP = "Selected agent's tile is highlighted in a bright color of your choice.",
+		SELECTION_FILTER_TILE_COLORS = {"OFF/VANILLA", "WHITE", "CYAN", "BLUE"},
 	},
 
 	UI =
