@@ -44,6 +44,14 @@ local AGENT_FILTER_COLORS = {
 ["PURPLE_SHADE"] = { shader=KLEIAnim.SHADER_FOW,			r=229/255,	g=8/255,	b=226/255,	a=1.0,	lum=2 },
 }
 
+local AGENT_FILTER_TACTICAL_COLORS = {}
+for label, color in pairs(AGENT_FILTER_COLORS) do
+	local tactical_color = util.tdupe(color)
+	tactical_color.a = 0.8 -- 0.2
+	tactical_color.lum = 1.0 -- 1.0-0.41
+	AGENT_FILTER_TACTICAL_COLORS[label] = tactical_color
+end
+
 -- For filtering the HUD circle below the agent
 local TILE_FILTER_COLORS = {
 -----------------these three look best for the 'ring' filter!!
@@ -97,7 +105,12 @@ function agentrig:refreshRenderFilter(...)
 				and (gfxOptions.bTacticalView or not unit:getTraits().invisible)
 		) then
 			local agentColor = uiTweaks.selectionFilterAgentColor or "BLUE_SHADE"
-			local agentFilter = AGENT_FILTER_COLORS[agentColor] or cdefs.RENDER_FILTERS["default"]
+			local agentFilter
+			if gfxOptions.bTacticalView then
+				agentFilter = AGENT_FILTER_TACTICAL_COLORS[agentColor] or cdefs.RENDER_FILTERS["default"]
+			else
+				agentFilter = AGENT_FILTER_COLORS[agentColor] or cdefs.RENDER_FILTERS["default"]
+			end
 			self._prop:setRenderFilter( agentFilter )
 		end
 		-- (Floor tile HUD circle)
