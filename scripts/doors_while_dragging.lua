@@ -43,7 +43,7 @@ function simactions.useDoorAction( sim, exitOp, unitID, x0, y0, facing )
 	-- open door
 	local retVal = oldUseDoorAction(sim, exitOp, unitID, x0, y0, facing)
 
-	if body then
+	if body and unit and body:isValid() and moveBody:canUseAbility( sim, unit, unit, body:getID() )  then
 		-- pick up again
 		moveBody:executeAbility( sim, unit, unit, body:getID() )
 	end
