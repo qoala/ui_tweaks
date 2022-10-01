@@ -68,12 +68,13 @@ local function init( modApi )
 	include( modApi:getScriptPath() .. "/xu_shank" )
 
 	include( modApi:getScriptPath() .. "/client_defs" )
-	include( modApi:getScriptPath() .. "/board_rig" )
+	include( modApi:getScriptPath() .. "/abilityutil" )
 	include( modApi:getScriptPath() .. "/agent_actions" )
+	include( modApi:getScriptPath() .. "/agentrig" )
+	include( modApi:getScriptPath() .. "/board_rig" )
 	include( modApi:getScriptPath() .. "/hud" )
 	include( modApi:getScriptPath() .. "/engine" )
 	include( modApi:getScriptPath() .. "/simquery" )
-	include( modApi:getScriptPath() .. "/agentrig" )
 end
 
 -- load may be called multiple times with different options enabled
