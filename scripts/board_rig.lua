@@ -77,65 +77,87 @@ local function trackerPredictPeripheralLos(self, facing)
 	return cells
 end
 
-local function findThreats(sim, selectedUnit)
-	local turretThreats = {}
-	local guardThreats = {}
-	for _,unit in pairs(sim:getAllUnits()) do
-		if simquery.isEnemyAgent(unit:getPlayerOwner(), selectedUnit) and (unit:isAiming() or unit:getTraits().skipOverwatch) and not unit:getTraits().pacifist then
-			-- Note: Most logic is just for guards/drones. Turrets don't actually track around the edge of their vision!
-			if unit:getBrain() then
-				local senses = unit:getBrain():getSenses()
-				if senses:hasTarget(selectedUnit) then
-					local tracker = {
-						threat=unit,
-						facing=unit:getFacing(),
-						tracking=true,
-						inSight=true,
-						_sim=sim,
-						_losByFacing={},
-						_peripheralLosByFacing={},
-						predictLos=trackerPredictLos,
-						predictPeripheralLos=trackerPredictPeripheralLos,
-					}
-					table.insert(guardThreats, tracker)
-				elseif senses:hasLostTarget(selectedUnit) then
-					local tracker = {
-						threat=unit,
-						facing=unit:getFacing(),
-						tracking=true,
-						inSight=false,
-						_sim=sim,
-						_losByFacing={},
-						_peripheralLosByFacing={},
-						predictLos=trackerPredictLos,
-						predictPeripheralLos=trackerPredictPeripheralLos,
-					}
-					table.insert(guardThreats, tracker)
-				else
-					local tracker = {
-						threat=unit,
-						facing=unit:getFacing(),
-						tracking=false,
-						inSight=false,
-						_sim=sim,
-						_losByFacing={},
-						_peripheralLosByFacing={},
-						predictLos=trackerPredictLos,
-						predictPeripheralLos=trackerPredictPeripheralLos,
-					}
-					table.insert(guardThreats, tracker)
-				end
-			else
+local function checkPotentialThreat(unit, sim, selectedUnit, guardThreats, turretThreats)
+	if simquery.isEnemyAgent(unit:getPlayerOwner(), selectedUnit) and (unit:isAiming() or unit:getTraits().skipOverwatch) and not unit:getTraits().pacifist then
+		-- Note: Most logic is just for guards/drones. Turrets don't actually track around the edge of their vision!
+		if unit:getBrain() then
+			local senses = unit:getBrain():getSenses()
+			if senses:hasTarget(selectedUnit) then
 				local tracker = {
 					threat=unit,
 					facing=unit:getFacing(),
+					tracking=true,
+					inSight=true,
 					_sim=sim,
 					_losByFacing={},
 					_peripheralLosByFacing={},
 					predictLos=trackerPredictLos,
 					predictPeripheralLos=trackerPredictPeripheralLos,
 				}
-				table.insert(turretThreats, tracker)
+				table.insert(guardThreats, tracker)
+			elseif senses:hasLostTarget(selectedUnit) then
+				local tracker = {
+					threat=unit,
+					facing=unit:getFacing(),
+					tracking=true,
+					inSight=false,
+					_sim=sim,
+					_losByFacing={},
+					_peripheralLosByFacing={},
+					predictLos=trackerPredictLos,
+					predictPeripheralLos=trackerPredictPeripheralLos,
+				}
+				table.insert(guardThreats, tracker)
+			else
+				local tracker = {
+					threat=unit,
+					facing=unit:getFacing(),
+					tracking=false,
+					inSight=false,
+					_sim=sim,
+					_losByFacing={},
+					_peripheralLosByFacing={},
+					predictLos=trackerPredictLos,
+					predictPeripheralLos=trackerPredictPeripheralLos,
+				}
+				table.insert(guardThreats, tracker)
+			end
+		else
+			local tracker = {
+				threat=unit,
+				facing=unit:getFacing(),
+				_sim=sim,
+				_losByFacing={},
+				_peripheralLosByFacing={},
+				predictLos=trackerPredictLos,
+				predictPeripheralLos=trackerPredictPeripheralLos,
+			}
+			table.insert(turretThreats, tracker)
+		end
+	end
+end
+local function findThreats(sim, selectedUnit)
+	local guardThreats = {}
+	local turretThreats = {}
+	local player = selectedUnit:getPlayerOwner()
+	if not player then
+		return guardThreats, turretThreats
+	end
+
+	-- Consider units the player can see
+	for _,unit in ipairs(player:getSeenUnits()) do
+		checkPotentialThreat(unit, sim, selectedUnit, guardThreats, turretThreats)
+	end
+	-- and ghost echoes that the player has the correct location for. (Same criteria as the vanilla SHIFT keybind)
+	if player._ghost_units then
+		for unitID,ghost in pairs(player._ghost_units) do
+			local unit = sim:getUnit(unitID)
+			if unit then
+				local gx,gy = ghost:getLocation()
+				local x,y = unit:getLocation()
+				if x==gx and y==gy then
+					checkPotentialThreat(unit, sim, selectedUnit, guardThreats, turretThreats)
+				end
 			end
 		end
 	end
