@@ -68,15 +68,13 @@ local function init( modApi )
 	include( modApi:getScriptPath() .. "/xu_shank" )
 
 	include( modApi:getScriptPath() .. "/client_defs" )
-	-- ABILITY OVERWATCH WARNINGS
-	-- include( modApi:getScriptPath() .. "/abilityutil" )
+	include( modApi:getScriptPath() .. "/abilityutil" )
 	include( modApi:getScriptPath() .. "/agent_actions" )
 	include( modApi:getScriptPath() .. "/agentrig" )
 	include( modApi:getScriptPath() .. "/board_rig" )
 	include( modApi:getScriptPath() .. "/hud" )
 	include( modApi:getScriptPath() .. "/engine" )
-	-- ABILITY OVERWATCH WARNINGS
-	-- include( modApi:getScriptPath() .. "/simability" )
+	include( modApi:getScriptPath() .. "/simability" )
 	include( modApi:getScriptPath() .. "/simquery" )
 end
 
@@ -131,9 +129,8 @@ local function lateLoad( modApi, options, params, mod_options )
 	local rrni_itemdefs = include( scriptPath .. "/rrni_itemdefs" )
 	rrni_itemdefs.swapIcons(RRNI_OPTIONS)
 
-	-- ABILITY OVERWATCH WARNINGS
-	-- local patch_abilities = include( scriptPath .. "/patch_abilities" )
-	-- patch_abilities.applyOverwatchFlag()
+	local patch_abilities = include( scriptPath .. "/patch_abilities" )
+	patch_abilities.applyOverwatchFlag()
 end
 
 local function lateUnload( modApi, options )
