@@ -2,6 +2,7 @@ local cdefs = include( "client_defs" )
 local util = include("client_util")
 local mui_tooltip = include("mui/mui_tooltip")
 local mui_util = include("mui/mui_util")
+local array = include("modules/array")
 local abilityutil = include("sim/abilities/abilityutil")
 local simquery = include("sim/simquery")
 
@@ -228,6 +229,80 @@ function delayed_tooltip_section:addWarning( ... )
 end
 
 -- ===
+-- Customize tooltip_section's addWarning to apply effects whenever the overwatch warning string is used.
+-- ===
+
+-- Blink effect on the warning's border
+local function warningBlinkFn( widget, baseColor, brightColor )
+	local frame = 0
+	local base = 1*cdefs.SECONDS
+	local key1 = math.floor(cdefs.SECONDS / 6)
+	local key2 = 2 * key1
+	local key3 = 3 * key1
+	while true do
+		if frame == 0 or frame == key2 then
+			widget.binder.bg:setColor(brightColor:unpack())
+		elseif frame == key1 or frame == key3 then
+			widget.binder.bg:setColor(baseColor:unpack())
+		end
+
+		coroutine.yield()
+		frame = (frame + 1) % base
+	end
+end
+
+local oldSectionAddWarning = util.tooltip_section.addWarning
+function util.tooltip_section:addWarning(title, line, icon, color, ...)
+	local isOverwatchWarning = false
+	if title == STRINGS.UI.DOOR_TRACKED and line == STRINGS.UI.DOOR_TRACKED_TT then
+		isOverwatchWarning = true
+	end
+
+	oldSectionAddWarning(self, title, line, icon, color, ...)
+
+	if isOverwatchWarning then
+		-- Reorder this warning section to appear first.
+		array.removeElement(self._tooltip._sections, self)
+		table.insert(self._tooltip._sections, 1, self)
+
+		-- New warning is the last widget.
+		local widget = self._children[#self._children]
+
+		-- Blink the border and icon
+		local oldActivate = widget.activate
+		function widget:activate( screen, ... )
+			if oldActivate then oldActivate(self, screen, ...) end
+			widget:onUpdate(warningBlinkFn, color, util.color.WHITE)
+		end
+	end
+	if color == cdefs.COLOR_WATCHED_BOLD then
+		local widget = self._children[#self._children]
+
+		-- Make the body text brighter, for legibility
+		widget.binder.desc:setColor(util.color.WHITE:unpack()) -- This is apparently necessary for format codes to modify color.
+		widget.binder.desc:setText( string.format( "<font1_16_r><c:FF0101>%s</c></>\n<c:FFF0F0>%s</c>", util.toupper(title), line ))
+	end
+end
+
+local oldSectionActivate = util.tooltip_section.activate
+function util.tooltip_section:activate( screen, ... )
+	local W,H = screen:getResolution()
+	local vanillaActivatedChildren = (self._w == nil or self._W ~= W or self._H ~= H)
+
+	oldSectionActivate( self, screen, ... )
+
+	if not vanillaActivatedChildren then
+		-- Vanilla implementation skipped activating children.
+		for _,child in ipairs(self._children) do
+			if child.activate then
+				child:activate( screen )
+			end
+		end
+	end
+end
+
+
+-- ===
 -- Sectioned tooltip for abilityutil.hotkey_tooltip
 -- ===
 
@@ -274,7 +349,7 @@ function hotkey_tooltip:addSection()
 end
 
 -- ===
--- Wrapped onTooltip (installed by simability.create)
+-- Wrapped onTooltip for abilities that injects our custom warnings (installed by simability.create)
 -- ===
 
 local function wrappedCreateToolTip( self, sim, abilityOwner, abilityUser, ... )
