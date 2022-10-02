@@ -7,24 +7,26 @@ local TRIGGERS_OVERWATCH_ABILITIES = {
 	"disarmtrap",
 	"doorMechanism",
 	-- "lastWords", -- No need to warn about this one. The normal tooltip should make this obvious.
+	"manualHack",
+	"melee",
 	"peek",
+	"shootSingle",
 	"throw",
 }
 
+-- Some abilities only trigger overwatch on the abilityOwner, so don't trigger if the ability is on a held item (example: prototype chip)
+local function triggersOverwatchOnOwnerOnly(self, sim, abilityOwner, abilityUser)
+	return abilityOwner == abilityUser
+end
+
+local function triggersOverwatchWithoutWirelessHacking(self, sim, abilityOwner, abilityUser)
+	return abilityOwner == abilityUser and abilityUser and not abilityUser:getTraits().wireless_range
+end
+
 local TRIGGERS_OVERWATCH_FUNCTIONS = {
-	jackin = function(self, sim, abilityOwner, abilityUser)
-		return (
-			-- Can only trigger overwatch on the abilityOwner.
-			abilityOwner == abilityUser
-			-- Wireless hacking apparently counts as magic here.
-			and not abilityUser:getTraits().wireless_range
-		)
-	end,
-	jackin_charge = function(self, sim, abilityOwner, abilityUser)
-		-- Can only trigger overwatch on the abilityOwner.
-		-- So doesn't apply to the vanilla prototype chip, but could apply if added directly to a modded agent.
-		return abilityOwner == abilityUser
-	end,
+	execute_protocol = triggersOverwatchWithoutWirelessHacking,
+	jackin = triggersOverwatchWithoutWirelessHacking,
+	jackin_charge = triggersOverwatchOnOwnerOnly,
 	useInvisiCloak = function(self, sim, abilityOwner)
 		local userUnit = abilityOwner:getUnitOwner()
 		if not userUnit then return end
