@@ -1,17 +1,9 @@
+local cdefs = include( "client_defs" )
 local util = include("client_util")
 local mui_tooltip = include("mui/mui_tooltip")
 local mui_util = include("mui/mui_util")
 local abilityutil = include("sim/abilities/abilityutil")
-
--- TODO: On abilities with createTooltip, need to hide that, and add onTooltip that creates one of our tooltips with (nil, generateTooltipReason(...), nil)
-
--- local function generateTooltipReason( tooltip, reason )
--- 	if reason then
--- 		return tooltip .. "\n<c:ff0000>" .. reason .. "</>"
--- 	else
--- 		return tooltip
--- 	end
--- end
+local simquery = include("sim/simquery")
 
 -- ===
 
@@ -279,4 +271,78 @@ function hotkey_tooltip:addSection()
 	local section = delayed_tooltip_section(self)
 	table.insert(self._sections, section)
 	return section
+end
+
+-- ===
+-- Wrapped onTooltip (installed by simability.create)
+-- ===
+
+local function wrappedCreateToolTip( self, sim, abilityOwner, abilityUser, ... )
+	-- Replicate how agent_panel calls createToolTip.
+	local _, reason = abilityUser:canUseAbility( sim, self, abilityOwner, ...)
+	local tooltip = self:_uitr_oldCreateToolTip( sim, abilityOwner, abilityUser, ... )
+	if reason then
+		return tooltip .. "\n<c:ff0000>" .. reason .. "</>"
+	else
+		return tooltip
+	end
+end
+
+local function wrapTooltip( tooltip, hud )
+	if type(tooltip) == "string" then
+		local wrapped = util.tooltip(hud._screen)
+		local section = mui_tooltip_section(wrapped, nil, tooltip, nil)
+		table.insert(wrapped._sections, section)
+		return wrapped
+	end
+	return tooltip
+end
+
+function abilityutil.wrappedOnTooltip( self, hud, sim, abilityOwner, abilityUser, ... )
+	-- Call the appropriate underlying tooltip fn.
+	local tooltip
+	local args = {...}
+	if not abilityUser then
+		-- We've patched something other than a normal ability and have been called by a different hud element.
+		return self._uitr_oldOnTooltip and self:_uitr_oldOnTooltip(hud, sim, abilityOwner, abilityUser, ...)
+	elseif args[1] then
+		-- agent_panel.updateButtonFromAbilityTarget provides additional target args and prefers onTooltip over createToolTip if both exist
+		if self._uitr_oldOnTooltip then
+			tooltip = self:_uitr_oldOnTooltip(hud, sim, abilityOwner, abilityUser, ...)
+		elseif self._uitr_oldCreateToolTip then
+			tooltip = wrappedCreateToolTip(self, sim, abilityOwner, abilityUser, ...)
+		else
+			return nil
+		end
+	else
+		-- agent_panel.updateButtonFromAbility stops at abilityUser and prefers onCreateToolTip over onTooltip if both exist
+		if self._uitr_oldCreateToolTip then
+			tooltip = wrappedCreateToolTip(self, sim, abilityOwner, abilityUser, ...)
+		elseif self._uitr_oldOnTooltip then
+			tooltip = self:_uitr_oldOnTooltip(hud, sim, abilityOwner, abilityUser, ...)
+		else
+			return nil
+		end
+	end
+
+	local uiTweaks = sim:getParams().difficultyOptions.uiTweaks
+	if not uiTweaks or not tooltip then
+		return tooltip
+	end
+
+	-- Wrap tooltips such that they support addSection.
+	tooltip = wrapTooltip(tooltip, hud)
+	if not tooltip.addSection then
+		-- oldOnTooltip constructed a mui_tooltip through some other path.
+		return tooltip
+	end
+
+	-- Overwatch warnings
+	local triggersOverwatch = self.triggersOverwatch == true or (type(self.triggersOverwatch) == "function" and self:triggersOverwatch(sim, abilityOwner, abilityUser, ...))
+	local dangerousOverwatch = triggersOverwatch and abilityUser and simquery.isUnitUnderOverwatch(abilityUser)
+	if dangerousOverwatch then
+		tooltip:addSection():addWarning(STRINGS.UI.DOOR_TRACKED, STRINGS.UI.DOOR_TRACKED_TT, "gui/hud3/hud3_tracking_icon_sm.png", cdefs.COLOR_WATCHED_BOLD)
+	end
+
+	return tooltip
 end

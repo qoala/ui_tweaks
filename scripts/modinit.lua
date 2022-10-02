@@ -74,6 +74,7 @@ local function init( modApi )
 	include( modApi:getScriptPath() .. "/board_rig" )
 	include( modApi:getScriptPath() .. "/hud" )
 	include( modApi:getScriptPath() .. "/engine" )
+	include( modApi:getScriptPath() .. "/simability" )
 	include( modApi:getScriptPath() .. "/simquery" )
 end
 
@@ -127,6 +128,9 @@ local function lateLoad( modApi, options, params, mod_options )
 	local scriptPath = modApi:getScriptPath()
 	local rrni_itemdefs = include( scriptPath .. "/rrni_itemdefs" )
 	rrni_itemdefs.swapIcons(RRNI_OPTIONS)
+
+	local patch_abilities = include( scriptPath .. "/patch_abilities" )
+	patch_abilities.applyOverwatchFlag()
 end
 
 local function lateUnload( modApi, options )
