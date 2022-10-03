@@ -5,11 +5,11 @@ local oldCreate = simability.create
 
 local function isNormalAbility( t )
 	return (
+		-- Give other modders a general opt-out if they need it.
+		not t.noUITR
 		-- Programs and Daemons use a completely different tooltip fn signature.
-		t.program == nil and t.standardDaemon == nil and t.reverseDaemon == nil
+		and t.program == nil and t.standardDaemon == nil and t.reverseDaemon == nil
 		-- PE Counter AI Subroutines are not added to ability defs.
-		-- Don't modify spells (wizard) for now.
-		and t.spellLevel == nil
 	)
 end
 
