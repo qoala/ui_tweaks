@@ -74,6 +74,18 @@ function mui_tooltip_section:init( tooltip, header, body, hotkey )
     self._hotkey = hotkey
 end
 
+mui_tooltip_section.__concat = function( a, b )
+	if type(b) == "string" and a.is_a and a:is_a(mui_tooltip_section) then
+		a._bodyTxt = (a._bodyTxt or "") .. b
+		return a
+	elseif type(a) == "string" and b.is_a and b:is_a(mui_tooltip_section) then
+		b._bodyTxt = a .. (b._bodyTxt or "")
+		return b
+	else
+		assert(nil, "Invalid attempt to concat mui_tooltip_section between '"..type(a).."' and '"..type(b).."'\n"..debug.traceback())
+	end
+end
+
 function mui_tooltip_section:activate( screen )
 	if DEFAULT_TOOLTIP == nil then
 		DEFAULT_TOOLTIP = screen:createFromSkin("tooltip")
@@ -301,13 +313,56 @@ function util.tooltip_section:activate( screen, ... )
 	end
 end
 
+-- ===
+-- Tooltip container for delayed tooltip sections
+-- Also supports a custom primary section. Concatenation will be proxied to the primary section.
+-- ===
+
+local delayed_tooltip = class( util.tooltip )
+abilityutil.delayed_tooltip = delayed_tooltip
+
+function delayed_tooltip:init( ... )
+	util.tooltip.init(self, ...)
+	self._primary_section = nil
+end
+
+delayed_tooltip.__concat = function( a, b )
+	if type(b) == "string" and a.is_a and a:is_a(delayed_tooltip) and a._primary_section and a._primary_section.__concat then
+		a._primary_section = a._primary_section .. b
+		return a
+	elseif type(a) == "string" and b.is_a and b:is_a(delayed_tooltip) and b._primary_section and b._primary_section.__concat then
+		b._primary_section = a .. b._primary_section
+		return b
+	else
+		assert(nil, "Invalid attempt to concat delayed_tooltip between '"..type(a).."' and '"..type(b).."'\n"..debug.traceback())
+	end
+end
+
+function delayed_tooltip:activate( screen, ... )
+	self._screen = screen
+	util.tooltip.activate(self, screen, ...)
+end
+function delayed_tooltip:deactivate( ... )
+	util.tooltip.deactivate( self, ... )
+end
+
+function delayed_tooltip:addSection()
+	local section = delayed_tooltip_section(self)
+	table.insert(self._sections, section)
+	return section
+end
+
+function delayed_tooltip:addPrimarySection( section )
+	table.insert(self._sections, section)
+	self._primary_section = section
+end
 
 -- ===
 -- Sectioned tooltip for abilityutil.hotkey_tooltip
 -- ===
 
 -- Overwrite base abilityutil.hotkey_tooltip (derived from mui_tooltip) with a new class derived from util.tooltip, to support adding sections.
-local hotkey_tooltip = class( util.tooltip )
+local hotkey_tooltip = class( delayed_tooltip )
 local old_hotkey_tooltip = abilityutil.hotkey_tooltip
 abilityutil.hotkey_tooltip = hotkey_tooltip
 
@@ -321,7 +376,7 @@ function hotkey_tooltip:init( ability, sim, abilityOwner, tooltip )
 	-- Initialize self
 	-- ===
 
-	util.tooltip.init(self, nil, nil) -- screen is not available, can only use delayed-impl sections.
+	delayed_tooltip.init(self, nil, nil) -- screen is not available, can only use delayed-impl sections.
 
 	-- ===
 	-- Prepare the vanilla content as the first section of this tooltip
@@ -334,22 +389,11 @@ function hotkey_tooltip:init( ability, sim, abilityOwner, tooltip )
 	else
 		section = mui_tooltip_section( self, util.toupper( ability.name ), tooltip, ability.hotkey )
 	end
-	table.insert(self._sections, section)
-end
-
-function hotkey_tooltip:activate( screen, ... )
-	self._screen = screen
-	util.tooltip.activate(self, screen, ...)
-end
-
-function hotkey_tooltip:addSection()
-	local section = delayed_tooltip_section(self)
-	table.insert(self._sections, section)
-	return section
+	self:addPrimarySection(section)
 end
 
 -- ===
--- Wrapped onTooltip for abilities that injects our custom warnings (installed by simability.create)
+-- Wrapped onTooltip and acquireTargets for abilities that injects our custom tooltip warnings (installed by simability.create)
 -- ===
 
 local function wrappedCreateToolTip( self, sim, abilityOwner, abilityUser, ... )
@@ -365,15 +409,14 @@ end
 
 local function wrapTooltip( tooltip, hud )
 	if type(tooltip) == "string" then
-		local wrapped = util.tooltip(hud._screen)
-		local section = mui_tooltip_section(wrapped, nil, tooltip, nil)
-		table.insert(wrapped._sections, section)
+		local wrapped = delayed_tooltip(hud._screen)
+		wrapped:addPrimarySection(mui_tooltip_section(wrapped, nil, tooltip, nil))
 		return wrapped
 	end
 	return tooltip
 end
 
-function abilityutil.wrappedOnTooltip( self, hud, sim, abilityOwner, abilityUser, ... )
+function abilityutil.uitr_wrappedOnTooltip( self, hud, sim, abilityOwner, abilityUser, ... )
 	-- Call the appropriate underlying tooltip fn.
 	local tooltip
 	local args = {...}
@@ -420,4 +463,37 @@ function abilityutil.wrappedOnTooltip( self, hud, sim, abilityOwner, abilityUser
 	end
 
 	return tooltip
+end
+
+function wrappedTargetingGenerateTooltip( self, x, y, ... )
+	local result = self:_uitr_oldGenerateTooltip( x, y, ... )
+	if not type(result) == "string" or not self._dangerousOverwatch then
+		return result
+	end
+	local tooltip = delayed_tooltip()
+	tooltip:addPrimarySection(mui_tooltip_section(tooltip, nil, result, nil))
+
+	if self._dangerousOverwatch then
+		tooltip:addSection():addWarning(STRINGS.UI.DOOR_TRACKED, STRINGS.UI.DOOR_TRACKED_TT, "gui/hud3/hud3_tracking_icon_sm.png", cdefs.COLOR_WATCHED_BOLD)
+	end
+
+	return tooltip
+end
+
+function abilityutil.uitr_wrappedAcquireTargets( self, targets, game, sim, abilityOwner, abilityUser, ... )
+	local target = self:_uitr_oldAcquireTargets(targets, game, sim, abilityOwner, abilityUser, ... )
+
+	local uiTweaks = sim:getParams().difficultyOptions.uiTweaks
+	if not uiTweaks or not target or not target.is_a or not target:is_a(targets.throwTarget) then
+		return target
+	end
+
+	local triggersOverwatch = self.triggersOverwatch == true or (type(self.triggersOverwatch) == "function" and self:triggersOverwatch(sim, abilityOwner, abilityUser, ...))
+	local dangerousOverwatch = triggersOverwatch and abilityUser and simquery.isUnitUnderOverwatch(abilityUser)
+	if dangerousOverwatch then
+		target._dangerousOverwatch = true
+		target._uitr_oldGenerateTooltip = target.generateTooltip
+		target.generateTooltip = wrappedTargetingGenerateTooltip
+	end
+	return target
 end

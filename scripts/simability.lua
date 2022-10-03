@@ -16,12 +16,20 @@ end
 function simability.create( abilityID, ... )
 	local t = oldCreate(abilityID, ...)
 
-	if isNormalAbility(t) and t.onTooltip or t.createToolTip then
+	if not isNormalAbility(t) then
+		return t
+	end
+	if t.onTooltip or t.createToolTip then
 		-- Hide whichever tooltip callbacks exist
 		t._uitr_oldOnTooltip = t.onTooltip
 		t._uitr_oldCreateToolTip = t.createToolTip
 
-		t.onTooltip = abilityutil.wrappedOnTooltip
+		t.onTooltip = abilityutil.uitr_wrappedOnTooltip
+	end
+	if t.acquireTargets then
+		t._uitr_oldAcquireTargets = t.acquireTargets
+
+		t.acquireTargets = abilityutil.uitr_wrappedAcquireTargets
 	end
 
 	return t
