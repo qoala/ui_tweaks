@@ -7,6 +7,57 @@ local abilityutil = include("sim/abilities/abilityutil")
 local simquery = include("sim/simquery")
 
 -- ===
+-- Common triggersOverwatch implementations
+-- ===
+
+-- An ability that only triggers overwatch on the abilityOwner, so don't trigger if the ability is on a held item (example: prototype chip)
+function abilityutil.triggersOverwatchOnOwnerOnly(self, sim, abilityOwner, abilityUser)
+	return abilityOwner == abilityUser
+end
+
+local function playerKnowsUnit(player, unit)
+	if array.find(player:getSeenUnits(), unit) then
+		return true
+	end
+	local ghost = player._ghost_units[unit:getID()]
+	if ghost then
+		local gx,gy = ghost:getLocation()
+		local x,y = unit:getLocation()
+		return x==gx and y==gy
+	end
+end
+
+-- An ability that triggers overwatch after making the user invisible. Unlike most triggersOverwatch checks, checks for detect-cloak on observers, to limit false positives.
+function abilityutil.triggersOverwatchAfterCloaking(self, sim, abilityOwner)
+	local userUnit
+	if simquery.isAgent(abilityOwner) then
+		userUnit = abilityOwner
+	else
+		userUnit = abilityOwner:getUnitOwner()
+	end
+
+	if not userUnit then return end
+
+	local player = userUnit:getPlayerOwner()
+
+	-- Technically triggers overwatch broadly, but it only matters if one of them can see invisible.
+	-- Check for that to reduce false positives.
+	local seers = sim:generateSeers( userUnit )
+	for i,seer in ipairs(seers) do
+		local seerUnit = sim:getUnit(seer)
+		if (seerUnit and seerUnit:getTraits().detect_cloak
+			and simquery.couldUnitSee(sim, seerUnit, userUnit)
+			and simquery.isEnemyAgent(player, seerUnit)
+			and playerKnowsUnit(player, seerUnit)
+		) then
+			return true
+		end
+	end
+end
+
+-- ===
+-- Meta helpers
+-- ===
 
 -- Extract a local variable from the given function's upvalues
 local function extractUpvalue( fn, name )
