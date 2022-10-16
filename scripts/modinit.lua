@@ -76,6 +76,7 @@ local function init( modApi )
 	include( modApi:getScriptPath() .. "/engine" )
 	include( modApi:getScriptPath() .. "/simability" )
 	include( modApi:getScriptPath() .. "/simquery" )
+	include( modApi:getScriptPath() .. "/targeting" )
 end
 
 -- load may be called multiple times with different options enabled
