@@ -56,6 +56,7 @@ local UI_TWEAKS_STRINGS =
 		OPTIONS_KEYBIND_CATEGORY = "MOD - UI TWEAKS RELOADED",
 		OPTIONS_KEYBIND_VISIONMODE = "TOGGLE VISION MODE",
 		BTN_RESET_OPTIONS = "RESET TO DEFAULTS",
+		RELOAD_WARNING = "Some options may require reloading\nfrom the main menu to apply.",
 	},
 }
 

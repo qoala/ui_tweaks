@@ -110,11 +110,13 @@ local function load( modApi, options, params )
 end
 
 local function lateLoad( modApi, options, params, mod_options )
+	local scriptPath = modApi:getScriptPath()
+	local uitr_util = include( scriptPath .. "/uitr_util" )
 
 	-- "Precise Icons" uses RolandJ's Roman Numeral Icons
 	-- Check our options and NIAA options, to determine which icons to replace
 	local RRNI_OPTIONS = {
-		RRNI_ENABLED = options["precise_icons"] and options["precise_icons"].enabled ,
+		RRNI_ENABLED = uitr_util.checkOption("preciseIcons") ,
 		RRNI_DART_RIFLE_ICON = false,
 		RRNI_RANGED_TIERS = false,
 	}
@@ -130,7 +132,6 @@ local function lateLoad( modApi, options, params, mod_options )
 		RRNI_OPTIONS.NIAA = {}
 	end
 
-	local scriptPath = modApi:getScriptPath()
 	local rrni_itemdefs = include( scriptPath .. "/rrni_itemdefs" )
 	rrni_itemdefs.swapIcons(RRNI_OPTIONS)
 

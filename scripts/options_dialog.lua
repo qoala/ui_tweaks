@@ -23,8 +23,8 @@ local UITR_OPTIONS = {
 	},
 	{
 		id = "preciseAp",
-		name = STRINGS.UITWEAKSR.OPTIONS.PRECISE_ICONS,
-		tip = STRINGS.UITWEAKSR.OPTIONS.PRECISE_ICONS_TIP,
+		name = STRINGS.UITWEAKSR.OPTIONS.PRECISE_AP,
+		tip = STRINGS.UITWEAKSR.OPTIONS.PRECISE_AP_TIP,
 		values={ false, 0.5 },
 		value=0.5,
 		strings={ STRINGS.UITWEAKSR.OPTIONS.VANILLA, STRINGS.UITWEAKSR.OPTIONS.PRECISE_AP_HALF },
@@ -34,6 +34,7 @@ local UITR_OPTIONS = {
 		name = STRINGS.UITWEAKSR.OPTIONS.PRECISE_ICONS,
 		tip = STRINGS.UITWEAKSR.OPTIONS.PRECISE_ICONS_TIP,
 		check = true,
+		needsReload = true,
 	},
 	{
 		id = "doorsWhileDragging",
@@ -43,11 +44,12 @@ local UITR_OPTIONS = {
 	},
 	{
 		id = "coloredTracks",
-		name = STRINGS.UITWEAKSR.OPTIONS.PRECISE_ICONS,
-		tip = STRINGS.UITWEAKSR.OPTIONS.PRECISE_ICONS_TIP,
+		name = STRINGS.UITWEAKSR.OPTIONS.COLORED_TRACKS,
+		tip = STRINGS.UITWEAKSR.OPTIONS.COLORED_TRACKS_TIP,
 		values = { false, 1 },
 		value = 1,
 		strings = { STRINGS.UITWEAKSR.OPTIONS.VANILLA, STRINGS.UITWEAKSR.OPTIONS.COLORED_TRACKS_A },
+		needsReload = true,
 	},
 	{
 		id = "stepCarefully",
@@ -135,14 +137,16 @@ end
 
 -- ===
 
-local function checkOptionApply( self, uitrSettings, value )
-	uitrSettings[self.id] = value
+local function checkOptionApply( self, uitrSettings, widget )
+	uitrSettings[self.id] = widget:getValue()
+	return uitrSettings[self.id]
 end
 local function checkOptionRetrieve( self, uitrSettings )
 	return getValue(uitrSettings, self)
 end
-local function comboOptionApply( self, uitrSettings, index )
-	uitrSettings[self.id] = self.values[index]
+local function comboOptionApply( self, uitrSettings, widget )
+	uitrSettings[self.id] = self.values[widget:getIndex()]
+	return uitrSettings[self.id]
 end
 local function comboOptionRetrieve( self, uitrSettings )
 	if self.strings then
@@ -150,6 +154,27 @@ local function comboOptionRetrieve( self, uitrSettings )
 	else
 		return tostring(getValue(uitrSettings, self))
 	end
+end
+
+local function onChangedOption( self, setting )
+	if not setting.needsReload or not self._game then
+		return
+	end
+
+	local tempSettings = {}
+	self:retrieveUitrSettings(tempSettings)
+	local originalSettings = self._originalSettings.uitr or {}
+
+	local needsReload = false
+	for _,optionDef in ipairs( UITR_OPTIONS ) do
+		if optionDef.needsReload and getValue(tempSettings, optionDef) ~= getValue(originalSettings, optionDef) then
+			needsReload = true
+		end
+	end
+
+
+	local uitrReloadWarning = self._screen.binder.uitrReloadWarning
+	uitrReloadWarning:setVisible( needsReload )
 end
 
 -- ===
@@ -192,6 +217,9 @@ function options_dialog:show(...)
 	uitrResetBtn:setText( STRINGS.UITWEAKSR.UI.BTN_RESET_OPTIONS )
 	uitrResetBtn.onClick = util.makeDelegate(nil, onClickUitrResetOptions, self)
 
+	local uitrReloadWarning = self._screen.binder.uitrReloadWarning
+	uitrReloadWarning:setText( STRINGS.UITWEAKSR.UI.RELOAD_WARNING )
+
 	if not self._appliedSettings.uitr then self._appliedSettings.uitr = {} end
 	self:refreshUitrSettings( self._appliedSettings.uitr )
 end
@@ -206,6 +234,7 @@ function options_dialog:refreshUitrSettings( uitrSettings )
 		if setting.check then
 			widget = list:addItem( setting, "CheckOption" )
 			widget.binder.widget:setText( setting.name )
+			widget.binder.widget.onClick = util.makeDelegate( nil, onChangedOption, self, setting )
 
 			setting.apply = checkOptionApply
 			setting.retrieve = checkOptionRetrieve
@@ -216,6 +245,8 @@ function options_dialog:refreshUitrSettings( uitrSettings )
 			for i, item in ipairs(setting.values) do
 				widget.binder.widget:addItem( setting.strings and setting.strings[i] or item )
 			end
+			widget.binder.widget.onTextChanged = util.makeDelegate( nil, onChangedOption, self, setting )
+
 			setting.apply = comboOptionApply
 			setting.retrieve = comboOptionRetrieve
 			widget.binder.widget:setValue( setting:retrieve(uitrSettings) )
@@ -236,11 +267,7 @@ function options_dialog:retrieveUitrSettings( uitrSettings )
 		local setting = item.user_data
 		if setting and setting.apply then
 			local widget = item.widget.binder.widget
-			if setting.check then
-				setting:apply(uitrSettings, widget:getValue())
-			elseif setting.values then
-				setting:apply(uitrSettings, widget:getIndex())
-			end
+			setting:apply(uitrSettings, widget)
 		end
 	end
 end
