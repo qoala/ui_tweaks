@@ -16,43 +16,6 @@ local function init( modApi )
 	rawset(_G,"SCRIPT_PATHS",rawget(_G,"SCRIPT_PATHS") or {})
 	SCRIPT_PATHS.qed_uitr = modApi:getScriptPath()
 
-	modApi:addGenerationOption("precise_ap", STRINGS.UITWEAKSR.OPTIONS.PRECISE_AP, STRINGS.UITWEAKSR.OPTIONS.PRECISE_AP_TIP, {
-		noUpdate=true,
-		values={ false, 0.5 },
-		value=0.5,
-		strings={ STRINGS.UITWEAKSR.OPTIONS.VANILLA, STRINGS.UITWEAKSR.OPTIONS.PRECISE_AP_HALF },
-	})
-	modApi:addGenerationOption("empty_pockets", STRINGS.UITWEAKSR.OPTIONS.EMPTY_POCKETS, STRINGS.UITWEAKSR.OPTIONS.EMPTY_POCKETS_TIP, { noUpdate=true })
-	modApi:addGenerationOption("inv_drag_drop", STRINGS.UITWEAKSR.OPTIONS.INV_DRAGDROP, STRINGS.UITWEAKSR.OPTIONS.INV_DRAGDROP_TIP, { noUpdate=true })
-	modApi:addGenerationOption("precise_icons", STRINGS.UITWEAKSR.OPTIONS.PRECISE_ICONS, STRINGS.UITWEAKSR.OPTIONS.PRECISE_ICONS_TIP, { noUpdate=true })
-	modApi:addGenerationOption("doors_while_dragging", STRINGS.UITWEAKSR.OPTIONS.DOORS_WHILE_DRAGGING, STRINGS.UITWEAKSR.OPTIONS.DOORS_WHILE_DRAGGING_TIP, { noUpdate=true })
-	modApi:addGenerationOption("colored_tracks", STRINGS.UITWEAKSR.OPTIONS.COLORED_TRACKS, STRINGS.UITWEAKSR.OPTIONS.COLORED_TRACKS_TIP, {
-		noUpdate=true,
-		values={ false, 1 },
-		value=1,
-		strings={ STRINGS.UITWEAKSR.OPTIONS.VANILLA, STRINGS.UITWEAKSR.OPTIONS.COLORED_TRACKS_A },
-	})
-	modApi:addGenerationOption("step_carefully", STRINGS.UITWEAKSR.OPTIONS.STEP_CAREFULLY, STRINGS.UITWEAKSR.OPTIONS.STEP_CAREFULLY_TIP, { noUpdate=true })
-	modApi:addGenerationOption("xu_shank", STRINGS.UITWEAKSR.OPTIONS.XU_SHANK, STRINGS.UITWEAKSR.OPTIONS.XU_SHANK_TIP, { noUpdate=true })
-
-	modApi:addGenerationOption("selection_filter_agent", STRINGS.UITWEAKSR.OPTIONS.SELECTION_FILTER_AGENT, STRINGS.UITWEAKSR.OPTIONS.SELECTION_FILTER_AGENT_TIP, {
-		noUpdate=true,
-		values={ false, "CYAN_SHADE", "BLUE_SHADE", "GREEN_SHADE", "PURPLE_SHADE", "CYAN_HILITE", "BLUE_HILITE", "GREEN_HILITE", "PURPLE_HILITE", },
-		value="BLUE_SHADE",
-		strings= STRINGS.UITWEAKSR.OPTIONS.SELECTION_FILTER_AGENT_COLORS,
-		masks = {{mask = "uitr_selection_filter_agent_disabled", requirement = false}},
-	})
-	modApi:addGenerationOption("selection_filter_agent_tactical", STRINGS.UITWEAKSR.OPTIONS.SELECTION_FILTER_AGENT_TACTICAL, STRINGS.UITWEAKSR.OPTIONS.SELECTION_FILTER_AGENT_TACTICAL_TIP, {
-		noUpdate=true,
-		requirements = {{mask = "uitr_selection_filter_agent_disabled", requirement = false}},
-	})
-	modApi:addGenerationOption("selection_filter_tile", STRINGS.UITWEAKSR.OPTIONS.SELECTION_FILTER_TILE, STRINGS.UITWEAKSR.OPTIONS.SELECTION_FILTER_TILE_TIP, {
-		noUpdate=true,
-		values={ false, "WHITE_SHADE", "CYAN_SHADE", "BLUE_SHADE", },
-		value="CYAN_SHADE",
-		strings= STRINGS.UITWEAKSR.OPTIONS.SELECTION_FILTER_TILE_COLORS,
-	})
-
 	local dataPath = modApi:getDataPath()
 	KLEIResourceMgr.MountPackage( dataPath .. "/gui.kwad", "data" )
 	KLEIResourceMgr.MountPackage( dataPath .. "/images.kwad", "data" )
@@ -87,21 +50,6 @@ end
 local function load( modApi, options, params )
 
 	if params then
-		params.uiTweaks = {}
-
-		params.uiTweaks.coloredTracks = options["colored_tracks"] and options["colored_tracks"].value
-		params.uiTweaks.doorsWhileDragging = options["doors_while_dragging"] and options["doors_while_dragging"].enabled
-		params.uiTweaks.emptyPockets = options["empty_pockets"] and options["empty_pockets"].enabled
-		params.uiTweaks.invDragDrop = options["inv_drag_drop"] and options["inv_drag_drop"].enabled
-		params.uiTweaks.preciseAp = options["precise_ap"] and options["precise_ap"].value
-		params.uiTweaks.stepCarefully = options["step_carefully"] and options["step_carefully"].enabled
-        params.uiTweaks.xuShank = options["xu_shank"] and options["xu_shank"].enabled
-		params.uiTweaks.selectionFilterAgentColor  = options["selection_filter_agent"] and options["selection_filter_agent"].value
-		params.uiTweaks.selectionFilterAgentTacticalOnly  = options["selection_filter_agent_tactical"] and options["selection_filter_agent_tactical"].value
-		params.uiTweaks.selectionFilterTileColor  = options["selection_filter_tile"] and options["selection_filter_tile"].value
-
-		-- Save a fake option, in case this gets a campaign toggle later
-		options["vision_mode"] = { enabled=true }
 	end
 
 	local scriptPath = modApi:getScriptPath()
