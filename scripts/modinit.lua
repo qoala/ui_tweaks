@@ -74,6 +74,7 @@ local function init( modApi )
 	include( modApi:getScriptPath() .. "/board_rig" )
 	include( modApi:getScriptPath() .. "/hud" )
 	include( modApi:getScriptPath() .. "/engine" )
+	include( modApi:getScriptPath() .. "/options_dialog" )
 	include( modApi:getScriptPath() .. "/simability" )
 	include( modApi:getScriptPath() .. "/simquery" )
 	include( modApi:getScriptPath() .. "/targeting" )
@@ -103,6 +104,7 @@ local function load( modApi, options, params )
 
 	local scriptPath = modApi:getScriptPath()
 	modApi:insertUIElements( include( scriptPath.."/screen_inserts" ) )
+	modApi:modifyUIElements( include( scriptPath.."/screen_modifications" ) )
 end
 
 local function lateLoad( modApi, options, params, mod_options )
