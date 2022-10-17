@@ -1,7 +1,7 @@
 local targeting = include( "hud/targeting" )
 
 function cellInLOS(sim, x0, y0, x, y)
-	local raycastX, raycastY = self.sim:getLOS():raycast(self.mx, self.my, x, y)
+	local raycastX, raycastY = sim:getLOS():raycast(x0, y0, x, y)
 	return raycastX == x and raycastY == y
 end
 
