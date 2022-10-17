@@ -6,6 +6,7 @@ local simdefs = include( "sim/simdefs" )
 local simquery = include( "sim/simquery" )
 
 local cbf_util = SCRIPT_PATHS and SCRIPT_PATHS.qoala_commbugfix and include( SCRIPT_PATHS.qoala_commbugfix .. "/cbf_util" )
+local uitr_util = include( SCRIPT_PATHS.qed_uitr .. "/uitr_util" )
 
 -- ===
 
@@ -285,8 +286,7 @@ function boardrig:chainCells( cells, color, ... )
 	local selectedUnit = self._game.hud:getSelectedUnit()
 	local sim = self:getSim()
 
-	local uiTweaks = sim:getParams().difficultyOptions.uiTweaks
-	if not selectedUnit or not uiTweaks then
+	if not selectedUnit or not uitr_util.checkOption("overwatchMovement") then
 		return id
 	end
 

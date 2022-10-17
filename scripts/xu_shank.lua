@@ -1,6 +1,8 @@
 local simdefs = include("sim/simdefs")
 local simengine = include("sim/engine")
 
+local uitr_util = include( SCRIPT_PATHS.qed_uitr .. "/uitr_util" )
+
 local dispatchEvent_old = simengine.dispatchEvent
 simengine.dispatchEvent = function( self, evType, evData, noSkip, ... )
 	assert( evType )
@@ -21,8 +23,7 @@ local abilitydefs = include( "sim/abilitydefs" )
 local manualHack = abilitydefs.lookupAbility("manualHack")
 local manualHack_executeAbility_old = manualHack.executeAbility
 manualHack.executeAbility = function( self, sim, unit, userUnit, target, ... )
-	local uiTweaks = unit and unit:getSim():getParams().difficultyOptions.uiTweaks
-	local xuShank_enabled = uiTweaks and uiTweaks.xuShank
+	local xuShank_enabled = uitr_util.checkOption("xuShank")
 	local newFacing = nil
 	if xuShank_enabled then
 		unit:getTraits().xuShanking = true

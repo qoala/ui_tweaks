@@ -2,13 +2,14 @@ local simquery = include ( "sim/simquery" )
 local simactions = include ( "sim/simactions" )
 local moveBody = include ( "sim/abilities/moveBody" )
 
+local uitr_util = include( SCRIPT_PATHS.qed_uitr .. "/uitr_util" )
+
 local oldCanModifyExit = simquery.canModifyExit
 
 function simquery.canModifyExit( unit, exitop, cell, dir )
 	local canModify, reason = oldCanModifyExit(unit, exitop, cell, dir )
 
-	local uiTweaks = unit:getSim():getParams().difficultyOptions.uiTweaks
-	if not uiTweaks or not uiTweaks.doorsWhileDragging then
+	if not uitr_util.checkOption("doorsWhileDragging") then
 		return canModify, reason
 	end
 
@@ -27,8 +28,7 @@ end
 local oldUseDoorAction = simactions.useDoorAction
 
 function simactions.useDoorAction( sim, exitOp, unitID, x0, y0, facing )
-	local uiTweaks = sim:getParams().difficultyOptions.uiTweaks
-	if not uiTweaks or not uiTweaks.doorsWhileDragging then
+	if not uitr_util.checkOption("doorsWhileDragging") then
 		return oldUseDoorAction(sim, exitOp, unitID, x0, y0, facing)
 	end
 

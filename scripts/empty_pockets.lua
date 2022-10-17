@@ -4,6 +4,8 @@ local simactions = include( "sim/simactions" )
 local simdefs = include( "sim/simdefs" )
 local simquery = include( "sim/simquery" )
 
+local uitr_util = include( SCRIPT_PATHS.qed_uitr .. "/uitr_util" )
+
 -- ==============
 -- sim/simactions
 -- ==============
@@ -13,8 +15,7 @@ local oldSearch = simactions.search
 function simactions.search( sim, unitID, searchTypeAnarchy5, ... )
 	oldSearch( sim, unitID, searchTypeAnarchy5, ... )
 
-	local uiTweaks = sim:getParams().difficultyOptions.uiTweaks
-	if uiTweaks and uiTweaks.emptyPockets then
+	if uitr_util.checkOption("emptyPockets") then
 		local unit = sim:getUnit(unitID)
 
 		-- Repeat the check for stealable items
@@ -84,8 +85,7 @@ local oldCanLoot = simquery.canLoot
 -- Modified copy of vanilla simquery.canLoot
 -- Changes at 'UIT:'
 function simquery.canLoot( sim, unit, targetUnit, ... )
-	local uiTweaks = sim:getParams().difficultyOptions.uiTweaks
-	if not uiTweaks or not uiTweaks.emptyPockets then
+	if not uitr_util.checkOption("emptyPockets") then
 		return oldCanLoot( sim, unit, targetUnit, ... )
 	end
 

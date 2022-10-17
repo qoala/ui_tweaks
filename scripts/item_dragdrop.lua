@@ -7,6 +7,8 @@ local cdefs = include( "client_defs" )
 local unitdefs = include("sim/unitdefs")
 local simfactory = include( "sim/simfactory" )
 
+local uitr_util = include( SCRIPT_PATHS.qed_uitr .. "/uitr_util" )
+
 local function updateButton(screen, widget, item, encumbered)
 	if item then
 		guiex.updateButtonFromItem( screen, nil, widget, item, nil, encumbered )
@@ -188,10 +190,7 @@ end
 
 local oldOnDragInventory = upgradeScreen.onDragInventory
 function upgradeScreen:onDragInventory( upgrade, item, oldOnDragDrop )
-	local user = savefiles.getCurrentGame()
-	local campaign = user.data.saveSlots[ user.data.currentSaveSlot]
-	local uiTweaks = campaign.difficultyOptions.uiTweaks
-	if not uiTweaks or not uiTweaks.invDragDrop then
+	if not uitr_util.checkOption("invDragDrop") then
 		return oldOnDragInventory( self, upgrade, item, oldOnDragDrop )
 	end
 
@@ -207,10 +206,7 @@ end
 
 local oldOnDragStorage = upgradeScreen.onDragStorage
 function upgradeScreen:onDragStorage( upgrade, item, oldOnDragDrop )
-	local user = savefiles.getCurrentGame()
-	local campaign = user.data.saveSlots[ user.data.currentSaveSlot]
-	local uiTweaks = campaign.difficultyOptions.uiTweaks
-	if not uiTweaks or not uiTweaks.invDragDrop then
+	if not uitr_util.checkOption("invDragDrop") then
 		return oldOnDragStorage( self, upgrade, item, oldOnDragDrop )
 	end
 
@@ -228,10 +224,7 @@ local oldRefreshInventory = upgradeScreen.refreshInventory
 function upgradeScreen:refreshInventory( unitDef, index )
 	oldRefreshInventory( self, unitDef, index )
 	
-	local user = savefiles.getCurrentGame()
-	local campaign = user.data.saveSlots[ user.data.currentSaveSlot]
-	local uiTweaks = campaign.difficultyOptions.uiTweaks
-	if not uiTweaks or not uiTweaks.invDragDrop then
+	if not uitr_util.checkOption("invDragDrop") then
 		return
 	end
 

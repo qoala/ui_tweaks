@@ -3,6 +3,8 @@ local pathrig = include( "gameplay/pathrig" )
 local agentrig = include( "gameplay/agentrig" )
 local util = include( "modules/util" )
 
+local uitr_util = include( SCRIPT_PATHS.qed_uitr .. "/uitr_util" )
+
 PATH_COLORS = {
 	color(0,     1,     0.1,   1.0), -- Green
 	color(1,     1,     0.1,   1.0), -- Yellow
@@ -61,9 +63,7 @@ local oldRefreshPlannedPath = pathrig.rig.refreshPlannedPath
 function pathrig.rig:refreshPlannedPath( unitID )
 	oldRefreshPlannedPath( self, unitID )
 
-	local sim = self._boardRig:getSim()
-	local uiTweaks = sim:getParams().difficultyOptions.uiTweaks
-	if uiTweaks and uiTweaks.coloredTracks and self._plannedPaths[ unitID ] then
+	if uitr_util.checkOption("coloredTracks") and self._plannedPaths[ unitID ] then
 		local pathCellColors = calculatePathColors( self, unitID, self._plannedPaths[ unitID ] )
 
 		for i, prop in ipairs(self._plannedPathProps[ unitID ]) do
@@ -75,9 +75,7 @@ end
 	--{ package = pathrig.rig,  name = 'refreshAllTracks',   f = refreshAllTracks },
 local oldRefreshAllTracks = pathrig.rig.refreshAllTracks
 function pathrig.rig:refreshAllTracks( )
-	local sim = self._boardRig:getSim()
-	local uiTweaks = sim:getParams().difficultyOptions.uiTweaks
-	if uiTweaks and uiTweaks.coloredTracks then
+	if uitr_util.checkOption("coloredTracks") then
 		self._pathCollisions = {}
 
 		if not self._pathColors then
@@ -94,9 +92,7 @@ local oldDrawInterest = agentrig.rig.drawInterest
 function agentrig.rig:drawInterest( interest, alerted )
 	oldDrawInterest( self, interest, alerted )
 
-	local sim = self._boardRig:getSim()
-	local uiTweaks = sim:getParams().difficultyOptions.uiTweaks
-	if uiTweaks and uiTweaks.coloredTracks and self.interestProp then
+	if uitr_util.checkOption("coloredTracks") and self.interestProp then
 		local color = assignColor( self:getUnit() )
 		self.interestProp:setSymbolModulate("interest_border", color:unpack() )
 		self.interestProp:setSymbolModulate("down_line", color:unpack() )

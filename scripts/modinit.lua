@@ -14,6 +14,7 @@ end
 local function init( modApi )
 	-- (This mod doesn't set its own script path, but relies on checking if other mods have done so)
 	rawset(_G,"SCRIPT_PATHS",rawget(_G,"SCRIPT_PATHS") or {})
+	SCRIPT_PATHS.qed_uitr = modApi:getScriptPath()
 
 	modApi:addGenerationOption("precise_ap", STRINGS.UITWEAKSR.OPTIONS.PRECISE_AP, STRINGS.UITWEAKSR.OPTIONS.PRECISE_AP_TIP, {
 		noUpdate=true,
@@ -58,6 +59,7 @@ local function init( modApi )
 	KLEIResourceMgr.MountPackage( dataPath .. "/rrni_gui.kwad", "data" )
 
 	include( modApi:getScriptPath() .. "/resources" ).initUitrResources()
+	include( modApi:getScriptPath() .. "/uitr_util" )
 
 	include( modApi:getScriptPath() .. "/doors_while_dragging" )
 	include( modApi:getScriptPath() .. "/empty_pockets" )

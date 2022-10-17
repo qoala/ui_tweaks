@@ -6,6 +6,8 @@ local array = include("modules/array")
 local abilityutil = include("sim/abilities/abilityutil")
 local simquery = include("sim/simquery")
 
+local uitr_util = include( SCRIPT_PATHS.qed_uitr .. "/uitr_util" )
+
 -- ===
 -- Common triggersOverwatch implementations
 -- ===
@@ -494,8 +496,7 @@ function abilityutil.uitr_wrappedOnTooltip( self, hud, sim, abilityOwner, abilit
 		end
 	end
 
-	local uiTweaks = sim:getParams().difficultyOptions.uiTweaks
-	if not uiTweaks or not tooltip then
+	if not uitr_util.checkOption("overwatchAbilities") or not tooltip then
 		return tooltip
 	end
 
@@ -534,8 +535,8 @@ end
 function abilityutil.uitr_wrappedAcquireTargets( self, targets, game, sim, abilityOwner, abilityUser, ... )
 	local target = self:_uitr_oldAcquireTargets(targets, game, sim, abilityOwner, abilityUser, ... )
 
-	local uiTweaks = sim:getParams().difficultyOptions.uiTweaks
-	if not uiTweaks or not target or not target.is_a or not target:is_a(targets.throwTarget) then
+
+	if not uitr_util.checkOption("overwatchAbilities") or not target or not target.is_a or not target:is_a(targets.throwTarget) then
 		return target
 	end
 

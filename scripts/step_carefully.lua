@@ -3,6 +3,8 @@ local astar = include( "modules/astar" )
 local astar_handlers = include( "sim/astar_handlers" )
 local simdefs = include( "sim/simdefs" )
 
+local uitr_util = include( SCRIPT_PATHS.qed_uitr .. "/uitr_util" )
+
 -- ===================
 -- modules/astar.AStar
 -- ===================
@@ -28,8 +30,7 @@ end
 local oldHandlerGetNode = astar_handlers.handler.getNode
 function astar_handlers.handler:getNode( cell, parentNode, ... )
 	local n = oldHandlerGetNode( self, cell, parentNode, ... )
-	local uiTweaks = self._sim:getParams().difficultyOptions.uiTweaks
-	if n and uiTweaks and uiTweaks.stepCarefully and self._unit and self._unit:isPC() then
+	if n and uitr_util.checkOption("stepCarefully") and self._unit and self._unit:isPC() then
 		-- mCost: algorithmic cost of the move (includes avoidance penalties)
 		-- realCost: true MP cost of the move
 		n.realCost = 0

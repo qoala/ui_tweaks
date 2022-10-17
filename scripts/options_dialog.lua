@@ -10,31 +10,39 @@ local options_dialog = include( "hud/options_dialog" )
 
 local UITR_OPTIONS = {
 	{
-		id = "empty_pockets",
+		id = "emptyPockets",
 		name = STRINGS.UITWEAKSR.OPTIONS.EMPTY_POCKETS,
 		tip = STRINGS.UITWEAKSR.OPTIONS.EMPTY_POCKETS_TIP,
 		check = true,
 	},
 	{
-		id = "inv_drag_drop",
+		id = "invDragDrop",
 		name = STRINGS.UITWEAKSR.OPTIONS.INV_DRAGDROP,
 		tip = STRINGS.UITWEAKSR.OPTIONS.INV_DRAGDROP_TIP,
 		check = true,
 	},
 	{
-		id = "precise_icons",
+		id = "preciseAp",
+		name = STRINGS.UITWEAKSR.OPTIONS.PRECISE_ICONS,
+		tip = STRINGS.UITWEAKSR.OPTIONS.PRECISE_ICONS_TIP,
+		values={ false, 0.5 },
+		value=0.5,
+		strings={ STRINGS.UITWEAKSR.OPTIONS.VANILLA, STRINGS.UITWEAKSR.OPTIONS.PRECISE_AP_HALF },
+	},
+	{
+		id = "preciseIcons",
 		name = STRINGS.UITWEAKSR.OPTIONS.PRECISE_ICONS,
 		tip = STRINGS.UITWEAKSR.OPTIONS.PRECISE_ICONS_TIP,
 		check = true,
 	},
 	{
-		id = "doors_while_dragging",
+		id = "doorsWhileDragging",
 		name = STRINGS.UITWEAKSR.OPTIONS.DOORS_WHILE_DRAGGING,
 		tip = STRINGS.UITWEAKSR.OPTIONS.DOORS_WHILE_DRAGGING_TIP,
 		check = true,
 	},
 	{
-		id = "colored_tracks",
+		id = "coloredTracks",
 		name = STRINGS.UITWEAKSR.OPTIONS.PRECISE_ICONS,
 		tip = STRINGS.UITWEAKSR.OPTIONS.PRECISE_ICONS_TIP,
 		values = { false, 1 },
@@ -42,13 +50,13 @@ local UITR_OPTIONS = {
 		strings = { STRINGS.UITWEAKSR.OPTIONS.VANILLA, STRINGS.UITWEAKSR.OPTIONS.COLORED_TRACKS_A },
 	},
 	{
-		id = "step_carefully",
+		id = "stepCarefully",
 		name = STRINGS.UITWEAKSR.OPTIONS.STEP_CAREFULLY,
 		tip = STRINGS.UITWEAKSR.OPTIONS.STEP_CAREFULLY_TIP,
 		check = true,
 	},
 	{
-		id = "xu_shank",
+		id = "xuShank",
 		name = STRINGS.UITWEAKSR.OPTIONS.XU_SHANK,
 		tip = STRINGS.UITWEAKSR.OPTIONS.XU_SHANK_TIP,
 		check = true,
@@ -58,7 +66,23 @@ local UITR_OPTIONS = {
 		spacer = true,
 	},
 	{
-		id = "selection_filter_agent",
+		id = "overwatchMovement",
+		name = STRINGS.UITWEAKSR.OPTIONS.OVERWATCH_MOVEMENT_WARNINGS,
+		tip = STRINGS.UITWEAKSR.OPTIONS.OVERWATCH_MOVEMENT_WARNINGS_TIP,
+		check = true,
+	},
+	{
+		id = "overwatchAbilities",
+		name = STRINGS.UITWEAKSR.OPTIONS.OVERWATCH_ABILITY_WARNINGS,
+		tip = STRINGS.UITWEAKSR.OPTIONS.OVERWATCH_ABILITY_WARNINGS_TIP,
+		check = true,
+	},
+
+	{
+		spacer = true,
+	},
+	{
+		id = "selectionFilterAgentColor",
 		name = STRINGS.UITWEAKSR.OPTIONS.SELECTION_FILTER_AGENT,
 		tip = STRINGS.UITWEAKSR.OPTIONS.SELECTION_FILTER_AGENT_TIP,
 		values = { false, "CYAN_SHADE", "BLUE_SHADE", "GREEN_SHADE", "PURPLE_SHADE", "CYAN_HILITE", "BLUE_HILITE", "GREEN_HILITE", "PURPLE_HILITE", },
@@ -66,13 +90,13 @@ local UITR_OPTIONS = {
 		strings = STRINGS.UITWEAKSR.OPTIONS.SELECTION_FILTER_AGENT_COLORS,
 	},
 	{
-		id = "selection_filter_agent_tactical",
+		id = "selectionFilterAgentTacticalOnly",
 		name = STRINGS.UITWEAKSR.OPTIONS.SELECTION_FILTER_AGENT_TACTICAL,
 		tip = STRINGS.UITWEAKSR.OPTIONS.SELECTION_FILTER_AGENT_TACTICAL_TIP,
 		check = true,
 	},
 	{
-		id = "selection_filter_tile",
+		id = "selectionFilterTileColor",
 		name = STRINGS.UITWEAKSR.OPTIONS.SELECTION_FILTER_TILE,
 		tip = STRINGS.UITWEAKSR.OPTIONS.SELECTION_FILTER_TILE_TIP,
 		values={ false, "WHITE_SHADE", "CYAN_SHADE", "BLUE_SHADE", },

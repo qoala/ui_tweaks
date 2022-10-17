@@ -22,6 +22,11 @@ local UI_TWEAKS_STRINGS =
 		XU_SHANK = "Xu Shank",
 		XU_SHANK_TIP = "Tony jabs devices with his arm instead of pulling out a laptop, to better match the augment icon. (animation change)",
 
+		OVERWATCH_MOVEMENT_WARNINGS = "Overwatch movement warnings",
+		OVERWATCH_MOVEMENT_WARNINGS_TIP = "Warning tiles appear on the floor if movement will trigger overwatch.",
+		OVERWATCH_ABILITY_WARNINGS = "Overwatch ability warnings",
+		OVERWATCH_ABILITY_WARNINGS_TIP = "Ability tooltips warn if the ability can trigger overwatch.",
+
 		SELECTION_FILTER_HEADING = "Selected Agent",
 		SELECTION_FILTER_AGENT = "Selected Agent Highlight",
 		SELECTION_FILTER_AGENT_TIP = "Selected agent is highlighted in a bright color of your choice.",

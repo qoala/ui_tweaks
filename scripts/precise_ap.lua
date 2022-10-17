@@ -1,6 +1,8 @@
 local flagui = include('hud/flag_ui')
 local home_panel = include('hud/home_panel')
 
+local uitr_util = include( SCRIPT_PATHS.qed_uitr .. "/uitr_util" )
+
 local function roundToPointFive( ap )
 	ap = math.max(0, ap)
 	return 0.5 * math.floor(ap / 0.5)
@@ -27,8 +29,7 @@ local oldRefreshAgent = home_panel.panel.refreshAgent
 function home_panel.panel:refreshAgent( unit, ... )
 	oldRefreshAgent( self, unit, ... )
 
-	local uiTweaks = self._hud._game.simCore:getParams().difficultyOptions.uiTweaks
-	if not uiTweaks or not uiTweaks.preciseAp then
+	if not uitr_util.checkOption("preciseAp") then
 		return
 	end
 
@@ -52,8 +53,7 @@ local oldRefreshFlag = flagui.refreshFlag
 
 function flagui:refreshFlag( unit, isSelected )
 	local sim = self._rig._boardRig:getSim()
-	local uiTweaks = sim:getParams().difficultyOptions.uiTweaks
-	if not uiTweaks or not uiTweaks.preciseAp then
+	if not uitr_util.checkOption("preciseAp") then
 		return oldRefreshFlag( self, unit, isSelected )
 	end
 

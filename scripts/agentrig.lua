@@ -2,6 +2,8 @@ local agentrig = include( "gameplay/agentrig" ).rig
 local cdefs = include( "client_defs" )
 local util = include( "modules/util" )
 
+local uitr_util = include( SCRIPT_PATHS.qed_uitr .. "/uitr_util" )
+
 -- Credit for selected highlights to Hekateras and Sizzlefrost.
 
 
@@ -70,9 +72,9 @@ local TILE_FILTER_COLORS = {
 
 local oldRefreshRenderFilter = agentrig.refreshRenderFilter
 function agentrig:refreshRenderFilter(...)
-	local uiTweaks = self._boardRig:getSim():getParams().difficultyOptions.uiTweaks
+	local uiTweaks = uitr_util:getOptions()
 
-	if uiTweaks and (uiTweaks.selectionFilterStyle ~= false) then
+	if uiTweaks.selectionFilterStyle ~= false then
 		-- Not selected. Reset filters first, in case the old refresh wants to change them.
 		self._prop:setRenderFilter(cdefs.RENDER_FILTERS["default"])
 		if self._HUDteamCircle then
@@ -83,7 +85,7 @@ function agentrig:refreshRenderFilter(...)
 	oldRefreshRenderFilter(self, ...)
 
 	local unit = self._boardRig:getLastKnownUnit( self._unitID )
-	if (not uiTweaks or (uiTweaks.selectionFilterTileColor == false and uiTweaks.selectionFilterAgentColor == false)
+	if ((uiTweaks.selectionFilterTileColor == false and uiTweaks.selectionFilterAgentColor == false)
 			or not unit
 	) then
 		return
