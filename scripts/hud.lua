@@ -9,13 +9,13 @@ local function onClickVisionToggle( hud )
 	hud:uitr_setVisionMode( not hud._uitr_isVisionMode )
 end
 
-function visionModeTooltip( doEnable )
+local function visionModeTooltip( doEnable )
 	return mui_tooltip( STRINGS.UITWEAKSR.UI.BTN_VISIONMODE_HEADER,
 			doEnable and STRINGS.UITWEAKSR.UI.BTN_VISIONMODE_DISABLE_TXT or STRINGS.UITWEAKSR.UI.BTN_VISIONMODE_ENABLE_TXT,
 			"UITR_VISIONMODE" )
 end
 
-function hud_uitr_setVisionMode( hud, doEnable )
+local function hud_uitr_setVisionMode( hud, doEnable )
 	hud._uitr_isVisionMode = doEnable
 
 	local btnToggleVisionMode = hud._screen.binder.topPnl.binder.btnToggleVisionMode
@@ -27,11 +27,11 @@ function hud_uitr_setVisionMode( hud, doEnable )
 	hud:refreshHud()
 end
 
-function hud_refreshTooltip( hud )
+local function hud_refreshTooltip( hud )
 	hud._forceTooltipRefresh = true
 end
 
-function hud_updateVision( hud )
+local function hud_updateVision( hud )
 	local sim = hud._game.simCore
 	local localPlayer = hud._game:getLocalPlayer()
 
