@@ -52,6 +52,7 @@ local function load( modApi, options, params )
 	local uitr_util = include( scriptPath .. "/uitr_util" )
 
 	if params then
+		params.uiTweaks = {}
 	end
 
 	-- Initialize fields in the settings file
@@ -64,6 +65,14 @@ local function load( modApi, options, params )
 		simlog("UITRDEBUG screen inserts")
 		modApi:insertUIElements( include( scriptPath.."/screen_inserts" ) )
 	end
+end
+
+local function unload( modApi )
+	local scriptPath = modApi:getScriptPath()
+	local uitr_util = include( scriptPath .. "/uitr_util" )
+	uitr_util.initOptions()
+	modApi:insertUIElements( include( scriptPath.."/base_screen_inserts" ) )
+	modApi:modifyUIElements( include( scriptPath.."/base_screen_modifications" ) )
 end
 
 local function lateLoad( modApi, options, params, mod_options )
@@ -114,6 +123,7 @@ return {
 	earlyInit = earlyInit,
 	init = init,
 	load = load,
+	unload = unload,
 	lateLoad = lateLoad,
 	lateUnload = lateUnload,
 	initStrings = initStrings,

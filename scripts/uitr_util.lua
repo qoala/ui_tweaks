@@ -60,6 +60,7 @@ local UITR_OPTIONS = {
 		name = STRINGS.UITWEAKSR.OPTIONS.DOORS_WHILE_DRAGGING,
 		tip = STRINGS.UITWEAKSR.OPTIONS.DOORS_WHILE_DRAGGING_TIP,
 		check = true,
+		needsCampaign = true,
 	},
 	{
 		id = "stepCarefully",

@@ -9,7 +9,10 @@ local oldCanModifyExit = simquery.canModifyExit
 function simquery.canModifyExit( unit, exitop, cell, dir )
 	local canModify, reason = oldCanModifyExit(unit, exitop, cell, dir )
 
-	if not uitr_util.checkOption("doorsWhileDragging") then
+	-- doorsWhileDragging is sim-incompatible if reloaded in a play session without UITR installed.
+	-- Require that the mod be enabled in the save file.
+	local uiTweaks = unit:getSim():getParams().difficultyOptions.uiTweaks
+	if not (uiTweaks and uitr_util.checkOption("doorsWhileDragging")) then
 		return canModify, reason
 	end
 
@@ -28,7 +31,8 @@ end
 local oldUseDoorAction = simactions.useDoorAction
 
 function simactions.useDoorAction( sim, exitOp, unitID, x0, y0, facing )
-	if not uitr_util.checkOption("doorsWhileDragging") then
+	local uiTweaks = unit:getSim():getParams().difficultyOptions.uiTweaks
+	if not (uiTweaks and uitr_util.checkOption("doorsWhileDragging")) then
 		return oldUseDoorAction(sim, exitOp, unitID, x0, y0, facing)
 	end
 

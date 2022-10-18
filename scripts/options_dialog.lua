@@ -57,7 +57,16 @@ local function comboOptionRetrieve( self, uitrSettings )
 	end
 end
 
-local function onChangedOption( self, setting )
+local function checkNeedsCampaign( self, setting, widget )
+	if setting.needsCampaign and self._game then
+		local value = setting:apply({}, widget.binder.widget)
+		local uiTweaks = self._game.simCore:getParams().difficultyOptions.uiTweaks
+		local uitrNeedsCampaignWarning = widget.binder.uitrNeedsCampaignWarning
+		uitrNeedsCampaignWarning:setVisible( value and not uiTweaks )
+	end
+end
+
+local function onChangedOption( self, setting, widget )
 	-- Enable/Disable other options
 	if setting.maskFn then
 		self:refreshUitrMasks()
@@ -79,6 +88,7 @@ local function onChangedOption( self, setting )
 		local uitrReloadWarning = self._screen.binder.uitrReloadWarning
 		uitrReloadWarning:setVisible( needsReload )
 	end
+	checkNeedsCampaign( self, setting, widget )
 end
 
 -- ===
@@ -156,22 +166,26 @@ function options_dialog:refreshUitrSettings( uitrSettings )
 		if setting.check then
 			widget = list:addItem( setting, "CheckOption" )
 			widget.binder.widget:setText( setting.name )
-			widget.binder.widget.onClick = util.makeDelegate( nil, onChangedOption, self, setting, widget.binder.widget )
+			widget.binder.widget.onClick = util.makeDelegate( nil, onChangedOption, self, setting, widget )
+			widget.binder.uitrNeedsCampaignWarning:setText( STRINGS.UITWEAKSR.UI.CAMPAIGN_WARNING )
 
 			setting.apply = checkOptionApply
 			setting.retrieve = checkOptionRetrieve
 			widget.binder.widget:setValue( setting:retrieve(uitrSettings) )
+			checkNeedsCampaign( self, setting, widget )
 		elseif setting.values then
 			widget = list:addItem( setting, "ComboOption" )
 			widget.binder.dropTxt:setText( setting.name )
 			for i, item in ipairs(setting.values) do
 				widget.binder.widget:addItem( setting.strings and setting.strings[i] or item )
 			end
-			widget.binder.widget.onTextChanged = util.makeDelegate( nil, onChangedOption, self, setting, widget.binder.widget )
+			widget.binder.widget.onTextChanged = util.makeDelegate( nil, onChangedOption, self, setting, widget )
+			widget.binder.uitrNeedsCampaignWarning:setText( STRINGS.UITWEAKSR.UI.CAMPAIGN_WARNING )
 
 			setting.apply = comboOptionApply
 			setting.retrieve = comboOptionRetrieve
 			widget.binder.widget:setValue( setting:retrieve(uitrSettings) )
+			checkNeedsCampaign( self, setting, widget )
 		elseif setting.spacer then
 			widget = list:addItem( setting, "OptionSpacer" )
 		end
