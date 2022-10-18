@@ -12,9 +12,8 @@ local UITR_OPTIONS = {
 
 	-- Additional interface detail.
 	{
-		spacer = true,
-	},
-	{
+		sectionHeader = true,
+
 		id = "preciseAp",
 		name = STRINGS.UITWEAKSR.OPTIONS.PRECISE_AP,
 		tip = STRINGS.UITWEAKSR.OPTIONS.PRECISE_AP_TIP,
@@ -48,9 +47,8 @@ local UITR_OPTIONS = {
 
 	-- QoL interface.
 	{
-		spacer = true,
-	},
-	{
+		sectionHeader = true,
+
 		id = "emptyPockets",
 		name = STRINGS.UITWEAKSR.OPTIONS.EMPTY_POCKETS,
 		tip = STRINGS.UITWEAKSR.OPTIONS.EMPTY_POCKETS_TIP,
@@ -78,9 +76,8 @@ local UITR_OPTIONS = {
 
 	-- Overwatch warnings.
 	{
-		spacer = true,
-	},
-	{
+		sectionHeader = true,
+
 		id = "overwatchMovement",
 		name = STRINGS.UITWEAKSR.OPTIONS.OVERWATCH_MOVEMENT_WARNINGS,
 		tip = STRINGS.UITWEAKSR.OPTIONS.OVERWATCH_MOVEMENT_WARNINGS_TIP,
@@ -95,9 +92,8 @@ local UITR_OPTIONS = {
 
 	-- Selection highlight.
 	{
-		spacer = true,
-	},
-	{
+		sectionHeader = true,
+
 		id = "selectionFilterAgentColor",
 		name = STRINGS.UITWEAKSR.OPTIONS.SELECTION_FILTER_AGENT,
 		tip = STRINGS.UITWEAKSR.OPTIONS.SELECTION_FILTER_AGENT_TIP,

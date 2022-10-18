@@ -167,6 +167,7 @@ function options_dialog:refreshUitrSettings( uitrSettings )
 			widget = list:addItem( setting, "CheckOption" )
 			widget.binder.widget:setText( setting.name )
 			widget.binder.widget.onClick = util.makeDelegate( nil, onChangedOption, self, setting, widget )
+			widget.binder.sectionHeaderLine:setVisible( not not setting.sectionHeader )
 			widget.binder.uitrNeedsCampaignWarning:setText( STRINGS.UITWEAKSR.UI.CAMPAIGN_WARNING )
 
 			setting.apply = checkOptionApply
@@ -180,6 +181,7 @@ function options_dialog:refreshUitrSettings( uitrSettings )
 				widget.binder.widget:addItem( setting.strings and setting.strings[i] or item )
 			end
 			widget.binder.widget.onTextChanged = util.makeDelegate( nil, onChangedOption, self, setting, widget )
+			widget.binder.sectionHeaderLine:setVisible( not not setting.sectionHeader )
 			widget.binder.uitrNeedsCampaignWarning:setText( STRINGS.UITWEAKSR.UI.CAMPAIGN_WARNING )
 
 			setting.apply = comboOptionApply
