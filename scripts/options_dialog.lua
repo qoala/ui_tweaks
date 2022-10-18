@@ -57,25 +57,40 @@ local function comboOptionRetrieve( self, uitrSettings )
 	end
 end
 
-local function onChangedOption( self, setting )
-	if not setting.needsReload or not self._game then
-		return
-	end
-
-	local tempSettings = {}
-	self:retrieveUitrSettings(tempSettings)
-	local originalSettings = self._originalSettings.uitr or {}
-
-	local needsReload = false
-	for _,optionDef in ipairs( uitr_util.UITR_OPTIONS ) do
-		if optionDef.needsReload and getValue(tempSettings, optionDef) ~= getValue(originalSettings, optionDef) then
-			needsReload = true
+local function onChangedOption( self, setting, widget )
+	-- Enable/Disable other options
+	if setting.onChanged then
+		local flags = setting.onChanged(setting:apply({}, widget))
+		if flags then
+			local items = self._screen.binder.uitrOptionsList:getItems()
+			for _,item in ipairs(items) do
+				local otherSetting = item.user_data
+				if otherSetting and flags[otherSetting.id] ~= nil then
+					local enabled = flags[otherSetting.id]
+					item.widget.binder.widget:setDisabled(not enabled)
+					item.widget:setVisible(enabled)
+				end
+			end
 		end
 	end
 
 
-	local uitrReloadWarning = self._screen.binder.uitrReloadWarning
-	uitrReloadWarning:setVisible( needsReload )
+	-- Reload warnings
+	if setting.needsReload and self._game then
+		local tempSettings = {}
+		self:retrieveUitrSettings(tempSettings)
+		local originalSettings = self._originalSettings.uitr or {}
+
+		local needsReload = false
+		for _,optionDef in ipairs( uitr_util.UITR_OPTIONS ) do
+			if optionDef.needsReload and getValue(tempSettings, optionDef) ~= getValue(originalSettings, optionDef) then
+				needsReload = true
+			end
+		end
+
+		local uitrReloadWarning = self._screen.binder.uitrReloadWarning
+		uitrReloadWarning:setVisible( needsReload )
+	end
 end
 
 -- ===
@@ -135,7 +150,7 @@ function options_dialog:refreshUitrSettings( uitrSettings )
 		if setting.check then
 			widget = list:addItem( setting, "CheckOption" )
 			widget.binder.widget:setText( setting.name )
-			widget.binder.widget.onClick = util.makeDelegate( nil, onChangedOption, self, setting )
+			widget.binder.widget.onClick = util.makeDelegate( nil, onChangedOption, self, setting, widget.binder.widget )
 
 			setting.apply = checkOptionApply
 			setting.retrieve = checkOptionRetrieve
@@ -146,7 +161,7 @@ function options_dialog:refreshUitrSettings( uitrSettings )
 			for i, item in ipairs(setting.values) do
 				widget.binder.widget:addItem( setting.strings and setting.strings[i] or item )
 			end
-			widget.binder.widget.onTextChanged = util.makeDelegate( nil, onChangedOption, self, setting )
+			widget.binder.widget.onTextChanged = util.makeDelegate( nil, onChangedOption, self, setting, widget.binder.widget )
 
 			setting.apply = comboOptionApply
 			setting.retrieve = comboOptionRetrieve

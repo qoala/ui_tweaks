@@ -83,6 +83,9 @@ local UITR_OPTIONS = {
 		values = { false, "CYAN_SHADE", "BLUE_SHADE", "GREEN_SHADE", "PURPLE_SHADE", "CYAN_HILITE", "BLUE_HILITE", "GREEN_HILITE", "PURPLE_HILITE", },
 		value = "BLUE_SHADE",
 		strings = STRINGS.UITWEAKSR.OPTIONS.SELECTION_FILTER_AGENT_COLORS,
+		onChanged = function(value)
+			return { selectionFilterAgentTacticalOnly = (value ~= false) }
+		end
 	},
 	{
 		id = "selectionFilterAgentTacticalOnly",
