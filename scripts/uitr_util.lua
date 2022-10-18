@@ -1,17 +1,6 @@
 
 local UITR_OPTIONS = {
-	{
-		id = "emptyPockets",
-		name = STRINGS.UITWEAKSR.OPTIONS.EMPTY_POCKETS,
-		tip = STRINGS.UITWEAKSR.OPTIONS.EMPTY_POCKETS_TIP,
-		check = true,
-	},
-	{
-		id = "invDragDrop",
-		name = STRINGS.UITWEAKSR.OPTIONS.INV_DRAGDROP,
-		tip = STRINGS.UITWEAKSR.OPTIONS.INV_DRAGDROP_TIP,
-		check = true,
-	},
+	-- Additional interface detail.
 	{
 		id = "preciseAp",
 		name = STRINGS.UITWEAKSR.OPTIONS.PRECISE_AP,
@@ -28,12 +17,6 @@ local UITR_OPTIONS = {
 		needsReload = true,
 	},
 	{
-		id = "doorsWhileDragging",
-		name = STRINGS.UITWEAKSR.OPTIONS.DOORS_WHILE_DRAGGING,
-		tip = STRINGS.UITWEAKSR.OPTIONS.DOORS_WHILE_DRAGGING_TIP,
-		check = true,
-	},
-	{
 		id = "coloredTracks",
 		name = STRINGS.UITWEAKSR.OPTIONS.COLORED_TRACKS,
 		tip = STRINGS.UITWEAKSR.OPTIONS.COLORED_TRACKS_TIP,
@@ -42,6 +25,29 @@ local UITR_OPTIONS = {
 		strings = { STRINGS.UITWEAKSR.OPTIONS.VANILLA, STRINGS.UITWEAKSR.OPTIONS.COLORED_TRACKS_A },
 		needsReload = true,
 	},
+
+	-- QoL interface.
+	{
+		spacer = true,
+	},
+	{
+		id = "emptyPockets",
+		name = STRINGS.UITWEAKSR.OPTIONS.EMPTY_POCKETS,
+		tip = STRINGS.UITWEAKSR.OPTIONS.EMPTY_POCKETS_TIP,
+		check = true,
+	},
+	{
+		id = "invDragDrop",
+		name = STRINGS.UITWEAKSR.OPTIONS.INV_DRAGDROP,
+		tip = STRINGS.UITWEAKSR.OPTIONS.INV_DRAGDROP_TIP,
+		check = true,
+	},
+	{
+		id = "doorsWhileDragging",
+		name = STRINGS.UITWEAKSR.OPTIONS.DOORS_WHILE_DRAGGING,
+		tip = STRINGS.UITWEAKSR.OPTIONS.DOORS_WHILE_DRAGGING_TIP,
+		check = true,
+	},
 	{
 		id = "stepCarefully",
 		name = STRINGS.UITWEAKSR.OPTIONS.STEP_CAREFULLY,
@@ -49,6 +55,7 @@ local UITR_OPTIONS = {
 		check = true,
 	},
 
+	-- Overwatch warnings.
 	{
 		spacer = true,
 	},
@@ -65,6 +72,7 @@ local UITR_OPTIONS = {
 		check = true,
 	},
 
+	-- Selection highlight.
 	{
 		spacer = true,
 	},
