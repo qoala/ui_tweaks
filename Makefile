@@ -9,7 +9,7 @@ include makeconfig.mk
 
 .PHONY: build
 
-build: out/modinfo.txt out/scripts.zip out/gui.kwad out/images.kwad out/rrni_gui.kwad
+build: out/modinfo.txt out/scripts.zip out/gui.kwad out/images.kwad out/rrni_gui.kwad out/tlv_anims.kwad
 
 install: build
 	mkdir -p $(INSTALL_PATH)
@@ -19,6 +19,7 @@ install: build
 	cp out/gui.kwad $(INSTALL_PATH)/
 	cp out/images.kwad $(INSTALL_PATH)/
 	cp out/rrni_gui.kwad $(INSTALL_PATH)/
+	cp out/tlv_anims.kwad $(INSTALL_PATH)/
 ifneq ($(INSTALL_PATH2),)
 	mkdir -p $(INSTALL_PATH2)
 	rm -f $(INSTALL_PATH2)/*.kwad $(INSTALL_PATH2)/*.zip
@@ -27,6 +28,7 @@ ifneq ($(INSTALL_PATH2),)
 	cp out/gui.kwad $(INSTALL_PATH2)/
 	cp out/images.kwad $(INSTALL_PATH2)/
 	cp out/rrni_gui.kwad $(INSTALL_PATH2)/
+	cp out/tlv_anims.kwad $(INSTALL_PATH2)/
 endif
 
 out/modinfo.txt: modinfo.txt
@@ -38,7 +40,7 @@ out/rrni_gui.kwad: rrni_gui.kwad
 	cp rrni_gui.kwad out/rrni_gui.kwad
 
 #
-# kwads and contained files
+## kwads and contained files
 #
 
 # anims := $(patsubst %.anim.d,%.anim,$(shell find anims -type d -name "*.anim.d"))
@@ -54,9 +56,22 @@ out/gui.kwad out/images.kwad: $(gui_files) $(images_files)
 	$(KWAD_BUILDER) -i build.lua -o out
 
 #
-# scripts
+## scripts
 #
 
 out/scripts.zip: $(shell find scripts -type f -name "*.lua")
 	mkdir -p out
 	cd scripts && zip -r ../$@ . -i '*.lua'
+
+#
+## Tactical Lamp View kwads
+#
+
+out/tlv_anims.kwad: tactical-lamp-mod/build/anims.kwad
+	mkdir -p out
+	cp tactical-lamp-mod/build/anims.kwad out/tlv_anims.kwad
+
+tlv_anims := $(wildcard tactical-lamp-mod/src/kwads/anims/**/*.anim)
+tactical-lamp-mod/build/anims.kwad: $(tlv_anims)
+	mkdir tactical-lamp-mod/build
+	cd tactical-lamp-mod/src/kwads && $(KWAD_BUILDER) -i build.lua -o ../../build

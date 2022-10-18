@@ -30,6 +30,13 @@ local UITR_OPTIONS = {
 		needsReload = true,
 	},
 	{
+		id = "tacticalLampView",
+		name = STRINGS.UITWEAKSR.OPTIONS.TACTICAL_LAMP_VIEW,
+		tip = STRINGS.UITWEAKSR.OPTIONS.TACTICAL_LAMP_VIEW_TIP,
+		check = true,
+		needsReload = true,
+	},
+	{
 		id = "coloredTracks",
 		name = STRINGS.UITWEAKSR.OPTIONS.COLORED_TRACKS,
 		tip = STRINGS.UITWEAKSR.OPTIONS.COLORED_TRACKS_TIP,

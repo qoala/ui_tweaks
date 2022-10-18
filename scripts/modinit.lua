@@ -19,6 +19,7 @@ local function init( modApi )
 	KLEIResourceMgr.MountPackage( dataPath .. "/gui.kwad", "data" )
 	KLEIResourceMgr.MountPackage( dataPath .. "/images.kwad", "data" )
 	KLEIResourceMgr.MountPackage( dataPath .. "/rrni_gui.kwad", "data" )
+	KLEIResourceMgr.MountPackage( dataPath .. "/tlv_anims.kwad", "data" )
 
 	include( modApi:getScriptPath() .. "/resources" ).initUitrResources()
 	include( modApi:getScriptPath() .. "/uitr_util" )
@@ -74,26 +75,35 @@ local function lateUnload( modApi, mod_options )
 	local uitr_util = include( scriptPath .. "/uitr_util" )
 
 	-- "Precise Icons" uses RolandJ's Roman Numeral Icons
-	-- Check our options and NIAA options, to determine which icons to replace
-	local RRNI_OPTIONS = {
-		RRNI_ENABLED = uitr_util.checkOption("preciseIcons") ,
-		RRNI_DART_RIFLE_ICON = false,
-		RRNI_RANGED_TIERS = false,
-	}
-	local niaa = mod_manager.findModByName and mod_manager:findModByName( "New Items And Augments" )
-	if niaa and mod_options[niaa.id] and mod_options[niaa.id].enabled then
-		local niaaOptions = mod_options[niaa.id].options
-		RRNI_OPTIONS.NIAA = {
-			AUGMENTS = niaaOptions["enable_augments"] and niaaOptions["enable_augments"].enabled,
-			ITEMS = niaaOptions["enable_items"] and niaaOptions["enable_items"].enabled,
-			WEAPONS = niaaOptions["enable_weapons"] and niaaOptions["enable_weapons"].enabled,
+	do
+		-- Check our options and NIAA options, to determine which icons to replace
+		-- If precise icons is disabled, still need to execute to undo any prior changes.
+		local RRNI_OPTIONS = {
+			RRNI_ENABLED = uitr_util.checkOption("preciseIcons") ,
+			RRNI_DART_RIFLE_ICON = false,
+			RRNI_RANGED_TIERS = false,
 		}
-	else
-		RRNI_OPTIONS.NIAA = {}
+		local niaa = mod_manager.findModByName and mod_manager:findModByName( "New Items And Augments" )
+		if niaa and mod_options[niaa.id] and mod_options[niaa.id].enabled then
+			local niaaOptions = mod_options[niaa.id].options
+			RRNI_OPTIONS.NIAA = {
+				AUGMENTS = niaaOptions["enable_augments"] and niaaOptions["enable_augments"].enabled,
+				ITEMS = niaaOptions["enable_items"] and niaaOptions["enable_items"].enabled,
+				WEAPONS = niaaOptions["enable_weapons"] and niaaOptions["enable_weapons"].enabled,
+			}
+		else
+			RRNI_OPTIONS.NIAA = {}
+		end
+
+		local rrni_itemdefs = include( scriptPath .. "/rrni_itemdefs" )
+		rrni_itemdefs.swapIcons(RRNI_OPTIONS)
 	end
 
-	local rrni_itemdefs = include( scriptPath .. "/rrni_itemdefs" )
-	rrni_itemdefs.swapIcons(RRNI_OPTIONS)
+	if uitr_util.checkOption("tacticalLampView") then
+		for name, animDef in pairs(include( scriptPath .. "/animdefs_tactical" )) do
+			modApi:addAnimDef( name, animDef )
+		end
+	end
 
 	local patch_abilities = include( scriptPath .. "/patch_abilities" )
 	patch_abilities.applyOverwatchFlag()
