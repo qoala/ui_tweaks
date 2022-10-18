@@ -23,7 +23,7 @@ local abilitydefs = include( "sim/abilitydefs" )
 local manualHack = abilitydefs.lookupAbility("manualHack")
 local manualHack_executeAbility_old = manualHack.executeAbility
 manualHack.executeAbility = function( self, sim, unit, userUnit, target, ... )
-	local xuShank_enabled = uitr_util.checkOption("xuShank")
+	local xuShank_enabled = true
 	local newFacing = nil
 	if xuShank_enabled then
 		unit:getTraits().xuShanking = true
@@ -36,7 +36,7 @@ manualHack.executeAbility = function( self, sim, unit, userUnit, target, ... )
 
 	manualHack_executeAbility_old( self, sim, unit, userUnit, target, ... )
 
-	if unit and xuShank_enabled then
+	if unit and unit:isValid() and xuShank_enabled then
 		sim:dispatchEvent( simdefs.EV_UNIT_USEDOOR_PST, { unitID = unit:getID(), facing = newFacing } )
 		unit:getTraits().xuShanking = nil
 	end

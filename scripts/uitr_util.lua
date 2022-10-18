@@ -48,12 +48,6 @@ local UITR_OPTIONS = {
 		tip = STRINGS.UITWEAKSR.OPTIONS.STEP_CAREFULLY_TIP,
 		check = true,
 	},
-	{
-		id = "xuShank",
-		name = STRINGS.UITWEAKSR.OPTIONS.XU_SHANK,
-		tip = STRINGS.UITWEAKSR.OPTIONS.XU_SHANK_TIP,
-		check = true,
-	},
 
 	{
 		spacer = true,
