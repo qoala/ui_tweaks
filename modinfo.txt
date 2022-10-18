@@ -1,4 +1,4 @@
 name = UI Tweaks Reloaded
 author = osheroff,qoalabear,RolandJ,Hekateras,Benjamin C. Lewis
-version = 2.6.0
+version = 2.6.1
 workshop = 2660875942
