@@ -31,7 +31,7 @@ end
 local oldUseDoorAction = simactions.useDoorAction
 
 function simactions.useDoorAction( sim, exitOp, unitID, x0, y0, facing )
-	local uiTweaks = unit:getSim():getParams().difficultyOptions.uiTweaks
+	local uiTweaks = sim:getParams().difficultyOptions.uiTweaks
 	if not (uiTweaks and uitr_util.checkOption("doorsWhileDragging")) then
 		return oldUseDoorAction(sim, exitOp, unitID, x0, y0, facing)
 	end
