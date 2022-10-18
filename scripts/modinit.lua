@@ -57,8 +57,13 @@ local function load( modApi, options, params )
 	-- Initialize fields in the settings file
 	uitr_util.initOptions()
 
-	modApi:insertUIElements( include( scriptPath.."/screen_inserts" ) )
-	modApi:modifyUIElements( include( scriptPath.."/screen_modifications" ) )
+	modApi:insertUIElements( include( scriptPath.."/base_screen_inserts" ) )
+	modApi:modifyUIElements( include( scriptPath.."/base_screen_modifications" ) )
+
+	if uitr_util.checkEnabled() then
+		simlog("UITRDEBUG screen inserts")
+		modApi:insertUIElements( include( scriptPath.."/screen_inserts" ) )
+	end
 end
 
 local function lateLoad( modApi, options, params, mod_options )

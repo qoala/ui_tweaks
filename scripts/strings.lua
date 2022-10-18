@@ -1,6 +1,7 @@
 local UI_TWEAKS_STRINGS =
 {
 	OPTIONS = {
+		MOD_ENABLED = "Enabled",
 		VANILLA = "OFF/VANILLA",
 
 		PRECISE_AP = "Precise AP",

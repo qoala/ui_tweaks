@@ -1,6 +1,19 @@
 
 local UITR_OPTIONS = {
+	{
+		id = "enabled",
+		name = STRINGS.UITWEAKSR.OPTIONS.MOD_ENABLED,
+		check = true,
+		needsReload = true,
+		maskFn = function(self, value)
+			return { [true] = value }
+		end
+	},
+
 	-- Additional interface detail.
+	{
+		spacer = true,
+	},
 	{
 		id = "preciseAp",
 		name = STRINGS.UITWEAKSR.OPTIONS.PRECISE_AP,
@@ -83,7 +96,7 @@ local UITR_OPTIONS = {
 		values = { false, "CYAN_SHADE", "BLUE_SHADE", "GREEN_SHADE", "PURPLE_SHADE", "CYAN_HILITE", "BLUE_HILITE", "GREEN_HILITE", "PURPLE_HILITE", },
 		value = "BLUE_SHADE",
 		strings = STRINGS.UITWEAKSR.OPTIONS.SELECTION_FILTER_AGENT_COLORS,
-		onChanged = function(value)
+		maskFn = function(self, value)
 			return { selectionFilterAgentTacticalOnly = (value ~= false) }
 		end
 	},
@@ -105,15 +118,26 @@ local UITR_OPTIONS = {
 
 -- ===
 
+local function checkEnabled( )
+	local settingsFile = savefiles.getSettings( "settings" )
+	local uitr = settingsFile.data.uitr
+	return uitr and uitr["enabled"]
+end
+
 local function checkOption( optionId )
 	local settingsFile = savefiles.getSettings( "settings" )
 	local uitr = settingsFile.data.uitr
-	return uitr and uitr[optionId]
+	return uitr and uitr["enabled"] and uitr[optionId]
 end
 
 local function getOptions( )
 	local settingsFile = savefiles.getSettings( "settings" )
-	return settingsFile.data.uitr or {}
+	local uitr = settingsFile.data.uitr
+	if uitr and uitr["enabled"] then
+		return uitr
+	else
+		return {}
+	end
 end
 
 local function initOptions( )
@@ -134,6 +158,7 @@ end
 
 return {
 	UITR_OPTIONS = UITR_OPTIONS,
+	checkEnabled = checkEnabled,
 	checkOption = checkOption,
 	getOptions = getOptions,
 	initOptions = initOptions,

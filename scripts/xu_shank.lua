@@ -23,7 +23,7 @@ local abilitydefs = include( "sim/abilitydefs" )
 local manualHack = abilitydefs.lookupAbility("manualHack")
 local manualHack_executeAbility_old = manualHack.executeAbility
 manualHack.executeAbility = function( self, sim, unit, userUnit, target, ... )
-	local xuShank_enabled = true
+	local xuShank_enabled = uitr_util.checkEnabled()
 	local newFacing = nil
 	if xuShank_enabled then
 		unit:getTraits().xuShanking = true

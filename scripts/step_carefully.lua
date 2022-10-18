@@ -40,8 +40,7 @@ end
 
 local oldHandlerHandleNode = astar_handlers.handler._handleNode
 function astar_handlers.handler:_handleNode( to_cell, from_node, goal_cell, ... )
-	local uiTweaks = self._sim:getParams().difficultyOptions.uiTweaks
-	if not uiTweaks or not uiTweaks.stepCarefully or not self._unit or not self._unit:isPC() then
+	if not uitr_util.checkOption("stepCarefully") or not self._unit or not self._unit:isPC() then
 		return oldHandlerHandleNode( self, to_cell, from_node, goal_cell, ... )
 	end
 

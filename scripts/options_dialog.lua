@@ -57,23 +57,11 @@ local function comboOptionRetrieve( self, uitrSettings )
 	end
 end
 
-local function onChangedOption( self, setting, widget )
+local function onChangedOption( self, setting )
 	-- Enable/Disable other options
-	if setting.onChanged then
-		local flags = setting.onChanged(setting:apply({}, widget))
-		if flags then
-			local items = self._screen.binder.uitrOptionsList:getItems()
-			for _,item in ipairs(items) do
-				local otherSetting = item.user_data
-				if otherSetting and flags[otherSetting.id] ~= nil then
-					local enabled = flags[otherSetting.id]
-					item.widget.binder.widget:setDisabled(not enabled)
-					item.widget:setVisible(enabled)
-				end
-			end
-		end
+	if setting.maskFn then
+		self:refreshUitrMasks()
 	end
-
 
 	-- Reload warnings
 	if setting.needsReload and self._game then
@@ -101,6 +89,9 @@ function options_dialog:init(...)
 
 	local oldOnClick = self._screen.binder.acceptBtn.binder.btn.onClick._fn
 	local oldRetrieveSettings
+	local oldRetrieveSettingsIndex
+	local oldApplyGfxSettings
+	local oldApplyGfxSettingsIndex
 
 	local i = 1
 	while true do
@@ -108,6 +99,12 @@ function options_dialog:init(...)
 		assert(n)
 		if n == "retrieveSettings" then
 			oldRetrieveSettings = v
+			oldRetrieveSettingsIndex = i
+		elseif n == "applyGfxSettings" then
+			oldApplyGfxSettings = v
+			oldApplyGfxSettingsIndex = i
+		end
+		if oldRetrieveSettingsIndex and oldApplyGfxSettingsIndex then
 			break
 		end
 		i = i + 1
@@ -122,7 +119,16 @@ function options_dialog:init(...)
 		return settings
 	end
 
-	debug.setupvalue(oldOnClick, i, retrieveSettings)
+	local applyGfxSettings = function(dialog, settings)
+		oldApplyGfxSettings(dialog, settings)
+
+		if dialog._game and dialog._game.hud then
+			dialog._game.hud:refreshHud()
+		end
+	end
+
+	debug.setupvalue(oldOnClick, oldRetrieveSettingsIndex, retrieveSettings)
+	debug.setupvalue(oldOnClick, oldApplyGfxSettingsIndex, applyGfxSettings)
 end
 
 local oldShow = options_dialog.show
@@ -174,6 +180,9 @@ function options_dialog:refreshUitrSettings( uitrSettings )
 		setting.list_index = list:getItemCount()
 		assert(setting.list_index > 0)
 	end
+
+	list:scrollItems(0)
+	self:refreshUitrMasks()
 end
 
 function options_dialog:retrieveUitrSettings( uitrSettings )
@@ -184,6 +193,41 @@ function options_dialog:retrieveUitrSettings( uitrSettings )
 		if setting and setting.apply then
 			local widget = item.widget.binder.widget
 			setting:apply(uitrSettings, widget)
+		end
+	end
+end
+
+function options_dialog:refreshUitrMasks()
+	local masks = {}
+	local items = self._screen.binder.uitrOptionsList:getItems()
+	for _,item in ipairs(items) do
+		local setting = item.user_data
+		if setting and setting.maskFn then
+			local widget = item.widget.binder.widget
+			local mask = setting:maskFn(setting:apply({}, widget))
+			if mask then
+				for maskId,maskValue in pairs(mask) do
+					masks[maskId] = (masks[maskId] == nil or masks[maskId]) and maskValue
+				end
+			end
+		end
+	end
+	for _,item in ipairs(items) do
+		local setting = item.user_data
+		local enabled = nil
+		if setting and setting.id == "enabled" then
+			-- skip
+		elseif setting and masks[setting.id] ~= nil then
+			enabled = masks[setting.id]
+		elseif setting and masks[true] ~= nil then
+			enabled = masks[true]
+		end
+		if enabled ~= nil then
+			local inputWidget = item.widget.binder.widget
+			if inputWidget and not inputWidget.isnull then
+				inputWidget:setDisabled(not enabled)
+			end
+			item.widget:setVisible(enabled)
 		end
 	end
 end
