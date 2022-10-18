@@ -10,7 +10,6 @@ local function earlyInit( modApi )
 	}
 end
 
--- init will be called once
 local function init( modApi )
 	-- (This mod doesn't set its own script path, but relies on checking if other mods have done so)
 	rawset(_G,"SCRIPT_PATHS",rawget(_G,"SCRIPT_PATHS") or {})
@@ -45,15 +44,10 @@ local function init( modApi )
 	include( modApi:getScriptPath() .. "/targeting" )
 end
 
--- load may be called multiple times with different options enabled
--- params is present iff Sim Constructor is installed and this is a new campaign.
-local function load( modApi, options, params )
+-- Apply changes on both unload and load. We're controlled by the settings file, not campaign options.
+local function unload( modApi )
 	local scriptPath = modApi:getScriptPath()
 	local uitr_util = include( scriptPath .. "/uitr_util" )
-
-	if params then
-		params.uiTweaks = {}
-	end
 
 	-- Initialize fields in the settings file
 	uitr_util.initOptions()
@@ -67,15 +61,15 @@ local function load( modApi, options, params )
 	end
 end
 
-local function unload( modApi )
-	local scriptPath = modApi:getScriptPath()
-	local uitr_util = include( scriptPath .. "/uitr_util" )
-	uitr_util.initOptions()
-	modApi:insertUIElements( include( scriptPath.."/base_screen_inserts" ) )
-	modApi:modifyUIElements( include( scriptPath.."/base_screen_modifications" ) )
+local function load( modApi, options, params )
+	unload( modApi )
+	if params then
+		params.uiTweaks = {}
+	end
 end
 
-local function lateLoad( modApi, options, params, mod_options )
+-- Apply changes on both lateUnload and lateLoad. We're controlled by the settings file, not campaign options.
+local function lateUnload( modApi, mod_options )
 	local scriptPath = modApi:getScriptPath()
 	local uitr_util = include( scriptPath .. "/uitr_util" )
 
@@ -105,10 +99,8 @@ local function lateLoad( modApi, options, params, mod_options )
 	patch_abilities.applyOverwatchFlag()
 end
 
-local function lateUnload( modApi, options )
-	local scriptPath = modApi:getScriptPath()
-	local rrni_itemdefs = include( scriptPath .. "/rrni_itemdefs" )
-	rrni_itemdefs.swapIcons({ RRNI_ENABLED = false })
+local function lateLoad( modApi, options, params, mod_options )
+	lateUnload( modApi, mod_options )
 end
 
 -- gets called before localization occurs and before content is loaded
