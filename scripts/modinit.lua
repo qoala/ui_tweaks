@@ -48,11 +48,15 @@ end
 -- load may be called multiple times with different options enabled
 -- params is present iff Sim Constructor is installed and this is a new campaign.
 local function load( modApi, options, params )
+	local scriptPath = modApi:getScriptPath()
+	local uitr_util = include( scriptPath .. "/uitr_util" )
 
 	if params then
 	end
 
-	local scriptPath = modApi:getScriptPath()
+	-- Initialize fields in the settings file
+	uitr_util.initOptions()
+
 	modApi:insertUIElements( include( scriptPath.."/screen_inserts" ) )
 	modApi:modifyUIElements( include( scriptPath.."/screen_modifications" ) )
 end
