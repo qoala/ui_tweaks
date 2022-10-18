@@ -31,8 +31,10 @@ end
 local oldUseDoorAction = simactions.useDoorAction
 
 function simactions.useDoorAction( sim, exitOp, unitID, x0, y0, facing )
+	-- Always attempt body-handling if the campaign has UITR enabled.
+	-- This allows toggling doorsWhileDragging off mid-mission while still preserving a valid simhistory.
 	local uiTweaks = sim:getParams().difficultyOptions.uiTweaks
-	if not (uiTweaks and uitr_util.checkOption("doorsWhileDragging")) then
+	if not uiTweaks then
 		return oldUseDoorAction(sim, exitOp, unitID, x0, y0, facing)
 	end
 
