@@ -3,6 +3,8 @@ local mui_tooltip = include( "mui/mui_tooltip" )
 local util = include( "modules/util" )
 local simquery = include( "sim/simquery" )
 
+local uitr_util = include( SCRIPT_PATHS.qed_uitr .. "/uitr_util" )
+
 -- ====
 
 local vision_tooltip = class( mui_tooltip )
@@ -146,11 +148,45 @@ end
 
 -- ====
 
-local function addVisionActionsForUnit( hud, actions, targetUnit, isSeen )
+local show_interest_tooltip = class( mui_tooltip )
+
+function show_interest_tooltip:init( hud, unit, x, y, x0, y0 )
+	mui_tooltip.init( self, util.sformat(STRINGS.UITWEAKSR.UI.HOVER_INTEREST, util.toupper(unit:getName())), nil, nil )
+	self._game = hud._game
+	self._unit = unit
+	self._x, self._y = x, y
+	self._x0, self._y0 = x0, y0
+end
+
+function show_interest_tooltip:activate( screen )
+	mui_tooltip.activate( self, screen )
+
+	self._fx = self._game.fxmgr:addAnimFx( { loop=true, kanim="gui/guard_interest_fx", symbol="effect", anim="in", x=self._x0, y=self._y0 } )
+end
+
+function show_interest_tooltip:deactivate()
+	mui_tooltip.deactivate( self )
+
+	if self._fx then
+		self._game.fxmgr:removeFx( self._fx )
+		self._fx = nil
+	end
+end
+
+-- ====
+
+local function addVisionActionsForUnit( hud, actions, targetUnit, isSeen, staleGhost )
 	local localPlayer = hud._game:getLocalPlayer()
-	local x,y = targetUnit:getLocation()
+	local x,y
+	if staleGhost then
+		x,y = staleGhost:getLocation()
+	else
+		x,y = targetUnit:getLocation()
+	end
 	local z = targetUnit:getTraits().breakIceOffset -- nil for most units. Z offset for cameras.
 	local sim = hud._game.simCore
+	local unitRig = hud._game.boardRig:getUnitRig(targetUnit:getID())
+
 	local unitCanSee = simquery.couldUnitSee( sim, targetUnit )
 	local canNormallySeeLOS = sim:getParams().difficultyOptions.dangerZones or isSeen
 
@@ -158,7 +194,7 @@ local function addVisionActionsForUnit( hud, actions, targetUnit, isSeen )
 		return
 	end
 
-	if unitCanSee and (not isSeen or targetUnit:getPlayerOwner() == localPlayer) then
+	if not staleGhost and unitCanSee and (not isSeen or targetUnit:getPlayerOwner() == localPlayer) then
 		table.insert( actions,
 		{
 			txt = "",
@@ -167,13 +203,13 @@ local function addVisionActionsForUnit( hud, actions, targetUnit, isSeen )
 			enabled = false,
 			layoutID = targetUnit:getID(),
 			tooltip = vision_tooltip( hud, targetUnit ),
-			priority = -10,
+			priority = -10.1,
 		})
 	end
 	-- getExplodeCells = grenade or EMP pack.
 	-- has range = not stickycam/holo cover/transport beacon
 	-- not has carryable or deployed = planted EMP or deployed grenade, not dropped item
-	if targetUnit.getExplodeCells
+	if not staleGhost and targetUnit.getExplodeCells
 			and targetUnit:hasTrait("range")
 			and (not targetUnit:hasAbility( "carryable" ) or targetUnit:getTraits().deployed) then
 		table.insert( actions,
@@ -187,7 +223,7 @@ local function addVisionActionsForUnit( hud, actions, targetUnit, isSeen )
 			priority = -9,
 		})
 	end
-	if targetUnit:getTraits().pulseScan and targetUnit:isNPC() and targetUnit:getTraits().range > 0 then
+	if not staleGhost and targetUnit:getTraits().pulseScan and targetUnit:isNPC() and targetUnit:getTraits().range > 0 then
 		table.insert( actions,
 		{
 			txt = "",
@@ -199,7 +235,7 @@ local function addVisionActionsForUnit( hud, actions, targetUnit, isSeen )
 			priority = -8,
 		})
 	end
-	if unitCanSee and canNormallySeeLOS and targetUnit:getPlayerOwner() ~= localPlayer then
+	if not staleGhost and unitCanSee and canNormallySeeLOS and targetUnit:getPlayerOwner() ~= localPlayer then
 		local doEnable = not targetUnit:getTraits().uitr_hideVision
 		table.insert( actions,
 		{
@@ -209,13 +245,31 @@ local function addVisionActionsForUnit( hud, actions, targetUnit, isSeen )
 			enabled = true,
 			layoutID = targetUnit:getID(),
 			tooltip = doEnable and hidevision_tooltip( hud, targetUnit ) or showvision_tooltip( targetUnit ),
-			priority = -5,
-			onClick =
-				function()
-					targetUnit:getTraits().uitr_hideVision = not targetUnit:getTraits().uitr_hideVision 
-					hud._game.boardRig:refresh()
-					hud:refreshHud()
-				end
+			priority = -10,
+			onClick = function()
+				targetUnit:getTraits().uitr_hideVision = not targetUnit:getTraits().uitr_hideVision
+				hud._game.boardRig:refresh()
+				hud:refreshHud()
+			end
+		})
+	end
+	-- Allowed on stale ghosts. Info is not connected to current location.
+	if unitRig and unitRig.interestProp then
+		local x0,y0 = unitRig.interestProp:getLoc()
+		local xc,yc = hud._game.boardRig:worldToCell(x0, y0)
+		table.insert( actions,
+		{
+			txt = "",
+			icon = targetUnit:isAlerted() and "gui/icons/thought_icons/status_hunting.png" or "gui/icons/thought_icons/status_investigating.png" ,
+			x = x, y = y, z = z,
+			enabled = true,
+			layoutID = targetUnit:getID(),
+			tooltip = show_interest_tooltip( hud, targetUnit, xc, yc, x0, y0 ),
+			priority = -9.9,
+			onClick = function()
+				hud._game:cameraPanToCell( xc, yc )
+				hud._game.fxmgr:addAnimFx( { kanim="gui/guard_interest_fx", symbol="effect", anim="in", x=x0, y=y0 } )
+			end
 		})
 	end
 end
@@ -229,9 +283,9 @@ local function resolveGhost( sim, unitID, ghostUnit )
 	local x1,y1 = unit:getLocation()
 	if x0 ~= x1 or y0 ~= y1 then
 		-- Ghost is stale (by the metric used for shift-highlighting)
-		return nil
+		return unit, true
 	end
-	return unit
+	return unit, false
 end
 
 local oldGeneratePotentialActions = agent_actions.generatePotentialActions
@@ -251,14 +305,14 @@ function agent_actions.generatePotentialActions( hud, actions, unit, cellx, cell
 
 	-- Vision actions for seen units
 	for i,targetUnit in ipairs( localPlayer:getSeenUnits() ) do
-		addVisionActionsForUnit( hud, actions, targetUnit, true )
+		addVisionActionsForUnit( hud, actions, targetUnit, true, false )
 	end
 
 	-- Vision actions for known ghosts
 	for unitID,ghostUnit in pairs( localPlayer._ghost_units ) do
-		local targetUnit = resolveGhost( sim, unitID, ghostUnit )
+		local targetUnit, isStale = resolveGhost( sim, unitID, ghostUnit )
 		if targetUnit then
-			addVisionActionsForUnit( hud, actions, targetUnit, false )
+			addVisionActionsForUnit( hud, actions, targetUnit, false, isStale and ghostUnit )
 		end
 	end
 
