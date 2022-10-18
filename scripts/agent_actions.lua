@@ -187,7 +187,7 @@ local function addVisionActionsForUnit( hud, actions, targetUnit, isSeen )
 			priority = -9,
 		})
 	end
-	if targetUnit:getTraits().pulseScan and targetUnit:getTraits().range > 0 then
+	if targetUnit:getTraits().pulseScan and targetUnit:isNPC() and targetUnit:getTraits().range > 0 then
 		table.insert( actions,
 		{
 			txt = "",
