@@ -57,7 +57,6 @@ local function unload( modApi )
 	modApi:modifyUIElements( include( scriptPath.."/base_screen_modifications" ) )
 
 	if uitr_util.checkEnabled() then
-		simlog("UITRDEBUG screen inserts")
 		modApi:insertUIElements( include( scriptPath.."/screen_inserts" ) )
 	end
 end
