@@ -96,6 +96,7 @@ local function checkPotentialThreat(unit, sim, selectedUnit, guardThreats, turre
 					predictPeripheralLos=trackerPredictPeripheralLos,
 				}
 				table.insert(guardThreats, tracker)
+				-- simlog("LOG_UITR_OW", "threat %s[%s] f=%s t=%s s=%s", unit:getName(), unit:getID(), tracker.facing, tostring(tracker.tracking), tostring(tracker.inSight))
 			elseif senses:hasLostTarget(selectedUnit) then
 				local tracker = {
 					threat=unit,
@@ -109,6 +110,7 @@ local function checkPotentialThreat(unit, sim, selectedUnit, guardThreats, turre
 					predictPeripheralLos=trackerPredictPeripheralLos,
 				}
 				table.insert(guardThreats, tracker)
+				-- simlog("LOG_UITR_OW", "threat %s[%s] f=%s t=%s s=%s", unit:getName(), unit:getID(), tracker.facing, tostring(tracker.tracking), tostring(tracker.inSight))
 			else
 				local tracker = {
 					threat=unit,
@@ -122,6 +124,7 @@ local function checkPotentialThreat(unit, sim, selectedUnit, guardThreats, turre
 					predictPeripheralLos=trackerPredictPeripheralLos,
 				}
 				table.insert(guardThreats, tracker)
+				-- simlog("LOG_UITR_OW", "threat %s[%s] f=%s t=%s s=%s", unit:getName(), unit:getID(), tracker.facing, tostring(tracker.tracking), tostring(tracker.inSight))
 			end
 		else
 			local tracker = {
@@ -134,6 +137,7 @@ local function checkPotentialThreat(unit, sim, selectedUnit, guardThreats, turre
 				predictPeripheralLos=trackerPredictPeripheralLos,
 			}
 			table.insert(turretThreats, tracker)
+			-- simlog("LOG_UITR_OW", "turret %s[%s] f=%s t=%s s=%s", unit:getName(), unit:getID(), tracker.facing, tostring(tracker.tracking), tostring(tracker.inSight))
 		end
 	end
 end
@@ -182,43 +186,65 @@ local function isWatchedByTurret(sim, turretThreats, selectedUnit, cell)
 	return foundThreat
 end
 
+-- Predict how each guard will react to this movement step.
 local function isWatchedByGuard(sim, guardThreats, selectedUnit, cell, prevCell)
 	local foundThreat = nil
 	for _,tracker in ipairs(guardThreats) do
 		local threat = tracker.threat
 		local tx,ty = threat:getLocation()
 		local facing = simquery.getDirectionFromDelta(cell.x-tx, cell.y-ty)
-
 		local couldSee = simquery.couldUnitSee(sim, threat, selectedUnit, false, cell)
 
-		local watchedCells
+		-- Senses:processWarpTrigger
+		-- Predict if the movement itself updates facing
 		if tracker.inSight then
-			-- Threat will turn to face immediately.
-			watchedCells = tracker:predictLos(facing)
-		elseif tracker:predictLos(tracker.facing)[cell.id] then
+			-- Was already watched in the previous cell
+			-- Threat will turn towards the destination.
+			-- (senses:729 `if self:hasTarget // and prevCanSee`)
+			simlog("LOG_UITR_OW", "  %s,%s-%s,%s %s[%s] TRACK f=%s->%s", prevCell and prevCell.x or "*", prevCell and prevCell.y or "*", cell.x, cell.y, threat:getName(), threat:getID(), tracker.facing, facing)
+			tracker.facing = facing
+		elseif couldSee and tracker:predictLos(tracker.facing)[cell.id] then
 			-- We just stepped into main vision.
-			watchedCells = tracker:predictLos(tracker.facing)
-		elseif tracker.tracking and couldSee and prevCell and tracker:predictPeripheralLos(tracker.facing)[cell.id] and not simquery.checkCover(sim, threat, prevCell.x, prevCell.y) then
-			-- We just stepped into peripheral from a visible cell.
-			-- Threat will turn to face the previous cell.
-			tracker.facing = simquery.getDirectionFromDelta(prevCell.x-tx, prevCell.y-ty)
-			watchedCells = tracker:predictLos(tracker.facing)
-		else
-			-- Threat is watching cells based on last known facing.
-			watchedCells = tracker:predictLos(tracker.facing)
-		end
+			-- No facing changes in processWarpTrigger. (`not canSee` on below checks)
+		elseif tracker.tracking and prevCell and not simquery.checkCover(sim, threat, prevCell.x, prevCell.y) then
+			-- Threat is eligible to turn if peripheral checks pass
+			-- (senses:769 `if self:hasLostTarget(...) and not simquery.checkCover(...)`)
 
-		if couldSee and watchedCells[cell.id] then
-			-- Threat will see us.
+			if couldSee and tracker:predictPeripheralLos(tracker.facing)[cell.id] then
+				-- We just stepped into peripheral from a non-cover cell.
+				-- Threat will turn to face this cell.
+				-- (senses:749 `if not canSee and canSense`)
+				simlog("LOG_UITR_OW", "  %s,%s-%s,%s %s[%s] PRETURN-A f=%s->%s", prevCell.x, prevCell.y, cell.x, cell.y, threat:getName(), threat:getID(), tracker.facing, facing)
+				tracker.facing = facing
+			elseif simquery.couldUnitSee(sim, threat, selectedUnit, false, prevCell) and not tracker:predictLos(tracker.facing)[prevCell.id] and tracker:predictPeripheralLos(tracker.facing)[prevCell.id] then
+				-- We just stepped out of peripheral.
+				-- Threat will turn to face the previous cell.
+				-- (senses:761 `elseif not canSee and not canSense // and simquery.couldUnitSee(... prevCell) // and not prevCanSee and prevCanSense`)
+				local prevCellFacing = simquery.getDirectionFromDelta(prevCell.x-tx, prevCell.y-ty)
+				simlog("LOG_UITR_OW", "  %s,%s-%s,%s %s[%s] PRETURN-B f=%s->%s", prevCell.x, prevCell.y, cell.x, cell.y, threat:getName(), threat:getID(), tracker.facing, prevCellFacing)
+				tracker.facing = prevCellFacing
+			-- else
+			-- 	simlog("LOG_UITR_OW", "  %s,%s-%s,%s %s[%s] no-change prevSee=%s prevSense=%s nowSense=%s nowSee=%s", prevCell and prevCell.x or "*", prevCell and prevCell.y or "*", cell.x, cell.y, threat:getName(), threat:getID(), tostring(tracker:predictLos(tracker.facing)[prevCell.id]), tostring(tracker:predictPeripheralLos(tracker.facing)[prevCell.id]), tostring(tracker:predictPeripheralLos(tracker.facing)[cell.id]), tostring(couldSee))
+			end
+		-- elseif tracker.tracking and prevCell then
+		-- 	simlog("LOG_UITR_OW", "  %s,%s-%s,%s %s[%s] no-change prevCover=%s nowSense=%s nowSee=%s", prevCell.x, prevCell.y, cell.x, cell.y, threat:getName(), threat:getID(),tostring(simquery.checkCover(sim, threat, prevCell.x, prevCell.y)), tostring(tracker:predictPeripheralLos(tracker.facing)[cell.id]), tostring(couldSee))
+		end
+		-- (else) Threat is watching cells based on last known facing.
+
+
+		-- Senses:processAppearedTrigger and actions.ReactToTarget / Senses:processDisappearedTrigger
+		if couldSee and tracker:predictLos(tracker.facing)[cell.id] then
+			-- (senses:594 `if not self:hasTarget(...) // and simquery.isEnemyTarget(...) or simquery.isKnownTraitor` => Target)
+			-- Threat sees us. Now or still a target.
+			simlog("LOG_UITR_OW", "  %s,%s-%s,%s %s[%s] WATCH f=%s->%s", prevCell and prevCell.x or "*", prevCell and prevCell.y or "*", cell.x, cell.y, threat:getName(), threat:getID(), tracker.facing, facing)
 			tracker.tracking = true
 			tracker.inSight = true
-			tracker.facing = facing
+			tracker.facing = facing  -- Technically, if multiple targets, threat only turns if we won priority in Senses:pickBestTarget.
 			foundThreat = foundThreat or threat
-		elseif tracker.inSight or (tracker.tracking and couldSee and tracker:predictPeripheralLos(tracker.facing)[cell.id]) then
-			-- We just left sight, or we are stepping through peripheral.
-			-- Threat will turn to track.
+		elseif tracker.inSight then
+			simlog("LOG_UITR_OW", "  %s,%s-%s,%s %s[%s] LOST f=%s", prevCell and prevCell.x or "*", prevCell and prevCell.y or "*", cell.x, cell.y, threat:getName(), threat:getID(), tracker.facing)
+			-- Was previously in sight. Now a lost target.
 			tracker.inSight = false
-			tracker.facing = facing
 		end
 	end
 	return foundThreat
@@ -296,6 +322,8 @@ function boardrig:chainCells( cells, color, ... )
 		return id
 	end
 
+	simlog("LOG_UITR_OW", "overwatchTracking ===========")
+
 	-- Mark movement cells that get us shot.
 	local fgProps = {}
 	local tempDoors = {}
@@ -304,11 +332,15 @@ function boardrig:chainCells( cells, color, ... )
 	for i,coord in ipairs(cells) do
 		local cell = sim:getCell(coord.x, coord.y)
 		if prevCell and predictDoorOpening(sim, tempDoors, prevCell, cell) then
+			simlog("LOG_UITR_OW", "   door %s,%s %s,%s", prevCell.x, prevCell.y, cell.x, cell.y)
 			clearLosCache(guardThreats, turretThreats)
 
-			if not prevCellThreat and  isWatchedByGuard(sim, guardThreats, selectedUnit, prevCell, nil) then
-				table.insert(fgProps, newShootProp(self, prevCell, color))
-			elseif not prevCellThreat and isWatchedByTurret(sim, turretThreats, selectedUnit, prevCell) then
+			local doorIsWatched = (
+				isWatchedByGuard(sim, guardThreats, selectedUnit, prevCell, nil)
+				or isWatchedByTurret(sim, turretThreats, selectedUnit, prevCell)
+			)
+			if not prevCellThreat and doorIsWatched then
+				simlog("LOG_UITR_OW", "   shot %s,%s", prevCell.x, prevCell.y)
 				table.insert(fgProps, newShootProp(self, prevCell, color))
 			end
 		end
@@ -317,15 +349,19 @@ function boardrig:chainCells( cells, color, ... )
 			-- Don't mark the origin cell of the path, even if it's obviously watched.
 			prevCellThreat = false
 			-- We still want to update possible peripheral rotations though.
-			isWatchedByGuard(sim, guardThreats, selectedUnit, cell, nil)
-		elseif isWatchedByGuard(sim, guardThreats, selectedUnit, cell, prevCell) then
-			table.insert(fgProps, newShootProp(self, cell, color))
-			prevCellThreat = true
-		elseif isWatchedByTurret(sim, turretThreats, selectedUnit, cell) then
-			table.insert(fgProps, newShootProp(self, cell, color))
-			prevCellThreat = true
+			-- isWatchedByGuard(sim, guardThreats, selectedUnit, cell, nil)
 		else
-			prevCellThreat = false
+			local cellIsWatched = (
+				isWatchedByGuard(sim, guardThreats, selectedUnit, cell, prevCell)
+				or isWatchedByTurret(sim, turretThreats, selectedUnit, cell)
+			)
+			if cellIsWatched then
+				simlog("LOG_UITR_OW", "   shot %s,%s", cell.x, cell.y)
+				table.insert(fgProps, newShootProp(self, cell, color))
+				prevCellThreat = true
+			else
+				prevCellThreat = false
+			end
 		end
 		prevCell = cell
 	end
@@ -337,6 +373,7 @@ function boardrig:chainCells( cells, color, ... )
 	end
 	self._chainCells[ id ].fgProps = fgProps
 
+	simlog("LOG_UITR_OW", "overwatchTracking END ===========")
 	return id
 end
 
