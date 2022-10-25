@@ -1,6 +1,7 @@
 local agent_actions = include( "hud/agent_actions" )
 local mui_tooltip = include( "mui/mui_tooltip" )
 local util = include( "client_util" )
+local simdefs = include( "sim/simdefs" )
 local simquery = include( "sim/simquery" )
 
 local uitr_util = include( SCRIPT_PATHS.qed_uitr .. "/uitr_util" )
@@ -292,6 +293,68 @@ local function resolveGhost( sim, unitID, ghostUnit )
 	return unit, false
 end
 
+local POTENTIAL_ACTIONS =
+{
+	0, 0,
+	1, 0,
+	-1, 0,
+	0, 1,
+	0, -1,
+	2, 0,
+	-2, 0,
+	0, 2,
+	0, -2,
+	1, 1,
+	1, -1,
+	-1, 1,
+	-1, -1,
+}
+
+local function canModifyExit( unit, exitop, cell, dir, sim )
+	if not simquery.canReachDoor( unit, cell, dir ) then
+		return false
+	end
+
+	local exit = cell.exits[dir]
+	if exitop == simdefs.EXITOP_CLOSE and exit.no_close then
+		return false
+	end
+
+	return simquery.canModifyExit( unit, exitop, cell, dir )
+end
+
+local function generateDoorActionForCell( hud, unit, cell, sim )
+	for dir, exit in pairs(cell.exits) do
+		if exit.door and exit.keybits ~= simdefs.DOOR_KEYS.ELEVATOR and exit.keybits ~= simdefs.DOOR_KEYS.ELEVATOR_INUSE then
+			local exitop = exit.closed and simdefs.EXITOP_OPEN or simdefs.EXITOP_CLOSE
+			if canModifyExit( unit, exitop, cell, dir, sim ) then
+				simlog("UITRDEBUG VISION MODE DOOR %s,%s %s", cell.x, cell.y, dir)
+				return {
+					hotkey = "abilityOpenDoor",
+					onHotkey = function() agent_actions.checkForSingleDoor( hud._game, exitop, unit, cell, dir, sim ) end,
+				}
+			end
+		end
+	end
+end
+
+local function generateDoorAction( hud, unit )
+	local sim = hud._game.simCore
+	local localPlayer = hud._game:getLocalPlayer()
+	local x0, y0 = unit:getLocation()
+
+	for i = 1, #POTENTIAL_ACTIONS, 2 do
+		local dx, dy = POTENTIAL_ACTIONS[i], POTENTIAL_ACTIONS[i+1]
+		local cell = localPlayer:getCell(x0+dx, y0+dy)
+		if cell then
+			local action = generateDoorActionForCell( hud, unit, cell, sim )
+			if action then
+				return action
+			end
+		end
+	end
+end
+
 -- ===
 -- Appends
 -- ===
@@ -339,5 +402,11 @@ function agent_actions.generateNonVisionActions( hud, actions, unit )
 		end
 	end
 
-	-- TODO: add a single action for the toggle-door hotkey binding.
+	-- Add a single action for the toggle-door hotkey binding.
+	if unit:getTraits().canUseDoor ~= false then
+		local doorAction = generateDoorAction( hud, unit )
+		if doorAction then
+			table.insert( actions, doorAction )
+		end
+	end
 end

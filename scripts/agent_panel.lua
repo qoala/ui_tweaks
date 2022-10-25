@@ -55,7 +55,6 @@ end
 
 local function updateButtonFromAction( self, btn, action )
 	btn:setVisible( true )
-	btn.onClick = action.onClick
 	btn.onHotkey = action.onHotkey
 	btn:setHotkey( action.hotkey )
 end
@@ -119,6 +118,7 @@ function agent_panel.agent_panel:refreshPanel( swipeIn, ... )
 		if (unit and unit:getPlayerOwner() ~= nil
 			and unit:getPlayerOwner() == sim:getCurrentPlayer()
 			and unit:getPlayerOwner() == self._hud._game:getLocalPlayer()
+			and unit:getLocation()
 			and not unit:isGhost()
 		) then
 			self._panelNonVisionActions:setVisible(true)
