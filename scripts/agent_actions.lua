@@ -329,3 +329,15 @@ function agent_actions.generateVisionActions( hud, actions )
 		end
 	end
 end
+
+-- Non-Vision actions that should still support hotkeys while in vision mode.
+function agent_actions.generateNonVisionActions( hud, actions, unit )
+	-- Non-proxy abilities that normally go in the bottom-left panel.
+	for _,ability in ipairs( unit:getAbilities() ) do
+		if agent_actions.shouldShowAbility( hud._game, ability, unit, unit ) and not ability.acquireTargets and ability.hotkey then
+			table.insert( actions, { ability = ability, abilityOwner = unit, abilityUser = unit } )
+		end
+	end
+
+	-- TODO: add a single action for the toggle-door hotkey binding.
+end
