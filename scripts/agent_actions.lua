@@ -1,10 +1,12 @@
 local agent_actions = include( "hud/agent_actions" )
 local mui_tooltip = include( "mui/mui_tooltip" )
-local util = include( "modules/util" )
+local util = include( "client_util" )
 local simquery = include( "sim/simquery" )
 
 local uitr_util = include( SCRIPT_PATHS.qed_uitr .. "/uitr_util" )
 
+-- ====
+-- Tooltips for vision mode actions
 -- ====
 
 local vision_tooltip = class( mui_tooltip )
@@ -174,6 +176,8 @@ function show_interest_tooltip:deactivate()
 end
 
 -- ====
+-- Helper functions
+-- ====
 
 local function addVisionActionsForUnit( hud, actions, targetUnit, isSeen, staleGhost )
 	local localPlayer = hud._game:getLocalPlayer()
@@ -288,18 +292,27 @@ local function resolveGhost( sim, unitID, ghostUnit )
 	return unit, false
 end
 
+-- ===
+-- Appends
+-- ===
+
 local oldGeneratePotentialActions = agent_actions.generatePotentialActions
 function agent_actions.generatePotentialActions( hud, actions, unit, cellx, celly, ... )
-	if not hud._uitr_isVisionMode then
-		return oldGeneratePotentialActions( hud, actions, unit, cellx, celly, ... )
-	end
-
-	local x0, y0 = unit:getLocation()
-	if x0 ~= cellx or y0 ~= celly then
-		-- Only execute once, on the current unit's cell
+	if hud._uitr_isVisionMode then
 		return
 	end
+	return oldGeneratePotentialActions( hud, actions, unit, cellx, celly, ... )
+end
 
+local oldShouldShowProxyAbility = agent_actions.shouldShowProxyAbility
+function agent_actions.shouldShowProxyAbility( game, ability, abilityOwner, abilityUser, actions, ... )
+	if game.hud and game.hud._uitr_isVisionMode then
+		return false
+	end
+	return oldShouldShowProxyAbility( game, ability, abilityOwner, abilityUser, actions, ... )
+end
+
+function agent_actions.generateVisionActions( hud, actions )
 	local sim = hud._game.simCore
 	local localPlayer = hud._game:getLocalPlayer()
 
@@ -315,21 +328,4 @@ function agent_actions.generatePotentialActions( hud, actions, unit, cellx, cell
 			addVisionActionsForUnit( hud, actions, targetUnit, false, isStale and ghostUnit )
 		end
 	end
-
-	-- Non-proxy abilities (copied from vanilla. All other abilities are suppressed)
-	for j, ability in ipairs( unit:getAbilities() ) do
-		if agent_actions.shouldShowAbility( hud._game, ability, unit, unit )
-				-- Only show untargetted abilities (that go in the bottom-left panel)
-				and not ability.acquireTargets then
-			table.insert( actions, { ability = ability, abilityOwner = unit, abilityUser = unit, priority = ability.HUDpriority } )
-		end
-	end
-end
-
-local oldShouldShowProxyAbility = agent_actions.shouldShowProxyAbility
-function agent_actions.shouldShowProxyAbility( game, ability, abilityOwner, abilityUser, actions, ... )
-	if game.hud and game.hud._uitr_isVisionMode then
-		return false
-	end
-	return oldShouldShowProxyAbility( game, ability, abilityOwner, abilityUser, actions, ... )
 end

@@ -1,6 +1,6 @@
 local agentrig = include( "gameplay/agentrig" ).rig
 local cdefs = include( "client_defs" )
-local util = include( "modules/util" )
+local util = include( "client_util" )
 
 local uitr_util = include( SCRIPT_PATHS.qed_uitr .. "/uitr_util" )
 

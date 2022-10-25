@@ -28,6 +28,7 @@ local function hud_uitr_setVisionMode( self, doEnable )
 
 	if not doEnable then
 		self._game.simCore:uitr_resetAllUnitVision()
+		self._game.boardRig:refresh()
 	end
 	self:refreshHud()
 end
