@@ -8,11 +8,6 @@ function simquery.canSeeLOS( sim, player, seer, ... )
 			if sim:getTags().uitr_oneVision ~= seer:getID() then
 				return false
 			end
-		elseif sim:getTags().uitr_oneCellVision then
-			local x,y = seer:getLocation()
-			if sim:getTags().uitr_oneCellVision ~= simquery.toCellID(x,y) then
-				return false
-			end
 		end
 	end
 
