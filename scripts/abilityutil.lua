@@ -61,50 +61,8 @@ end
 -- Meta helpers
 -- ===
 
--- Extract a local variable from the given function's upvalues
-local function extractUpvalue( fn, name )
-	local i = 1
-	while true do
-		local n, v = debug.getupvalue(fn, i)
-		assert(n, string.format( "Could not find upvalue: %s", name ) )
-		if n == name then
-			return v, i
-		end
-		i = i + 1
-	end
-end
-
--- Overwrite a class' base class to force method-override/-append propagation to subclasses.
--- Call from :init, obtaining the current class via getmetatable
-local function overwriteInheritance(c, oldBaseClass, newBaseClass, sentinelKey, logName)
-	if c and not c[sentinelKey] then
-		logName = logName or tostring(c)
-		simlog("LOG_UITRMETA", "%s init for ", logName, sentinelKey)
-		c[sentinelKey] = true
-
-		if c._base == oldBaseClass then
-			c._base = newBaseClass
-		end
-
-		for i,v in pairs(newBaseClass) do
-			if not type(i) == "string" or i == "_base" or i == "__index" or i == "is_a" or i == "init" or i == sentinelKey then
-				-- skip core/meta fields
-			elseif c[i] == oldBaseClass[i] and c[i] ~= newBaseClass[i] then
-				if c[i] then
-					simlog("LOG_UITRMETA", "%s replacing %s %s-%s", logName, tostring(i), tostring(c[i]), tostring(newBaseClass[i]))
-				else
-					simlog("LOG_UITRMETA", "%s adding %s", logName, tostring(i))
-				end
-				c[i] = newBaseClass[i]
-			else
-				simlog("LOG_UITRMETA", "%s keeping %s", logName, tostring(i))
-			end
-		end
-	end
-end
-
 if not util.tooltip_section then
-	util.tooltip_section = extractUpvalue(util.tooltip.addSection, "tooltip_section")
+	util.tooltip_section = uitr_util.extractUpvalue(util.tooltip.addSection, "tooltip_section")
 end
 
 -- ===
@@ -419,11 +377,11 @@ local hotkey_tooltip = class( delayed_tooltip )
 local old_hotkey_tooltip = abilityutil.hotkey_tooltip
 abilityutil.hotkey_tooltip = hotkey_tooltip
 
-hotkey_tooltip._uitr_mergedTooltip = true
+hotkey_tooltip._uitrmeta_hotkeyTooltipBase = true
 
 function hotkey_tooltip:init( ability, sim, abilityOwner, tooltip )
 	-- Meta shenanigans: override the cached base class on any hotkey_tooltip subclasses.
-	overwriteInheritance(getmetatable(self), old_hotkey_tooltip, hotkey_tooltip, "_uitr_mergedTooltip", ability.name)
+	uitr_util.overwriteInheritance(getmetatable(self), old_hotkey_tooltip, hotkey_tooltip, "_uitrmeta_hotkeyTooltipBase", ability.name)
 
 	-- ===
 	-- Initialize self

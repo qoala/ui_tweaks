@@ -24,6 +24,8 @@ local function init( modApi )
 	include( modApi:getScriptPath() .. "/resources" ).initUitrResources()
 	include( modApi:getScriptPath() .. "/uitr_util" )
 
+	include( modApi:getScriptPath() .. "/mui_tooltip" ) -- Must be before abilityutil.
+
 	include( modApi:getScriptPath() .. "/doors_while_dragging" )
 	include( modApi:getScriptPath() .. "/empty_pockets" )
 	include( modApi:getScriptPath() .. "/item_dragdrop" )

@@ -166,10 +166,90 @@ local function initOptions( )
 	end
 end
 
+-- ===
+
+-- Extract a local variable from the given function's upvalues
+local function extractUpvalue( fn, name )
+	local i = 1
+	while true do
+		local n, v = debug.getupvalue(fn, i)
+		assert(n, string.format( "Could not find upvalue: %s", name ) )
+		if n == name then
+			return v, i
+		end
+		i = i + 1
+	end
+end
+
+-- Overwrite a class' base class to force method-override/-append propagation to subclasses.
+-- oldFnMapping is a table of function names to the old function implementations. If the given class has the old function, it's replaced with the current superclass function.
+-- If the given class already overrode it from the old function, it's assumed to either internally call the superclass method or have a good reason not to.
+-- Call from :init, obtaining the current class via getmetatable
+local function propagateSuperclass(c, superClass, oldFnMapping, sentinelKey, logName)
+	if c and not c[sentinelKey] then
+		logName = logName or tostring(c)
+		simlog("LOG_UITRMETA", "%s init for %s", logName, sentinelKey)
+		c[sentinelKey] = true
+
+		for fnName, oldFn in pairs(oldFnMapping) do
+			if (c[fnName] == oldFn) then
+				simlog("LOG_UITRMETA", "%s replacing %s", logName, fnName)
+				c[fnName] = superClass[fnName]
+			end
+		end
+	end
+end
+
+-- Overwrite a class' base class to force method-override/-append propagation to subclasses.
+-- (More invasive than propagateSuperclassMethods)
+-- For each symbol in oldBaseClass, if it is unchanged in the given class and different in the new base class, it's replaced with the one from then new base class.
+-- If the given class already overrode it from the old base class, it's assumed to either internally call the superclass method or have a good reason not to.
+-- Call from :init, obtaining the current class via getmetatable
+local function overwriteInheritance(c, oldBaseClass, newBaseClass, sentinelKey, logName)
+	if c and not c[sentinelKey] then
+		logName = logName or tostring(c)
+		simlog("LOG_UITRMETA", "%s init for %s", logName, sentinelKey)
+		c[sentinelKey] = true
+
+		do
+			local m = c
+			while m do
+				if m._base == oldBaseClass then
+					m._base = newBaseClass
+					break
+				end
+				m = m._base
+			end
+		end
+
+		for i,v in pairs(newBaseClass) do
+			if not type(i) == "string" or i == "_base" or i == "__index" or i == "is_a" or i == "init" or i == sentinelKey then
+				-- skip core/meta fields
+			elseif c[i] == oldBaseClass[i] and c[i] ~= newBaseClass[i] then
+				if c[i] then
+					simlog("LOG_UITRMETA", "%s replacing %s %s-%s", logName, tostring(i), tostring(c[i]), tostring(newBaseClass[i]))
+				else
+					simlog("LOG_UITRMETA", "%s adding %s", logName, tostring(i))
+				end
+				c[i] = newBaseClass[i]
+			else
+				simlog("LOG_UITRMETA", "%s keeping %s", logName, tostring(i))
+			end
+		end
+	end
+end
+
+
+-- ===
+
 return {
 	UITR_OPTIONS = UITR_OPTIONS,
 	checkEnabled = checkEnabled,
 	checkOption = checkOption,
 	getOptions = getOptions,
 	initOptions = initOptions,
+
+	extractUpvalue = extractUpvalue,
+	propagateSuperclass = propagateSuperclass,
+	overwriteInheritance = overwriteInheritance,
 }
