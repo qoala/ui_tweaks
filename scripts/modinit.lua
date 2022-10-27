@@ -44,6 +44,7 @@ local function init( modApi )
 	include( modApi:getScriptPath() .. "/simability" )
 	include( modApi:getScriptPath() .. "/simquery" )
 	include( modApi:getScriptPath() .. "/targeting" )
+	include( modApi:getScriptPath() .. "/world_hud" )
 end
 
 -- Apply changes on both unload and load. We're controlled by the settings file, not campaign options.

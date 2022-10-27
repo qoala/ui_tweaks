@@ -44,6 +44,12 @@ local UITR_OPTIONS = {
 		strings = { STRINGS.UITWEAKSR.OPTIONS.VANILLA, STRINGS.UITWEAKSR.OPTIONS.COLORED_TRACKS_A },
 		needsReload = true,
 	},
+	{
+		id = "cleanShift",
+		name = STRINGS.UITWEAKSR.OPTIONS.CLEAN_SHIFT,
+		tip = STRINGS.UITWEAKSR.OPTIONS.CLEAN_SHIFT_TIP,
+		check = true,
+	},
 
 	-- QoL interface.
 	{
