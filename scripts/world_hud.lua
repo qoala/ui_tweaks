@@ -11,9 +11,19 @@ function world_hud:refreshWidgets( ... )
 	if uitr_util.checkOption("cleanShift") then
 		local shouldShowHudActions = not (inputmgr.keyIsDown(mui_defs.K_SHIFT) and not inputmgr.keyIsDown(mui_defs.K_CONTROL))
 		if shouldShowHudActions ~= self._uitr_hudActionsVisible  then
-			local widgets = self._widgets[world_hud.HUD] or {}
-			for _,widget in ipairs(widgets) do
-				widget:setVisible(shouldShowHudActions)
+			local widgets = self._widgets[world_hud.HUD]
+			if widgets then
+				for _,widget in ipairs(widgets) do
+					widget:setVisible(shouldShowHudActions)
+				end
+			end
+			local layout = self._layouts[world_hud.HUD]
+			if layout and layout._layout then
+				for layoutID, lt in pairs(layout._layout) do
+					if lt.leaderWidget then
+						lt.leaderWidget:setVisible(shouldShowHudActions)
+					end
+				end
 			end
 		end
 		self._uitr_hudActionsVisible = shouldShowHudActions
