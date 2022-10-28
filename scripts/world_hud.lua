@@ -31,3 +31,10 @@ function world_hud:refreshWidgets( ... )
 		self._uitr_showHudActions = nil
 	end
 end
+
+function world_hud:destroyLayout( groupKey )
+	if self._layouts[ groupKey ] then
+		self._layouts[ groupKey ]:destroy( self._screen )
+		self._layouts[ groupKey ] = nil
+	end
+end

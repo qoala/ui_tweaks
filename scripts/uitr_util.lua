@@ -50,6 +50,12 @@ local UITR_OPTIONS = {
 		tip = STRINGS.UITWEAKSR.OPTIONS.CLEAN_SHIFT_TIP,
 		check = true,
 	},
+	{
+		id = "mainframeLayout",
+		name = STRINGS.UITWEAKSR.OPTIONS.MAINFRAME_LAYOUT,
+		tip = STRINGS.UITWEAKSR.OPTIONS.MAINFRAME_LAYOUT_TIP,
+		check = true,
+	},
 
 	-- QoL interface.
 	{

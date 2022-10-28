@@ -16,6 +16,8 @@ local UI_TWEAKS_STRINGS =
 		COLORED_TRACKS_A = "PALETTE A",
 		CLEAN_SHIFT = "SHIFT Hides Context Actions.",
 		CLEAN_SHIFT_TIP = "Holding SHIFT hides targeted action icons, making it easier to select or move agents in crowded areas.\nThis is in addition to the vanilla keybinding where holding SHIFT highlights tiles watched by units under the cursor.",
+		MAINFRAME_LAYOUT = "Separate Overlapping Mainframe Actions",
+		MAINFRAME_LAYOUT_TIP = "If active, targeted mainframe action icons adjust their position to avoid overlap, just like non-mainframe targeted action icons.",
 
 		EMPTY_POCKETS = "Empty Pockets Stealing",
 		EMPTY_POCKETS_TIP = "Agents can attempt to steal if it would newly reveal that the target isn't carrying anything.\nAllows marking targets as Searched and Expertly Searched.",
