@@ -353,6 +353,71 @@ local inserts =
 			},
 		},
 	},
+	{
+		"hud-inworld.lua",
+		{ "skins" },
+		{
+			name = [[MainframeLayoutLineLeader]],
+			isVisible = true,
+			noInput = false,
+			anchor = 1,
+			rotation = 0,
+			x = 0,
+			y = 0,
+			w = 0,
+			h = 0,
+			sx = 1,
+			sy = 1,
+			ctor = [[group]],
+			children =
+			{
+				{
+					name = [[line]],
+					isVisible = true,
+					noInput = true,
+					anchor = 1,
+					rotation = 0,
+					x = 0,
+					y = 0,
+					w = 16,
+					wpx = true,
+					h = 16,
+					hpx = true,
+					sx = 1,
+					sy = 1,
+					ctor = [[uitrMainframeLineLeader]],
+					images =
+					{
+						{
+							file = [[uitr_mf_leader_circle.png]],
+							name = [[target]],
+							color =
+							{
+								1,
+								1,
+								1,
+								0.69803923368454,
+							},
+						},
+						{
+							file = [[white.png]],
+							name = [[line]],
+							color =
+							{
+								1,
+								0,
+								0,
+								1,
+							},
+						},
+					},
+					lineWidth = 2,
+					targetx = 0.5,
+					targety = 0.2,
+				},
+			},
+		},
+	}
 }
 
 return inserts

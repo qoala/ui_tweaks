@@ -39,8 +39,10 @@ function mainframe_layout:calculateLayout( screen, game, widgets )
 		if layoutID then
 			local layout = self._layout[ layoutID ]
 			if layout == nil then
-				local leaderWidget = screen:createFromSkin( "LineLeader" )
+				local leaderWidget = screen:createFromSkin( "MainframeLayoutLineLeader" )
 				screen:addWidget( leaderWidget )
+				-- UITR: Move to back.
+				screen:reorderWidget( leaderWidget, 1 )
 				leaderWidget.binder.line:appear( 0.5 )
 				layout =
 					{
@@ -129,12 +131,14 @@ function mainframe_layout:setPosition( widget )
 		widget:setPosition( x, y )
 	end
 
-	-- UITR: Line goes from the target unit to near the bottom-center of the button, then stays there.
+	-- UITR: Line goes from the target circle to near the bottom-center of the button, then stays there.
 	--       Instead of from target unit, to one side of an underline, to the other side of the underline.
 	layout.leaderWidget:setPosition( startx, starty )
 	local BUTTON_OFFSET_Y = ((36/2 - 4) / H)
-	local x0, y0 = x - startx, y - BUTTON_OFFSET_Y - starty
-	layout.leaderWidget.binder.line:setTarget( x0, y0, x0, y0 )
+	local x1, y1 = x - startx, y - BUTTON_OFFSET_Y - starty
+	local wndDist = mathutil.dist2d( layout.startx, layout.starty, layout.posx, layout.posy - (36/2 - 4) )
+	local t0 = 8 / wndDist -- target circle is 16x16
+	layout.leaderWidget.binder.line:setTarget( t0, x1, y1 )
 	return true
 end
 

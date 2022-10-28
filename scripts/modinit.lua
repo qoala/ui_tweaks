@@ -23,6 +23,7 @@ local function init( modApi )
 
 	include( modApi:getScriptPath() .. "/resources" ).initUitrResources()
 	include( modApi:getScriptPath() .. "/uitr_util" )
+	include( modApi:getScriptPath() .. "/mui" )
 
 	include( modApi:getScriptPath() .. "/mui_tooltip" ) -- Must be before abilityutil.
 
