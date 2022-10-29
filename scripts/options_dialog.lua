@@ -100,24 +100,18 @@ function options_dialog:init(...)
 	local oldOnClick = self._screen.binder.acceptBtn.binder.btn.onClick._fn
 	local oldRetrieveSettings
 	local oldRetrieveSettingsIndex
-	local oldApplyGfxSettings
-	local oldApplyGfxSettingsIndex
-
-	local i = 1
-	while true do
-		local n, v = debug.getupvalue(oldOnClick, i)
-		assert(n)
-		if n == "retrieveSettings" then
-			oldRetrieveSettings = v
-			oldRetrieveSettingsIndex = i
-		elseif n == "applyGfxSettings" then
-			oldApplyGfxSettings = v
-			oldApplyGfxSettingsIndex = i
+	do
+		local i = 1
+		while true do
+			local n, v = debug.getupvalue(oldOnClick, i)
+			assert(n)
+			if n == "retrieveSettings" then
+				oldRetrieveSettings = v
+				oldRetrieveSettingsIndex = i
+				break
+			end
+			i = i + 1
 		end
-		if oldRetrieveSettingsIndex and oldApplyGfxSettingsIndex then
-			break
-		end
-		i = i + 1
 	end
 
 	local retrieveSettings = function(dialog)
@@ -129,16 +123,7 @@ function options_dialog:init(...)
 		return settings
 	end
 
-	local applyGfxSettings = function(dialog, settings)
-		oldApplyGfxSettings(dialog, settings)
-
-		if dialog._game and dialog._game.hud then
-			dialog._game.hud:refreshHud()
-		end
-	end
-
 	debug.setupvalue(oldOnClick, oldRetrieveSettingsIndex, retrieveSettings)
-	debug.setupvalue(oldOnClick, oldApplyGfxSettingsIndex, applyGfxSettings)
 end
 
 local oldShow = options_dialog.show
@@ -154,6 +139,15 @@ function options_dialog:show(...)
 
 	if not self._appliedSettings.uitr then self._appliedSettings.uitr = {} end
 	self:refreshUitrSettings( self._appliedSettings.uitr )
+end
+
+local oldHide = options_dialog.hide
+function options_dialog:hide( ... )
+	oldHide(self, ...)
+
+	if self._game and self._game.hud then
+		self._game.hud:refreshHud()
+	end
 end
 
 function options_dialog:refreshUitrSettings( uitrSettings )
