@@ -26,6 +26,7 @@ function mainframe_layout.restoreWidgets( widgets )
 end
 
 function mainframe_layout:calculateLayout( screen, game, widgets )
+	local layoutsByPosition = {}
 	for i, widget in ipairs( widgets ) do
         assert( widget.worldx )
 
@@ -72,26 +73,27 @@ function mainframe_layout:calculateLayout( screen, game, widgets )
 			--       Use a fixed offset as the base offset.
 			local ox, oy = -18, -59
 			local radius = mathutil.dist2d( 0, 0, ox, oy )
-			-- Vary by a delta dependent on the widget index so that widgets that originate at the same
-			-- world location don't end up being in the exact same position.
-			-- local dox, doy = 4 * math.cos( 2*math.pi * (i / #widgets) ), 8 * math.sin( 2*math.pi * (i / #widgets ))
-			-- ox, oy = ox + dox, oy + doy
-			-- local dist = mathutil.dist2d( 0, 0, ox, oy )
-			-- local radius = self._tuning.initRadius
-			-- layout.posx, layout.posy = layout.posx + radius * ox / dist, layout.posy + radius * oy / dist
 			layout.posx, layout.posy = layout.posx + ox, layout.posy + oy
+
+			-- UITR: Track layouts that start on the exact same coordinate.
+			local positionKey = tostring(layout.posx) .. "|" .. tostring(layout.posy)
+			if layoutsByPosition[positionKey] then
+				table.insert( layoutsByPosition[positionKey], layout )
+			else
+				layoutsByPosition[positionKey] = { layout }
+			end
 
 			-- UITR: We'll be drawing our own arm, thank you very much.
 			if hasArm(widget) then
 				widget.binder.arm:setVisible(false)
 			end
 
-			-- Mark
+			-- Mark...
 			layout.active = true
 		end
 	end
 
-	-- and Sweep
+	-- ...and Sweep
 	-- UITR: Unlike meatspace buttons, mainframe widgets are retained across refreshes.
 	--       So this layout is also retained and needs to cleanup layout elements for any widgets that disappeared.
 	for _,k in ipairs(util.tkeys(self._layout)) do
@@ -101,6 +103,17 @@ function mainframe_layout:calculateLayout( screen, game, widgets )
 		else
 			screen:removeWidget(layout.leaderWidget)
 			self._layout[k] = nil
+		end
+	end
+
+	-- UITR: Vary overlapping positions so that they are able to separate in the later calculations.
+	--       Unlike base layout, only do this when there's an exact match, so that otherwise colinear items can remain colinear.
+	for _,layouts in pairs(layoutsByPosition) do
+		if #layouts > 1 then
+			for i, layout in ipairs(layouts) do
+				local dx, dy = 4 * math.cos( 2*math.pi * (i / #layouts) ), 4 * math.sin( 2*math.pi * (i / #layouts ))
+				layout.posx, layout.posy = layout.posx + dx, layout.posy + dy
+			end
 		end
 	end
 
