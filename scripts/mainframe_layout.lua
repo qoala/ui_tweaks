@@ -6,13 +6,44 @@ local mui = include("mui/mui")
 local mui_defs = include( "mui/mui_defs")
 local cdefs = include( "client_defs" )
 
+local uitr_util = include( SCRIPT_PATHS.qed_uitr .. "/uitr_util" )
+
+-- ===
+
 local mainframe_layout = class( button_layout )
+
+local TUNING =
+{
+    -- Magnitude at which buttons/static regions push away at eachother (button_layout: 5)
+    repulseMagnitude = 5,
+    -- Inverse squared magnitude is capped at this minimum distance. (button_layout: 40)
+    repulseDist = 20,
+    -- Max iterations to figure out a layout placement. (button_layout: 10)
+    maxIters = 10,
+}
 
 -- Extra element for layout widget-lists to make the layout entry wider.
 local SPACER = {}
 
 function mainframe_layout:init()
 	button_layout.init( self, 0, 0 ) -- Target lines vary around a semi-fixed offset, instead of radiating away from the current agent.
+	self._tuning = TUNING
+
+	self._lastSettingsID = -1
+	self:refreshTuningSettings()
+end
+
+function mainframe_layout:refreshTuningSettings()
+	local uitrSettings = uitr_util.getOptions()
+	if self._lastSettingsID ~= uitrSettings._tempID then
+		self._tuning = {
+			repulseMagnitude = uitrSettings.mainframeLayoutMagnitude or 5,
+			repulseDist = uitrSettings.mainframeLayoutDistance or 40,
+			maxIters = 10,
+		}
+
+		self._lastSettingsID = uitrSettings._tempID
+	end
 end
 
 local function hasArm( widget )

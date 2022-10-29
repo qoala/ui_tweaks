@@ -57,6 +57,24 @@ local UITR_OPTIONS = {
 		check = true,
 	},
 
+	-- TODO: Remove parameters
+	{
+		sectionHeader = true,
+
+		id = "mainframeLayoutMagnitude",
+		name = "  Repulse Magnitude",
+		tip = "",
+		values={ 2, 3, 4, 5, 6, 7, 8, 9, 10 },
+		value=5,
+	},
+	{
+		id = "mainframeLayoutDistance",
+		name = "  Repulse Distance",
+		tip = "",
+		values={ 5, 10, 15, 20, 25, 30, 35, 40, 50, 60 },
+		value=20,
+	},
+
 	-- QoL interface.
 	{
 		sectionHeader = true,
@@ -134,6 +152,13 @@ local UITR_OPTIONS = {
 
 for _,setting in ipairs( UITR_OPTIONS ) do
 	setting.canRefresh = not setting.needsReload and not setting.needsCampaign
+
+	if setting.values and not setting.strings then
+		setting.strings = {}
+		for i,v in ipairs(setting.values) do
+			setting.strings[i] = tostring(v)
+		end
+	end
 end
 
 -- ===

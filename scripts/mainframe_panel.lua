@@ -13,6 +13,7 @@ local MODE_VISIBLE = 1
 
 local function initLayouts( self )
 	local layout = mainframe_layout(self._hud)
+	self._uitr_layout = layout
 	self._hud._world_hud:setLayout( world_hud.MAINFRAME, layout )
 	-- There's also the RAW_MF_T group key for "Raw targeting" mainframe abilities added by SimConstructor.
 	-- If the layout starts repositioning targeted abilities, should also account for these.
@@ -20,6 +21,7 @@ end
 
 local function destroyLayouts( self )
 	self._hud._world_hud:destroyLayout( world_hud.MAINFRAME )
+	self._uitr_layout = nil
 
 	local widgets = self._hud._world_hud:getWidgets( world_hud.MAINFRAME )
 	if widgets then
@@ -40,6 +42,9 @@ function panel:refresh( ... )
 			else
 				destroyLayouts(self)
 			end
+		end
+		if self._uitr_layout then
+			self._uitr_layout:refreshTuningSettings()
 		end
 	else
 		-- Layout was destroyed by world_hud along with the mainframe widgets.
