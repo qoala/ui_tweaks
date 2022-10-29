@@ -37,15 +37,22 @@ local TUNING =
 	},
 	-- Additional horizontal spacers for wide fixed widgets, by skin name.
 	staticSpacerCount = {
-		["Activate"] = 5,
+		["Activate"] = 6,
 	},
 	staticSpacerRadius = {
 		["Activate"] = 21,
 	},
 }
 
--- Extra element for layout widget-lists to make the layout entry wider.
-local SPACER = {}
+-- Extra elements for layout widget-lists to make the layout entry wider.
+-- Left: Horizontal forcing cannot push right.
+-- Mid: Horizontal forcing is halved.
+-- Right: Horizontal forcing cannot push left.
+local MIDDLE_SPACER = { _layoutMid = true }
+local LEFT_SPACER = { _layoutLeft = true }
+local LEFTMID_SPACER = { _layoutLeft = true, _layoutMid = true }
+local RIGHT_SPACER = { _layoutRight = true }
+local RIGHTMID_SPACER = { _layoutRight = true, _layoutMid = true }
 
 function mainframe_layout:init()
 	button_layout.init( self, 0, 0 ) -- Target lines vary around a semi-fixed offset, instead of radiating away from the current agent.
@@ -114,10 +121,19 @@ function mainframe_layout:calculateLayout( screen, game, widgets )
 				table.insert(self._statics, { posx = wx, posy = wy, radius = radius })
 
 				if self._tuning.staticSpacerCount[widget:getName()] then
-					for i = 1, self._tuning.staticSpacerCount[widget:getName()] do
-						local offset = math.floor(radius * 1.5)
-						spacerRadius = self._tuning.staticSpacerRadius[widget:getName()] 
-						table.insert(self._statics, { posx = wx + i * offset, posy = wy, radius = spacerRadius or radius })
+					local spacerCount = self._tuning.staticSpacerCount[widget:getName()]
+					local spacerRadius = self._tuning.staticSpacerRadius[widget:getName()] or radius
+					local offset = math.floor(spacerRadius * 1.5)
+					local midpoint = spacerCount / 2  -- idx will range from 0 (the item above) to spacerCount
+					for i = 1, spacerCount do
+						table.insert(self._statics, {
+							posx = wx + i * offset,
+							posy = wy,
+							radius = spacerRadius,
+							_layoutLeft = i < midpoint,
+							_layoutRight = i > midpoint,
+							_layoutMid = i ~= spacerCount,
+						})
 					end
 				end
 			end
@@ -144,9 +160,11 @@ function mainframe_layout:calculateLayout( screen, game, widgets )
 			if widget.layoutWide then
 				 -- Layout treats each widget as 40px wide.
 				 -- program.daemonKnown.bg is 234px wide, including borders.
-				layout.widgets = { widget, SPACER, SPACER, SPACER, SPACER }
+				layout.widgets = { widget, LEFTMID_SPACER, MIDDLE_SPACER, RIGHTMID_SPACER, RIGHT_SPACER }
+				widget._layoutLeft = true
 			else
 				layout.widgets = { widget }
+				widget._layoutLeft = nil
 			end
 
 			local wx, wy = game:worldToWnd( widget.worldx, widget.worldy, widget.layoutWorldz or widget.worldz )
@@ -291,20 +309,28 @@ function mainframe_layout:hasOverlaps( layout, statics )
 	return false
 end
 
-function mainframe_layout:updateForce( fx, fy, dx, dy, radius )
+function mainframe_layout:updateForce( fx, fy, dx, dy, radius, left, mid, right )
 	local mag = self._tuning.repulseMagnitude
 	if mag then
 		local SCALE_DIST = radius * self._tuning.repulseScaleCap
 		local MAX_DIST = radius + self._tuning.repulseMaxSep
 		local d = math.sqrt( dx*dx + dy*dy )
 		if d < 1 then
-			mag = 0
+			return fx, fy
 		elseif d > MAX_DIST then
 			-- Far enough apart.
-			mag = 0
+			return fx, fy
 		else
 			mag = mag * math.min( 1, (SCALE_DIST * SCALE_DIST) / (d*d)) -- inverse sqr mag.
 			dx, dy = dx / d, dy / d
+		end
+
+		if left and dx > 0 then
+			dx = 0
+		elseif right and dx < 0 then
+			dx = 0
+		elseif mid then
+			dx = dx * 3 / 4
 		end
 
 		fx, fy = fx + mag * dx, fy + mag * dy
@@ -319,15 +345,15 @@ function mainframe_layout:calculateForce( layoutID, layout, statics )
 		local x0, y0, r0 = self:getCircle( layoutID, i )
 		for w2, ll in pairs(layout) do
 			if w2 ~= layoutID then
-				for j = 1, #ll.widgets do
+				for j, widget in ipairs(ll.widgets) do
 					local x1, y1, r1 = self:getCircle( w2, j )
-					fx, fy = self:updateForce( fx, fy, x0 - x1, y0 - y1, r0 + r1 )
+					fx, fy = self:updateForce( fx, fy, x0 - x1, y0 - y1, r0 + r1, widget._layoutLeft, widget._layoutMid, widget._layoutRight )
 				end
 			end
 		end
 		for i, ll in pairs(statics) do
 			local x1, y1, r1 = self:getStaticCircle( ll )
-			fx, fy = self:updateForce( fx, fy, x0 - x1, y0 - y1, r0 + r1 )
+			fx, fy = self:updateForce( fx, fy, x0 - x1, y0 - y1, r0 + r1, ll._layoutLeft, ll._layoutMid, ll._layoutRight )
 		end
 	end
 
