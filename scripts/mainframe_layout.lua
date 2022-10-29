@@ -16,6 +16,15 @@ local function hasArm( widget )
 	return widget.binder and widget.binder.arm and not widget.binder.arm.isnull
 end
 
+-- Restore modified widgets if we're destroyed by a settings change.
+function mainframe_layout.restoreWidgets( widgets )
+	for _, widget in ipairs( widgets ) do
+		if hasArm(widget) then
+			widget.binder.arm:setVisible(true)
+		end
+	end
+end
+
 function mainframe_layout:calculateLayout( screen, game, widgets )
 	for i, widget in ipairs( widgets ) do
         assert( widget.worldx )

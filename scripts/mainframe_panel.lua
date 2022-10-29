@@ -8,46 +8,42 @@ local uitr_util = include( SCRIPT_PATHS.qed_uitr .. "/uitr_util" )
 local mainframe_layout = include( SCRIPT_PATHS.qed_uitr .. "/mainframe_layout" )
 
 local panel = mainframe_panel.panel
+local MODE_HIDDEN = 0
+local MODE_VISIBLE = 1
 
 local function initLayouts( self )
 	local layout = mainframe_layout(self._hud)
 	self._hud._world_hud:setLayout( world_hud.MAINFRAME, layout )
-	-- RAW_MF_T: Raw mainframe targeting from SimConstructor.
-	-- if self.RAW_MF_T then
-	-- 	local layout = mainframe_layout(self._hud)
-	-- 	self._hud._world_hud:setLayout( self.RAW_MF_T, layout )
-	-- end
+	-- There's also the RAW_MF_T group key for "Raw targeting" mainframe abilities added by SimConstructor.
+	-- If the layout starts repositioning targeted abilities, should also account for these.
 end
 
-local oldShow = panel.show
-function panel:show( ... )
-	if uitr_util.checkOption("mainframeLayout") then
-		self._uitr_usingLayout = true
-		initLayouts(self)
+local function destroyLayouts( self )
+	self._hud._world_hud:destroyLayout( world_hud.MAINFRAME )
+
+	local widgets = self._hud._world_hud:getWidgets( world_hud.MAINFRAME )
+	if widgets then
+		mainframe_layout.restoreWidgets(widgets)
 	end
-
-	oldShow( self, ... )
-end
-
-local oldHide = panel.hide
-function panel:hide( ... )
-	oldHide( self, ... )
-
-	-- Layout was destroyed by world_hud along with the mainframe widgets.
-	self._uitr_usingLayout = false
 end
 
 local oldRefresh = panel.refresh
 function panel:refresh( ... )
-	local useLayout = uitr_util.checkOption("mainframeLayout")
-	if useLayout ~= self._uitr_usingLayout then
-		self._uitr_usingLayout = useLayout
-		if useLayout then
-			initLayouts(self)
-		else
-			self._hud._world_hud:destroyLayout( world_hud.MAINFRAME )
-			-- if self.RAW_MF_T then self._hud._world_hud:destroyLayout( self.RAW_MF_T ) end
+	if self._mode == MODE_VISIBLE then
+
+		-- Prepare the layout if necessary. This panel preserves the layout and widgets across refreshes.
+		local useLayout = uitr_util.checkOption("mainframeLayout")
+		if useLayout ~= self._uitr_usingLayout then
+			self._uitr_usingLayout = useLayout
+			if useLayout then
+				initLayouts(self)
+			else
+				destroyLayouts(self)
+			end
 		end
+	else
+		-- Layout was destroyed by world_hud along with the mainframe widgets.
+		self._uitr_usingLayout = false
 	end
 
 	oldRefresh( self, ... )
