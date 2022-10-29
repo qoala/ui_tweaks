@@ -8,6 +8,9 @@ local cdefs = include( "client_defs" )
 
 local mainframe_layout = class( button_layout )
 
+-- Extra element for layout widget-lists to make the layout entry wider.
+local SPACER = {}
+
 function mainframe_layout:init()
 	button_layout.init( self, 0, 0 ) -- Target lines vary around a semi-fixed offset, instead of radiating away from the current agent.
 end
@@ -63,7 +66,14 @@ function mainframe_layout:calculateLayout( screen, game, widgets )
 			end
 
 			-- UITR: Each layout entry only gets a single widget, unlike the meatspace button layout.
-			layout.widgets[1] = widget
+			--       If the widget is extra-wide, add some dummy entries for the spacing calculations.
+			if widget.layoutWide then
+				 -- Layout treats each widget as 40px wide.
+				 -- program.daemonKnown.bg is 234px wide, including borders.
+				layout.widgets = { widget, SPACER, SPACER, SPACER, SPACER }
+			else
+				layout.widgets = { widget }
+			end
 
 			local wx, wy = game:worldToWnd( widget.worldx, widget.worldy, widget.layoutWorldz or widget.worldz )
 			layout.startx, layout.starty = wx, wy

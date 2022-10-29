@@ -48,3 +48,13 @@ function panel:refresh( ... )
 
 	oldRefresh( self, ... )
 end
+
+local oldRefreshBreakIceButton = panel.refreshBreakIceButton
+function panel:refreshBreakIceButton( widget, unit, ... )
+	oldRefreshBreakIceButton(self, widget, unit, ...)
+
+	if unit:getTraits().mainframe_program ~= nil and unit:getTraits().daemon_sniffed then
+		-- Widget is drawing the full daemon label.
+		widget.layoutWide = true
+	end
+end
