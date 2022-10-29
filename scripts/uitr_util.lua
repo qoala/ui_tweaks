@@ -132,18 +132,35 @@ local UITR_OPTIONS = {
 	},
 }
 
+for _,setting in ipairs( UITR_OPTIONS ) do
+	setting.canRefresh = not setting.needsReload and not setting.needsCampaign
+end
+
 -- ===
 
+-- Mutable container for temporary options
+local _M = {
+	tempOptions = nil,
+}
+
 local function checkEnabled( )
-	local settingsFile = savefiles.getSettings( "settings" )
-	local uitr = settingsFile.data.uitr
-	return uitr and uitr["enabled"]
+	if _M.tempOptions then
+		return _M.tempOptions["enabled"]
+	else
+		local settingsFile = savefiles.getSettings( "settings" )
+		local uitr = settingsFile.data.uitr
+		return uitr and uitr["enabled"]
+	end
 end
 
 local function checkOption( optionId )
-	local settingsFile = savefiles.getSettings( "settings" )
-	local uitr = settingsFile.data.uitr
-	return uitr and uitr["enabled"] and uitr[optionId]
+	if _M.tempOptions then
+		return _M.tempOptions["enabled"] and _M.tempOptions[optionId]
+	else
+		local settingsFile = savefiles.getSettings( "settings" )
+		local uitr = settingsFile.data.uitr
+		return uitr and uitr["enabled"] and uitr[optionId]
+	end
 end
 
 local function getOptions( )
@@ -154,6 +171,10 @@ local function getOptions( )
 	else
 		return {}
 	end
+end
+
+local function _setTempOptions( tempOptions )
+	_M.tempOptions = tempOptions
 end
 
 local function initOptions( )
@@ -253,6 +274,7 @@ return {
 	checkEnabled = checkEnabled,
 	checkOption = checkOption,
 	getOptions = getOptions,
+	_setTempOptions = _setTempOptions,
 	initOptions = initOptions,
 
 	extractUpvalue = extractUpvalue,

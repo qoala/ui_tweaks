@@ -34,6 +34,13 @@ end
 
 local function onClickUitrResetOptions( dialog )
 	dialog:refreshUitrSettings( {} )
+
+	if dialog._game and dialog._game.hud then
+		local uitrSettings = {}
+		dialog:retrieveRefreshableUitrSettings(uitrSettings)
+		uitr_util._setTempOptions(uitrSettings)
+		dialog._game.hud:refreshHud()
+	end
 end
 
 -- ===
@@ -57,22 +64,7 @@ local function comboOptionRetrieve( self, uitrSettings )
 	end
 end
 
-local function checkNeedsCampaign( self, setting, widget )
-	if setting.needsCampaign and self._game then
-		local value = setting:apply({}, widget.binder.widget)
-		local uiTweaks = self._game.simCore:getParams().difficultyOptions.uiTweaks
-		local uitrNeedsCampaignWarning = widget.binder.uitrNeedsCampaignWarning
-		uitrNeedsCampaignWarning:setVisible( value and not uiTweaks )
-	end
-end
-
-local function onChangedOption( self, setting, widget )
-	-- Enable/Disable other options
-	if setting.maskFn then
-		self:refreshUitrMasks()
-	end
-
-	-- Reload warnings
+local function checkNeedsReload( self, setting, widget )
 	if setting.needsReload and self._game then
 		local tempSettings = {}
 		self:retrieveUitrSettings(tempSettings)
@@ -88,7 +80,33 @@ local function onChangedOption( self, setting, widget )
 		local uitrReloadWarning = self._screen.binder.uitrReloadWarning
 		uitrReloadWarning:setVisible( needsReload )
 	end
+end
+local function checkNeedsCampaign( self, setting, widget )
+	if setting.needsCampaign and self._game then
+		local value = setting:apply({}, widget.binder.widget)
+		local uiTweaks = self._game.simCore:getParams().difficultyOptions.uiTweaks
+		local uitrNeedsCampaignWarning = widget.binder.uitrNeedsCampaignWarning
+		uitrNeedsCampaignWarning:setVisible( value and not uiTweaks )
+	end
+end
+
+local function onChangedOption( self, setting, widget )
+	-- Enable/Disable other options
+	if setting.maskFn then
+		self:refreshUitrMasks()
+	end
+
+	-- Warnings
+	checkNeedsReload( self, setting, widget )
 	checkNeedsCampaign( self, setting, widget )
+
+	-- Refresh the UI
+	if setting.canRefresh and self._game and self._game.hud then
+		local uitrSettings = {}
+		self:retrieveRefreshableUitrSettings(uitrSettings)
+		uitr_util._setTempOptions(uitrSettings)
+		self._game.hud:refreshHud()
+	end
 end
 
 -- ===
@@ -145,6 +163,8 @@ local oldHide = options_dialog.hide
 function options_dialog:hide( ... )
 	oldHide(self, ...)
 
+	-- Clear temporary options.
+	uitr_util._setTempOptions(nil)
 	if self._game and self._game.hud then
 		self._game.hud:refreshHud()
 	end
@@ -160,13 +180,13 @@ function options_dialog:refreshUitrSettings( uitrSettings )
 		if setting.check then
 			widget = list:addItem( setting, "CheckOption" )
 			widget.binder.widget:setText( setting.name )
-			widget.binder.widget.onClick = util.makeDelegate( nil, onChangedOption, self, setting, widget )
 			widget.binder.sectionHeaderLine:setVisible( not not setting.sectionHeader )
 			widget.binder.uitrNeedsCampaignWarning:setText( STRINGS.UITWEAKSR.UI.CAMPAIGN_WARNING )
 
 			setting.apply = checkOptionApply
 			setting.retrieve = checkOptionRetrieve
 			widget.binder.widget:setValue( setting:retrieve(uitrSettings) )
+			widget.binder.widget.onClick = util.makeDelegate( nil, onChangedOption, self, setting, widget )
 			checkNeedsCampaign( self, setting, widget )
 		elseif setting.values then
 			widget = list:addItem( setting, "ComboOption" )
@@ -174,13 +194,13 @@ function options_dialog:refreshUitrSettings( uitrSettings )
 			for i, item in ipairs(setting.values) do
 				widget.binder.widget:addItem( setting.strings and setting.strings[i] or item )
 			end
-			widget.binder.widget.onTextChanged = util.makeDelegate( nil, onChangedOption, self, setting, widget )
 			widget.binder.sectionHeaderLine:setVisible( not not setting.sectionHeader )
 			widget.binder.uitrNeedsCampaignWarning:setText( STRINGS.UITWEAKSR.UI.CAMPAIGN_WARNING )
 
 			setting.apply = comboOptionApply
 			setting.retrieve = comboOptionRetrieve
 			widget.binder.widget:setValue( setting:retrieve(uitrSettings) )
+			widget.binder.widget.onTextChanged = util.makeDelegate( nil, onChangedOption, self, setting, widget )
 			checkNeedsCampaign( self, setting, widget )
 		elseif setting.spacer then
 			widget = list:addItem( setting, "OptionSpacer" )
@@ -203,6 +223,21 @@ function options_dialog:retrieveUitrSettings( uitrSettings )
 		if setting and setting.apply then
 			local widget = item.widget.binder.widget
 			setting:apply(uitrSettings, widget)
+		end
+	end
+end
+
+function options_dialog:retrieveRefreshableUitrSettings( uitrSettings )
+	local original = self._originalSettings.uitr or {}
+	local items = self._screen.binder.uitrOptionsList:getItems()
+
+	for _,item in ipairs(items) do
+		local setting = item.user_data
+		if setting and setting.apply and setting.canRefresh then
+			local widget = item.widget.binder.widget
+			setting:apply(uitrSettings, widget)
+		elseif setting and setting.id then
+			uitrSettings[setting.id] = original[setting.id]
 		end
 	end
 end
