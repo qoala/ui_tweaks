@@ -4,7 +4,6 @@ local mui_defs = include( "mui/mui_defs")
 local uitr_util = include( SCRIPT_PATHS.qed_uitr .. "/uitr_util" )
 
 local oldRefreshWidgets = world_hud.refreshWidgets
-
 function world_hud:refreshWidgets( ... )
 	oldRefreshWidgets( self, ... )
 
@@ -37,4 +36,18 @@ function world_hud:destroyLayout( groupKey )
 		self._layouts[ groupKey ]:destroy( self._screen )
 		self._layouts[ groupKey ] = nil
 	end
+end
+
+local oldCreateWidget = world_hud.createWidget
+function world_hud:createWidget( groupKey, skinName, t, ... )
+	if groupKey == world_hud.MAINFRAME and skinName == "BreakIce" and t.ownerID then
+		local sim = self._game.simCore
+		local unit = sim:getUnit( t.ownerID )
+		if unit and unit:getLocation() then
+			-- Store the true worldz without the mainframe panel's crude offset for overlapping targets
+			t.layoutWorldz = unit:getTraits().breakIceOffset or 12
+		end
+	end
+
+	return oldCreateWidget(self, groupKey, skinName, t, ... )
 end

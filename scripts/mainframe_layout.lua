@@ -64,7 +64,7 @@ function mainframe_layout:calculateLayout( screen, game, widgets )
 			-- UITR: Each layout entry only gets a single widget, unlike the meatspace button layout.
 			layout.widgets[1] = widget
 
-			local wx, wy = game:worldToWnd( widget.worldx, widget.worldy, widget.worldz )
+			local wx, wy = game:worldToWnd( widget.worldx, widget.worldy, widget.layoutWorldz or widget.worldz )
 			layout.startx, layout.starty = wx, wy
 			layout.posx, layout.posy = wx, wy
 
