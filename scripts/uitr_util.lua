@@ -63,16 +63,56 @@ local UITR_OPTIONS = {
 
 		id = "mainframeLayoutMagnitude",
 		name = "  Repulse Magnitude",
-		tip = "",
 		values={ 2, 3, 4, 5, 6, 7, 8, 9, 10 },
 		value=5,
 	},
 	{
-		id = "mainframeLayoutDistance",
-		name = "  Repulse Distance",
-		tip = "",
-		values={ 5, 10, 15, 20, 25, 30, 35, 40, 50, 60 },
+		id = "mainframeLayoutScaleLimit",
+		name = "  Repulse Scaling Limit",
+		values={ 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0 },
+		value=0.4,
+	},
+	{
+		id = "mainframeLayoutMaxSeparation",
+		name = "  Max Repulse Separation",
+		values={ 5, 7, 10, 12, 15, 17, 20, 25, 30, 35, 40, 45, 50, 55, 60 },
 		value=20,
+	},
+	{
+		id = "mainframeLayoutItemRadius",
+		name = "  Boundary radius of firewall widgets",
+		values={ 9,11,13,15,17,19,21,23,25, 31, 35, 41, 45, 51,  },
+		value = 21,
+	},
+	{
+		id = "mainframeLayoutStaticIceRadius",
+		name = "  Static boundary for mainframe devices",
+		values={ 1,3,5,7,9,11,13,15,17,19,21,23,25 },
+		value = 3,
+	},
+	{
+		id = "mainframeLayoutStaticActivateRadius",
+		name = "  Static boundary for activatables",
+		values={ 9,11,13,15,17,19,21,23,25, 31, 35, 41, 45, 51,  },
+		value = 31,
+	},
+	{
+		id = "mainframeLayoutStaticActivateTextRadius",
+		name = "  Static boundary for activatable text",
+		values={ 9,11,13,15,17,19,21,23,25, 31, 35, 41, 45, 51,  },
+		value = 21,
+	},
+	{
+		id = "mainframeLayoutStaticActivateTextWidth",
+		name = "  Static boundary for activatable text",
+		values={ 0,1,2,3,4,5,6,7,8,9,10  },
+		value = 5,
+	},
+	{
+		id = "mainframeLayoutStaticTargetRadius",
+		name = "  Static boundary for ability targets",
+		values={ 9,11,13,15,17,19,21,23,25 },
+		value = 21
 	},
 
 	-- QoL interface.
@@ -153,10 +193,15 @@ local UITR_OPTIONS = {
 for _,setting in ipairs( UITR_OPTIONS ) do
 	setting.canRefresh = not setting.needsReload and not setting.needsCampaign
 
-	if setting.values and not setting.strings then
-		setting.strings = {}
-		for i,v in ipairs(setting.values) do
-			setting.strings[i] = tostring(v)
+	if setting.values then
+		if not setting.strings then
+			setting.strings = {}
+			for i,v in ipairs(setting.values) do
+				setting.strings[i] = tostring(v)
+			end
+		end
+		if setting.value == nil then
+			setting.value = setting.values[1]
 		end
 	end
 end
@@ -204,12 +249,13 @@ local function _setTempOptions( tempOptions )
 end
 
 local function initOptions( )
+	local array = include( "modules/array" )
 	local settingsFile = savefiles.getSettings( "settings" )
 	if not settingsFile.data.uitr then settingsFile.data.uitr = {} end
 
 	local uitr = settingsFile.data.uitr
 	for _,optionDef in ipairs( UITR_OPTIONS ) do
-		if uitr[optionDef.id] == nil then
+		if uitr[optionDef.id] == nil or (optionDef.values and not array.find(optionDef.values, uitr[optionDef.id])) then
 			if optionDef.value ~= nil then
 				uitr[optionDef.id] = optionDef.value
 			elseif optionDef.check then

@@ -14,12 +14,34 @@ local mainframe_layout = class( button_layout )
 
 local TUNING =
 {
-    -- Magnitude at which buttons/static regions push away at eachother (button_layout: 5)
-    repulseMagnitude = 5,
-    -- Inverse squared magnitude is capped at this minimum distance. (button_layout: 40)
-    repulseDist = 20,
-    -- Max iterations to figure out a layout placement. (button_layout: 10)
-    maxIters = 10,
+	-- Magnitude at which buttons/static regions push away at eachother (button_layout: 5)
+	repulseMagnitude = 5,
+	-- Inverse squared magnitude is capped at this minimum distance. (button_layout: 40)
+	repulseScaleCap = 0.4,
+	-- Repulsion is applied up to this amount of separation + bounding radii.
+	repulseMaxSep = 20,
+	-- Max iterations to figure out a layout placement. (button_layout: 10)
+	maxIters = 10,
+
+	-- Horizontal spacing between spacers (both static and wide widgets).
+	itemSpacing = 40,
+
+	-- Overlap radius of layout widgets/spacer.
+	itemRadius = 21,
+	-- Overlap radius of the static bubble at the target circle for a layout item.
+	staticIceRadius = 3,
+	-- Overlap radius of the static bubble around fixed widgets, by skin name.
+	staticRadius = {
+		["Activate"] = 31,
+		["Target"] = 21,
+	},
+	-- Additional horizontal spacers for wide fixed widgets, by skin name.
+	staticSpacerCount = {
+		["Activate"] = 5,
+	},
+	staticSpacerRadius = {
+		["Activate"] = 21,
+	},
 }
 
 -- Extra element for layout widget-lists to make the layout entry wider.
@@ -27,7 +49,7 @@ local SPACER = {}
 
 function mainframe_layout:init()
 	button_layout.init( self, 0, 0 ) -- Target lines vary around a semi-fixed offset, instead of radiating away from the current agent.
-	self._tuning = TUNING
+	self._tuning = util.tcopy(TUNING)
 
 	self._lastSettingsID = -1
 	self:refreshTuningSettings()
@@ -36,11 +58,16 @@ end
 function mainframe_layout:refreshTuningSettings()
 	local uitrSettings = uitr_util.getOptions()
 	if self._lastSettingsID ~= uitrSettings._tempID then
-		self._tuning = {
-			repulseMagnitude = uitrSettings.mainframeLayoutMagnitude or 5,
-			repulseDist = uitrSettings.mainframeLayoutDistance or 40,
-			maxIters = 10,
-		}
+		self._tuning.repulseMagnitude = uitrSettings.mainframeLayoutMagnitude
+		self._tuning.repulseScaleCap = uitrSettings.mainframeLayoutScaleLimit
+		self._tuning.repulseMaxSep = uitrSettings.mainframeLayoutMaxSeparation
+
+		self._tuning.itemRadius = uitrSettings.mainframeLayoutItemRadius
+		self._tuning.staticIceRadius = uitrSettings.mainframeLayoutStaticIceRadius
+		self._tuning.staticRadius["Activate"] = uitrSettings.mainframeLayoutStaticActivateRadius
+		self._tuning.staticRadius["Target"] = uitrSettings.mainframeLayoutStaticTargetRadius
+		self._tuning.staticSpacerCount["Activate"] = uitrSettings.mainframeLayoutStaticActivateTextWidth
+		self._tuning.staticSpacerRadius["Activate"] = uitrSettings.mainframeLayoutStaticActivateTextRadius
 
 		self._lastSettingsID = uitrSettings._tempID
 	end
@@ -60,6 +87,9 @@ function mainframe_layout.restoreWidgets( widgets )
 end
 
 function mainframe_layout:calculateLayout( screen, game, widgets )
+	-- UITR: Populate the list of statics from static widgets each time we calculate.
+	self._statics = {}
+
 	local layoutsByPosition = {}
 	for i, widget in ipairs( widgets ) do
         assert( widget.worldx )
@@ -76,8 +106,21 @@ function mainframe_layout:calculateLayout( screen, game, widgets )
 		else
 			-- UITR: Other widgets should be drawn directly on their coordinates.
 			widget.layoutID = nil
-			widget.layoutStatic = true
-			-- TODO: Insert bounds into the static forcing coordinates list for Activate/Target/etc?
+
+			if widget.getName and self._tuning.staticRadius[widget:getName()] then
+				-- UITR: Insert into the static forcing coordinates list to keep clear around this button.
+				local radius = self._tuning.staticRadius[widget:getName()]
+				local wx, wy = game:worldToWnd( widget.worldx, widget.worldy, widget.worldz )
+				table.insert(self._statics, { posx = wx, posy = wy, radius = radius })
+
+				if self._tuning.staticSpacerCount[widget:getName()] then
+					for i = 1, self._tuning.staticSpacerCount[widget:getName()] do
+						local offset = math.floor(radius * 1.5)
+						spacerRadius = self._tuning.staticSpacerRadius[widget:getName()] 
+						table.insert(self._statics, { posx = wx + i * offset, posy = wy, radius = spacerRadius or radius })
+					end
+				end
+			end
 		end
 
 		if layoutID then
@@ -109,6 +152,11 @@ function mainframe_layout:calculateLayout( screen, game, widgets )
 			local wx, wy = game:worldToWnd( widget.worldx, widget.worldy, widget.layoutWorldz or widget.worldz )
 			layout.startx, layout.starty = wx, wy
 			layout.posx, layout.posy = wx, wy
+
+			-- UITR: Keep a small area clear around the target circle for this item.
+			if self._tuning.staticIceRadius then
+				table.insert(self._statics, { posx = wx, posy = wy, radius = self._tuning.staticIceRadius })
+			end
 
 			-- UITR: Instead of radiating the offset away from a center point on the selected agent,
 			--       Use a fixed offset as the base offset.
@@ -158,10 +206,6 @@ function mainframe_layout:calculateLayout( screen, game, widgets )
 		end
 	end
 
-	for i, coords in ipairs( self._statics ) do
-		coords.posx, coords.posy = game:worldToWnd( coords[1], coords[2], coords[3] )
-	end
-
 	local iters = 0
 	while iters < self._tuning.maxIters and self:hasOverlaps( self._layout, self._statics ) do
 		self:doPass( self._layout, self._statics )
@@ -170,7 +214,7 @@ function mainframe_layout:calculateLayout( screen, game, widgets )
 end
 
 function mainframe_layout:setPosition( widget )
-	if widget.layoutFixed then
+	if not widget.layoutID then
 		-- UITR: This is a non-targeting widget, such as the 'rebooting' floater. Let the HUD draw it directly.
 		return false
 	end
@@ -203,6 +247,91 @@ function mainframe_layout:setPosition( widget )
 	local t0 = 8 / wndDist -- target circle is 16x16
 	layout.leaderWidget.binder.line:setTarget( t0, x1, y1 )
 	return true
+end
+
+-- ===
+-- Calculation tweaks
+-- ===
+
+function mainframe_layout:getCircle( layoutID, index )
+
+	local OFFSET_X = self._tuning.itemSpacing
+	local ll = self._layout[ layoutID ]
+	return ll.posx + OFFSET_X * (index-1), ll.posy, (ll.widgets[index].layoutRadius or self._tuning.itemRadius)
+end
+
+function mainframe_layout:getStaticCircle( static )
+	return static.posx, static.posy, static.radius
+end
+
+function mainframe_layout:hasOverlaps( layout, statics )
+	local overlaps = 0
+	for layoutID, l in pairs( layout ) do
+		for i = 1, #l.widgets do
+			local x0, y0, r0 = self:getCircle( layoutID, i )
+			for w2, ll in pairs(layout) do
+				if w2 ~= layoutID then
+					for j = 1, #ll.widgets do
+						local x1, y1, r1 = self:getCircle( w2, j )
+						if mathutil.dist2d( x0, y0, x1, y1 ) <= r0+r1 then
+							return true
+						end
+					end
+				end
+			end
+			for i, static in pairs(statics) do
+				local x1, y1, r1 = self:getStaticCircle( static )
+				if mathutil.dist2d( x0, y0, x1, y1 ) <= r0+r1 then
+					return true
+				end
+			end
+		end
+	end
+
+	return false
+end
+
+function mainframe_layout:updateForce( fx, fy, dx, dy, radius )
+	local mag = self._tuning.repulseMagnitude
+	if mag then
+		local SCALE_DIST = radius * self._tuning.repulseScaleCap
+		local MAX_DIST = radius + self._tuning.repulseMaxSep
+		local d = math.sqrt( dx*dx + dy*dy )
+		if d < 1 then
+			mag = 0
+		elseif d > MAX_DIST then
+			-- Far enough apart.
+			mag = 0
+		else
+			mag = mag * math.min( 1, (SCALE_DIST * SCALE_DIST) / (d*d)) -- inverse sqr mag.
+			dx, dy = dx / d, dy / d
+		end
+
+		fx, fy = fx + mag * dx, fy + mag * dy
+	end
+	return fx, fy
+end
+
+function mainframe_layout:calculateForce( layoutID, layout, statics )
+	local fx, fy = 0, 0
+	local l = layout[ layoutID ]
+	for i = 1, #l.widgets do
+		local x0, y0, r0 = self:getCircle( layoutID, i )
+		for w2, ll in pairs(layout) do
+			if w2 ~= layoutID then
+				for j = 1, #ll.widgets do
+					local x1, y1, r1 = self:getCircle( w2, j )
+					fx, fy = self:updateForce( fx, fy, x0 - x1, y0 - y1, r0 + r1 )
+				end
+			end
+		end
+		for i, ll in pairs(statics) do
+			local x1, y1, r1 = self:getStaticCircle( ll )
+			fx, fy = self:updateForce( fx, fy, x0 - x1, y0 - y1, r0 + r1 )
+		end
+	end
+
+    return fx, fy
 end
 
 return mainframe_layout
