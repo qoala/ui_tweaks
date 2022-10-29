@@ -146,24 +146,25 @@ local _M = {
 local function checkEnabled( )
 	if _M.tempOptions then
 		return _M.tempOptions["enabled"]
-	else
-		local settingsFile = savefiles.getSettings( "settings" )
-		local uitr = settingsFile.data.uitr
-		return uitr and uitr["enabled"]
 	end
+	local settingsFile = savefiles.getSettings( "settings" )
+	local uitr = settingsFile.data.uitr
+	return uitr and uitr["enabled"]
 end
 
 local function checkOption( optionId )
 	if _M.tempOptions then
 		return _M.tempOptions["enabled"] and _M.tempOptions[optionId]
-	else
-		local settingsFile = savefiles.getSettings( "settings" )
-		local uitr = settingsFile.data.uitr
-		return uitr and uitr["enabled"] and uitr[optionId]
 	end
+	local settingsFile = savefiles.getSettings( "settings" )
+	local uitr = settingsFile.data.uitr
+	return uitr and uitr["enabled"] and uitr[optionId]
 end
 
 local function getOptions( )
+	if _M.tempOptions then
+		return _M.tempOptions
+	end
 	local settingsFile = savefiles.getSettings( "settings" )
 	local uitr = settingsFile.data.uitr
 	if uitr and uitr["enabled"] then

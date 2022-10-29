@@ -328,7 +328,6 @@ local function generateDoorActionForCell( hud, unit, cell, sim )
 		if exit.door and exit.keybits ~= simdefs.DOOR_KEYS.ELEVATOR and exit.keybits ~= simdefs.DOOR_KEYS.ELEVATOR_INUSE then
 			local exitop = exit.closed and simdefs.EXITOP_OPEN or simdefs.EXITOP_CLOSE
 			if canModifyExit( unit, exitop, cell, dir, sim ) then
-				simlog("UITRDEBUG VISION MODE DOOR %s,%s %s", cell.x, cell.y, dir)
 				return {
 					hotkey = "abilityOpenDoor",
 					onHotkey = function() agent_actions.checkForSingleDoor( hud._game, exitop, unit, cell, dir, sim ) end,

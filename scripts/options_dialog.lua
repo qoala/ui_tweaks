@@ -33,14 +33,10 @@ local function initUitrSettings( settings )
 end
 
 local function onClickUitrResetOptions( dialog )
+	-- Empty options will evaluate defaults.
 	dialog:refreshUitrSettings( {} )
 
-	if dialog._game and dialog._game.hud then
-		local uitrSettings = {}
-		dialog:retrieveRefreshableUitrSettings(uitrSettings)
-		uitr_util._setTempOptions(uitrSettings)
-		dialog._game.hud:refreshHud()
-	end
+	dialog:refreshHudUitrSettings()
 end
 
 -- ===
@@ -101,11 +97,8 @@ local function onChangedOption( self, setting, widget )
 	checkNeedsCampaign( self, setting, widget )
 
 	-- Refresh the UI
-	if setting.canRefresh and self._game and self._game.hud then
-		local uitrSettings = {}
-		self:retrieveRefreshableUitrSettings(uitrSettings)
-		uitr_util._setTempOptions(uitrSettings)
-		self._game.hud:refreshHud()
+	if setting.canRefresh then
+		self:refreshHudUitrSettings()
 	end
 end
 
@@ -147,6 +140,8 @@ end
 local oldShow = options_dialog.show
 function options_dialog:show(...)
 	oldShow(self, ...)
+
+	self._uitr_tempID = 0
 
 	local uitrResetBtn = self._screen.binder.uitrResetOptionsBtn
 	uitrResetBtn:setText( STRINGS.UITWEAKSR.UI.BTN_RESET_OPTIONS )
@@ -227,10 +222,16 @@ function options_dialog:retrieveUitrSettings( uitrSettings )
 	end
 end
 
-function options_dialog:retrieveRefreshableUitrSettings( uitrSettings )
-	local original = self._originalSettings.uitr or {}
-	local items = self._screen.binder.uitrOptionsList:getItems()
+function options_dialog:refreshHudUitrSettings()
+	if not (self._game and self._game.hud) then
+		return
+	end
 
+	local original = self._originalSettings.uitr or {}
+	local uitrSettings = { _tempID = self._uitr_tempID }
+	self._uitr_tempID = self._uitr_tempID + 1
+
+	local items = self._screen.binder.uitrOptionsList:getItems()
 	for _,item in ipairs(items) do
 		local setting = item.user_data
 		if setting and setting.apply and setting.canRefresh then
@@ -240,6 +241,9 @@ function options_dialog:retrieveRefreshableUitrSettings( uitrSettings )
 			uitrSettings[setting.id] = original[setting.id]
 		end
 	end
+
+	uitr_util._setTempOptions(uitrSettings)
+	self._game.hud:refreshHud()
 end
 
 function options_dialog:refreshUitrMasks()
