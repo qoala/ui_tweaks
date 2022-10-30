@@ -258,6 +258,35 @@ function mainframe_layout:_refreshDirtyWidgets( screen, game, widgets )
 		self:_destroyLayoutWidget( screen, self._layout[oldID] )
 		self._layout[oldID] = nil
 	end
+
+	if self.getExtraWidgets then
+		local extraWidgets = self:getExtraWidgets() or {}
+		for i, widget in ipairs( extraWidgets ) do
+			assert( widget.worldx )
+
+			if widget.getName then
+				local radius = self._tuning.staticRadius[widget:getName()]
+				if radius and radius > 0 then
+					-- UITR: Insert into the static forcing coordinates list to keep clear around this button.
+					table.insert(self._statics, {
+						worldx = widget.worldx,
+						worldy = widget.worldy,
+						worldz = widget.worldz,
+						radius = radius,
+					})
+
+					if self._debugViz then
+						local l = self._statics[#self._statics]
+						l.debugRings = {
+							screen:createFromSkin( "MainframeLayoutDebug" ),
+						}
+						screen:addWidget( l.debugRings[1] )
+						l.debugRings[1]:setScale( radius, radius )
+					end
+				end
+			end
+		end
+	end
 end
 
 function mainframe_layout:calculateLayout( screen, game, widgets )

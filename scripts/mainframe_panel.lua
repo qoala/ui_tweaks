@@ -11,15 +11,52 @@ local panel = mainframe_panel.panel
 local MODE_HIDDEN = 0
 local MODE_VISIBLE = 1
 
+-- ===
+
+-- "Layout" that only exists to proxy the dirty-bit between world_hud groups.
+local proxy_layout = class()
+
+function proxy_layout:init( primeLayout )
+	self._primeLayout = primeLayout
+end
+function proxy_layout:dirtyLayout()
+	self._primeLayout:dirtyLayout()
+end
+
+function proxy_layout:destroy()
+end
+function proxy_layout:calculateLayout()
+end
+function proxy_layout:setPosition()
+	return false
+end
+
+-- ===
+
 local function initLayouts( self )
-	local layout = mainframe_layout(self._hud)
+	local layout = mainframe_layout( self._hud )
 	self._uitr_layout = layout
 	self._hud._world_hud:setLayout( world_hud.MAINFRAME, layout )
-	-- There's also the RAW_MF_T group key for "Raw targeting" mainframe abilities added by SimConstructor.
-	-- If the layout starts repositioning targeted abilities, should also account for these.
+
+	-- RAW_MF_T: "Raw targeting" mainframe abilities added by SimConstructor.
+	if self.RAW_MF_T then
+		local proxyLayout = proxy_layout( layout )
+		self._hud._world_hud:setLayout( self.RAW_MF_T, proxyLayout )
+
+		do
+			-- Capture variables from self.
+			local worldHud = self._hud._world_hud
+			local RAW_MF_T = self.RAW_MF_T
+			function layout:getExtraWidgets()
+				return worldHud:getWidgets( RAW_MF_T ) or {}
+			end
+		end
+	end
 end
 
 local function destroyLayouts( self )
+	if self.RAW_MF_T then self._hud._world_hud:destroyLayout( self.RAW_MF_T ) end
+
 	self._hud._world_hud:destroyLayout( world_hud.MAINFRAME )
 	self._uitr_layout = nil
 
