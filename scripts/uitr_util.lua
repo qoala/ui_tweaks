@@ -85,6 +85,12 @@ local UITR_OPTIONS = {
 		value=20,
 	},
 	{
+		id = "mainframeLayoutOverlapLimit",
+		name = "  Horizontal overlap forcing",
+		values={ false, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 },
+		value=2,
+	},
+	{
 		id = "mainframeLayoutItemRadius",
 		name = "  Boundary radius of firewall widgets",
 		values={ 9,11,13,15,17,19,21,23,25, 31, 35, 41, 45, 51,  },
@@ -93,31 +99,19 @@ local UITR_OPTIONS = {
 	{
 		id = "mainframeLayoutStaticIceRadius",
 		name = "  Static boundary for mainframe devices",
-		values={ 0, 1,3,5,7,9,11,13,15,17,19,21,23,25 },
-		value = 3,
+		values={ false, 1,3,5,7,9,11,13,15,17,19,21,23,25 },
+		value = false,
 	},
 	{
 		id = "mainframeLayoutStaticActivateRadius",
 		name = "  Static boundary for activatables",
-		values={ 0, 9,11,13,15,17,19,21,23,25, 31, 35, 41, 45, 51,  },
+		values={ false, 9,11,13,15,17,19,21,23,25, 31, 35, 41, 45, 51,  },
 		value = 31,
-	},
-	{
-		id = "mainframeLayoutStaticActivateTextRadius",
-		name = "  Static boundary for activatable text",
-		values={ 0, 9,11,13,15,17,19,21,23,25, 31, 35, 41, 45, 51,  },
-		value = 21,
-	},
-	{
-		id = "mainframeLayoutStaticActivateTextWidth",
-		name = "  Static boundary for activatable text",
-		values={ 0,1,2,3,4,5,6,7,8,9,10  },
-		value = 6,
 	},
 	{
 		id = "mainframeLayoutStaticTargetRadius",
 		name = "  Static boundary for ability targets",
-		values={ 0, 9,11,13,15,17,19,21,23,25 },
+		values={ false, 9,11,13,15,17,19,21,23,25 },
 		value = 21
 	},
 

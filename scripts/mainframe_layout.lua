@@ -22,6 +22,8 @@ local TUNING =
 	repulseScaleCap = 0.4,
 	-- Repulsion is applied up to this amount of separation + bounding radii.
 	repulseMaxSep = 20,
+	-- Limit for additional force on horizontally-overlapping wide regions.
+	repulseOverlapLimit = 2,
 
 	-- Overlap radius of layout items. (button_layout: 42)
 	itemRadius = 21,
@@ -30,7 +32,7 @@ local TUNING =
 	wideItemWidth = 170,
 
 	-- Overlap radius of the static bubble at the target circle for a layout item.
-	staticIceRadius = 3,
+	staticIceRadius = false,
 	-- Overlap radius of the static bubble around fixed widgets, by skin name.
 	staticRadius = {
 		["Activate"] = 31,
@@ -72,6 +74,7 @@ function mainframe_layout:refreshTuningSettings()
 		self._tuning.repulseMagnitude = uitrSettings.mainframeLayoutMagnitude
 		self._tuning.repulseScaleCap = uitrSettings.mainframeLayoutScaleLimit
 		self._tuning.repulseMaxSep = uitrSettings.mainframeLayoutMaxSeparation
+		self._tuning.repulseOverlapLimit = uitrSettings.mainframeLayoutOverlapLimit
 
 		self._tuning.itemRadius = uitrSettings.mainframeLayoutItemRadius
 
@@ -291,7 +294,7 @@ function mainframe_layout:calculateLayout( screen, game, widgets )
 	for _,layouts in pairs(layoutsByPosition) do
 		if #layouts > 1 then
 			for i, l in ipairs(layouts) do
-				local dx, dy = 4 * math.cos( 2*math.pi * (i / #layouts) ), 4 * math.sin( 2*math.pi * (i / #layouts ))
+				local dx, dy = 8 * math.cos( 2*math.pi * (i / #layouts) ), 8 * math.sin( 2*math.pi * (i / #layouts ))
 				l.posxMin, l.posy = l.posxMin + dx, l.posy + dy
 				l.posxMid, l.posxMax = l.posxMid + dx, l.posxMax + dx
 			end
@@ -389,15 +392,28 @@ end
 
 -- Nearest separation vector between two horizontal lines defined by rounded-rectangle centers
 function mainframe_layout:_getSeparationVector( l0, l1 )
+	local dxForce
+	if (l0.posxMax == l0.posxMin) and (l1.posxMax == l1.posxMin) then
+		-- Both are point sources: use vector as-is.
+	elseif self._tuning.repulseOverlapLimit then
+		-- Additional horizontal forcing to force the true centers away from each other.
+		-- Up to diameter, the force is limited to +/- repulsion magnitude.
+		-- Cap at [-limit, limit]
+		local limit = self._tuning.repulseOverlapLimit
+		local diameter = (l0.radius or self._tuning.itemRadius) + (l1.radius or self._tuning.itemRadius)
+		dxForce = (l1.posxMid - l0.posxMid) / diameter
+		dxForce = math.max( -limit, math.min( limit, dxForce ) )
+	end
+
 	if l0.posxMin > l1.posxMax then
 		-- l0 fully right of l1: Compare endpoint centers.
-		return l1.posxMax - l0.posxMin, l1.posy - l0.posy
+		return l1.posxMax - l0.posxMin, l1.posy - l0.posy, dxForce
 	elseif l1.posxMin > l0.posxMax then
 		-- l1 fully right of l0: Compare endpoint centers.
-		return l1.posxMin - l0.posxMax, l1.posy - l0.posy
+		return l1.posxMin - l0.posxMax, l1.posy - l0.posy, dxForce
 	else
-		-- Overlapping: Compare y-only.
-		return 0, l1.posy - l0.posy
+		-- Horizontal overlap: Compare y-only.
+		return 0, l1.posy - l0.posy, dxForce
 	end
 end
 
@@ -420,7 +436,7 @@ function mainframe_layout:hasOverlaps( layouts, statics )
 	return false
 end
 
-function mainframe_layout:updateForce( fx, fy, dx, dy, radius, id0, id1 )
+function mainframe_layout:updateForce( fx, fy, dx, dy, radius, dxForce, id0, id1 )
 	local SCALE_DIST = radius * self._tuning.repulseScaleCap
 	local MAX_DIST = radius + self._tuning.repulseMaxSep
 	local mag = self._tuning.repulseMagnitude
@@ -431,15 +447,21 @@ function mainframe_layout:updateForce( fx, fy, dx, dy, radius, id0, id1 )
 	elseif d < 1 then
 		-- Too close, but attempting to separate based on dx,dy leads to jumping.
 		if id0 == id1 then
-			return fx, fy
+			dx, dy = 0, 0
 		elseif id1 > id0 then
 			dx, dy = math.cos( 2*math.pi * (id1-id0 / 100) ), math.sin( 2*math.pi * (id1-id0 / 100 ))
 		else
 			dx, dy = -math.cos( 2*math.pi * (id0-id1 / 100) ), -math.sin( 2*math.pi * (id0-id1 / 100 ))
 		end
 	else
-		mag = mag * math.min( 1, (SCALE_DIST * SCALE_DIST) / (d*d)) -- inverse sqr mag.
+		-- Inverse-square decrease to the magnitude when beyond SCALE_DIST
+		mag = mag * math.min( 1, (SCALE_DIST * SCALE_DIST) / (d*d) )
+		-- Unit vector
 		dx, dy = dx / d, dy / d
+	end
+
+	if dxForce then
+		dx = dx/2 + dxForce
 	end
 
 	fx, fy = fx + mag * dx, fy + mag * dy
@@ -453,13 +475,13 @@ function mainframe_layout:calculateForce( id0, l0, layouts, statics )
 	local fx, fy = 0, 0
 	for id1, l1 in pairs(layouts) do
 		if id0 ~= id1 then
-			local dx, dy = self:_getSeparationVector( l1, l0 )
-			fx, fy = self:updateForce( fx, fy, dx, dy, itemDiameter, id0,id1 )
+			local dx, dy, dxForce = self:_getSeparationVector( l1, l0 )
+			fx, fy = self:updateForce( fx, fy, dx, dy, itemDiameter, dxForce, id0,id1 )
 		end
 	end
 	for _, l1 in ipairs(statics) do
-		local dx, dy = self:_getSeparationVector( l1, l0 )
-		fx, fy = self:updateForce( fx, fy, dx, dy, itemRadius + l1.radius )
+		local dx, dy, dxForce = self:_getSeparationVector( l1, l0 )
+		fx, fy = self:updateForce( fx, fy, dx, dy, itemRadius + l1.radius, dxForce )
 	end
 
     return fx, fy
