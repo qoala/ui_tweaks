@@ -61,6 +61,12 @@ local UITR_OPTIONS = {
 	{
 		sectionHeader = true,
 
+		id = "mainframeLayoutDebug",
+		name = "  Layout Debug Visualization",
+		check = true,
+		value = false,
+	},
+	{
 		id = "mainframeLayoutMagnitude",
 		name = "  Repulse Magnitude",
 		values={ 2, 3, 4, 5, 6, 7, 8, 9, 10 },

@@ -14,6 +14,7 @@ local TUNING =
 {
 	-- Max iterations to figure out a layout placement. (button_layout: 10)
 	maxIters = 10,
+	debugViz = false,
 
 	-- Magnitude at which buttons/static regions push away at eachother (button_layout: 5)
 	repulseMagnitude = 5,
@@ -66,6 +67,8 @@ end
 function mainframe_layout:refreshTuningSettings()
 	local uitrSettings = uitr_util.getOptions()
 	if self._lastSettingsID ~= uitrSettings._tempID then
+		self._tuning.debugViz = uitrSettings.mainframeLayoutDebug
+
 		self._tuning.repulseMagnitude = uitrSettings.mainframeLayoutMagnitude
 		self._tuning.repulseScaleCap = uitrSettings.mainframeLayoutScaleLimit
 		self._tuning.repulseMaxSep = uitrSettings.mainframeLayoutMaxSeparation
@@ -85,6 +88,22 @@ function mainframe_layout:dirtyLayout()
 	self._dirty = true
 end
 
+function mainframe_layout:_destroyLayoutWidget( screen, l )
+	screen:removeWidget( l.leaderWidget )
+	if l.debugRings then
+		for _, ring in ipairs( l.debugRings ) do
+			screen:removeWidget( ring )
+		end
+	end
+end
+
+function mainframe_layout:destroy( screen )
+	for _, l in pairs( self._layout ) do
+		self:_destroyLayoutWidget( screen, l )
+	end
+	self._layout = nil
+end
+
 local function hasArm( widget )
 	return widget.binder and widget.binder.arm and not widget.binder.arm.isnull
 end
@@ -100,7 +119,17 @@ end
 
 function mainframe_layout:_refreshDirtyWidgets( screen, game, widgets )
 	-- UITR: Populate the list of statics from static widgets each time we calculate.
+	if self._debugViz then
+		for _, l in ipairs( self._statics ) do
+			if l.debugRings then
+				for _, ring in ipairs( l.debugRings ) do
+					screen:removeWidget( ring )
+				end
+			end
+		end
+	end
 	self._statics = {}
+	self._debugViz = self._tuning.debugViz
 
 	-- Mark and Sweep
 	-- Unlike meatspace buttons, mainframe widgets are retained across refreshes.
@@ -130,6 +159,15 @@ function mainframe_layout:_refreshDirtyWidgets( screen, game, widgets )
 						worldz = widget.worldz,
 						radius = radius,
 					})
+
+					if self._debugViz then
+						local l = self._statics[#self._statics]
+						l.debugRings = {
+							screen:createFromSkin( "MainframeLayoutDebug" ),
+						}
+						screen:addWidget( l.debugRings[1] )
+						l.debugRings[1]:setScale( radius, radius )
+					end
 				end
 			end
 		end
@@ -169,12 +207,33 @@ function mainframe_layout:_refreshDirtyWidgets( screen, game, widgets )
 			if hasArm(widget) then
 				widget.binder.arm:setVisible(false)
 			end
+
+			if self._debugViz and not layout.debugRings then
+				layout.debugRings = {
+					screen:createFromSkin( "MainframeLayoutDebug" ),
+					screen:createFromSkin( "MainframeLayoutDebug" ),
+					screen:createFromSkin( "MainframeLayoutDebug" )
+				}
+				screen:addWidget( layout.debugRings[1] )
+				screen:addWidget( layout.debugRings[2] )
+				screen:addWidget( layout.debugRings[3] )
+			elseif not self._debugViz and layout.debugRings then
+				for _, ring in ipairs( layout.debugRings ) do
+					screen:removeWidget( ring )
+				end
+				layout.debugRings = nil
+			end
+			if layout.debugRings then
+				local radius = self._tuning.itemRadius
+				layout.debugRings[1].binder.ring:setScale( radius, radius )
+				layout.debugRings[2].binder.ring:setScale( radius, radius )
+				layout.debugRings[3].binder.ring:setScale( radius, radius )
+			end
 		end
 	end
 
 	for i,oldID in ipairs(oldIDs) do
-		local layout = self._layout[oldID]
-		screen:removeWidget(layout.leaderWidget)
+		self:_destroyLayoutWidget( screen, self._layout[oldID] )
 		self._layout[oldID] = nil
 	end
 end
@@ -235,6 +294,11 @@ function mainframe_layout:calculateLayout( screen, game, widgets )
 	for _,static in ipairs(self._statics) do
 		static.posxMin, static.posy = game:worldToWnd( static.worldx, static.worldy, static.worldz )
 		static.posxMid, static.posxMax = static.posxMin, static.posxMin
+
+		if static.debugRings then
+			local x, y = screen:wndToUI( static.posxMin, static.posy )
+			static.debugRings[1]:setPosition( x, y )
+		end
 	end
 
 	-- Now, shift positions to reduce overlap.
@@ -278,6 +342,22 @@ function mainframe_layout:setPosition( widget )
 	local wndDist = mathutil.dist2d( layout.startx, layout.starty, layout.posxMin, layout.posy - (36/2 - 4) )
 	local t0 = 8 / wndDist -- target circle is 16x16
 	layout.leaderWidget.binder.line:setTarget( t0, x1, y1 )
+
+	if layout.debugRings then
+		layout.debugRings[1]:setPosition( x, y )
+		if layout.posxMax == layout.posxMin then
+			layout.debugRings[2]:setVisible( false )
+			layout.debugRings[3]:setVisible( false )
+		else
+			local xMid, yMid = widget:getScreen():wndToUI( layout.posxMid, layout.posy )
+			local xMax, yMax = widget:getScreen():wndToUI( layout.posxMax, layout.posy )
+			layout.debugRings[2]:setPosition( xMid, yMid )
+			layout.debugRings[3]:setPosition( xMax, yMax )
+			layout.debugRings[2]:setVisible( true )
+			layout.debugRings[3]:setVisible( true )
+		end
+	end
+
 	return true
 end
 
