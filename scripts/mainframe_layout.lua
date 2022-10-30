@@ -75,7 +75,7 @@ function mainframe_layout:init()
 end
 
 function mainframe_layout:refreshTuningSettings()
-	if not config[uitr_util.DEBUG_KEYS.MF_LAYOUT] then
+	if not config[uitr_util.DEBUG.MF_LAYOUT] then
 		return
 	end
 

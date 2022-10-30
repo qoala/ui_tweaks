@@ -1,7 +1,31 @@
+local STRICT_MT
+do
+	STRICT_MT = {
+		__newIndex = function(t, n, v)
+				assert(nil, "assign to undeclared variable '"..n.."'\n"..debug.traceback())
+		end,
 
-local DEBUG_KEYS = {
+		__index = function(t, n)
+				assert(nil, "variable '"..tostring(n).."' is not declared\n"..debug.traceback())
+		end
+	}
+end
+local function makeStrict( t )
+	setmetatable(t, STRICT_MT)
+end
+
+-- ===
+
+local DEBUG = {
 	MF_LAYOUT = "UITRDEBUG_MF_LAYOUT",
 }
+makeStrict(DEBUG)
+
+local REFRESH = {
+	HUD = "HUD",  -- Default
+	BOARDRIG = "BOARDRIG",
+}
+makeStrict(REFRESH)
 
 local UITR_OPTIONS = {
 	{
@@ -21,9 +45,10 @@ local UITR_OPTIONS = {
 		id = "preciseAp",
 		name = STRINGS.UITWEAKSR.OPTIONS.PRECISE_AP,
 		tip = STRINGS.UITWEAKSR.OPTIONS.PRECISE_AP_TIP,
-		values={ false, 0.5 },
-		value=0.5,
-		strings={ STRINGS.UITWEAKSR.OPTIONS.VANILLA, STRINGS.UITWEAKSR.OPTIONS.PRECISE_AP_HALF },
+		values = { false, 0.5 },
+		value = 0.5,
+		strings = { STRINGS.UITWEAKSR.OPTIONS.VANILLA, STRINGS.UITWEAKSR.OPTIONS.PRECISE_AP_HALF },
+		refreshTypes = { [REFRESH.BOARDRIG]=true },
 	},
 	{
 		id = "preciseIcons",
@@ -69,70 +94,70 @@ local UITR_OPTIONS = {
 		name = "  Layout Debug Visualization",
 		check = true,
 		value = false,
-		debugKey = DEBUG_KEYS.MF_LAYOUT,
+		debugKey = DEBUG.MF_LAYOUT,
 	},
 	{
 		id = "mainframeLayoutMagnitude",
 		name = "  Repulse Magnitude",
 		values={ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 },
 		value=5,
-		debugKey = DEBUG_KEYS.MF_LAYOUT,
+		debugKey = DEBUG.MF_LAYOUT,
 	},
 	{
 		id = "mainframeLayoutStaticMagnitude",
 		name = "  Repulse Magnitude for Statics",
 		values={ 0.5, 1, 2, 2.5, 3, 4, 5, 6, 7, 8, 9, 10 },
 		value=2,
-		debugKey = DEBUG_KEYS.MF_LAYOUT,
+		debugKey = DEBUG.MF_LAYOUT,
 	},
 	{
 		id = "mainframeLayoutScaleLimit",
 		name = "  Repulse Scaling Limit",
 		values={ 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0 },
 		value=0.4,
-		debugKey = DEBUG_KEYS.MF_LAYOUT,
+		debugKey = DEBUG.MF_LAYOUT,
 	},
 	{
 		id = "mainframeLayoutStaticScaleLimit",
 		name = "  Repulse Scaling Limit for Statics",
 		values={ 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0 },
 		value=0.6,
-		debugKey = DEBUG_KEYS.MF_LAYOUT,
+		debugKey = DEBUG.MF_LAYOUT,
 	},
 	{
 		id = "mainframeLayoutMaxSeparation",
 		name = "  Max Repulse Separation",
 		values={ 5, 7, 10, 12, 15, 17, 20, 25, 30, 35, 40, 45, 50, 55, 60 },
 		value=20,
-		debugKey = DEBUG_KEYS.MF_LAYOUT,
+		debugKey = DEBUG.MF_LAYOUT,
 	},
 	{
 		id = "mainframeLayoutOverlapLimit",
 		name = "  Horizontal overlap forcing",
 		values={ false, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 },
 		value=2,
-		debugKey = DEBUG_KEYS.MF_LAYOUT,
+		debugKey = DEBUG.MF_LAYOUT,
 	},
 	{
 		id = "mainframeLayoutStaticIceRadius",
 		name = "  Static boundary for mainframe devices",
 		values={ false, 1,3,5,7,9,11,13,15,17,19,21,23,25 },
 		value = false,
-		debugKey = DEBUG_KEYS.MF_LAYOUT,
+		debugKey = DEBUG.MF_LAYOUT,
 	},
 	{
 		id = "mainframeLayoutStaticActivateRadius",
 		name = "  Static boundary for activatables",
 		values={ false, 9,11,13,15,17,19,21,23,25, 31, 35, 41, 45, 51,  },
 		value = 31,
-		debugKey = DEBUG_KEYS.MF_LAYOUT,
+		debugKey = DEBUG.MF_LAYOUT,
 	},
 	{
 		id = "mainframeLayoutStaticTargetRadius",
 		name = "  Static boundary for ability targets",
 		values={ false, 9,11,13,15,17,19,21,23,25 },
 		value = 21,
-		debugKey = DEBUG_KEYS.MF_LAYOUT,
+		debugKey = DEBUG.MF_LAYOUT,
 	},
 
 	-- QoL interface.
@@ -190,6 +215,7 @@ local UITR_OPTIONS = {
 		values = { false, "CYAN_SHADE", "BLUE_SHADE", "GREEN_SHADE", "PURPLE_SHADE", "CYAN_HILITE", "BLUE_HILITE", "GREEN_HILITE", "PURPLE_HILITE", },
 		value = "BLUE_SHADE",
 		strings = STRINGS.UITWEAKSR.OPTIONS.SELECTION_FILTER_AGENT_COLORS,
+		refreshTypes = { [REFRESH.BOARDRIG]=true },
 		maskFn = function(self, value)
 			return { selectionFilterAgentTacticalOnly = (value ~= false) }
 		end
@@ -199,6 +225,7 @@ local UITR_OPTIONS = {
 		name = STRINGS.UITWEAKSR.OPTIONS.SELECTION_FILTER_AGENT_TACTICAL,
 		tip = STRINGS.UITWEAKSR.OPTIONS.SELECTION_FILTER_AGENT_TACTICAL_TIP,
 		check = true,
+		refreshTypes = { [REFRESH.BOARDRIG]=true },
 	},
 	{
 		id = "selectionFilterTileColor",
@@ -207,6 +234,7 @@ local UITR_OPTIONS = {
 		values={ false, "WHITE_SHADE", "CYAN_SHADE", "BLUE_SHADE", },
 		value="CYAN_SHADE",
 		strings= STRINGS.UITWEAKSR.OPTIONS.SELECTION_FILTER_TILE_COLORS,
+		refreshTypes = { [REFRESH.BOARDRIG]=true },
 	},
 }
 
@@ -219,7 +247,9 @@ do
 end
 
 for _,setting in ipairs( UITR_OPTIONS ) do
-	setting.canRefresh = not setting.needsReload and not setting.needsCampaign
+	if not setting.needsReload and not setting.refreshTypes then
+		setting.refreshTypes = { [REFRESH.HUD]=true }
+	end
 
 	if setting.values then
 		if not setting.strings then
@@ -370,7 +400,8 @@ end
 -- ===
 
 return {
-	DEBUG_KEYS = DEBUG_KEYS,
+	DEBUG = DEBUG,
+	REFRESH = REFRESH,
 	UITR_OPTIONS = UITR_OPTIONS,
 	checkEnabled = checkEnabled,
 	checkOption = checkOption,

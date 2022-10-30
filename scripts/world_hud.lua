@@ -27,7 +27,7 @@ function world_hud:refreshWidgets( ... )
 		end
 		self._uitr_hudActionsVisible = shouldShowHudActions
 	else
-		self._uitr_showHudActions = nil
+		self._uitr_hudActionsVisible = nil
 	end
 end
 

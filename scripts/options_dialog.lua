@@ -7,6 +7,7 @@ local simquery = include( "sim/simquery" )
 local options_dialog = include( "hud/options_dialog" )
 
 local uitr_util = include( SCRIPT_PATHS.qed_uitr .. "/uitr_util" )
+local REFRESH = uitr_util.REFRESH
 
 -- ===
 
@@ -36,7 +37,8 @@ local function onClickUitrResetOptions( dialog )
 	-- Empty options will evaluate defaults.
 	dialog:refreshUitrSettings( {} )
 
-	dialog:refreshHudUitrSettings()
+	-- Refresh all.
+	dialog:refreshHudUitrSettings( uitr_util.REFRESH )
 end
 
 -- ===
@@ -97,8 +99,8 @@ local function onChangedOption( self, setting, widget )
 	checkNeedsCampaign( self, setting, widget )
 
 	-- Refresh the UI
-	if setting.canRefresh then
-		self:refreshHudUitrSettings()
+	if setting.refreshTypes then
+		self:refreshHudUitrSettings(setting.refreshTypes)
 	end
 end
 
@@ -162,6 +164,7 @@ function options_dialog:hide( ... )
 	uitr_util._setTempOptions(nil)
 	if self._game and self._game.hud then
 		self._game.hud:refreshHud()
+		self._game.boardRig:refresh()
 	end
 end
 
@@ -222,7 +225,7 @@ function options_dialog:retrieveUitrSettings( uitrSettings )
 	end
 end
 
-function options_dialog:refreshHudUitrSettings()
+function options_dialog:refreshHudUitrSettings( refreshTypes )
 	if not (self._game and self._game.hud) then
 		return
 	end
@@ -234,7 +237,7 @@ function options_dialog:refreshHudUitrSettings()
 	local items = self._screen.binder.uitrOptionsList:getItems()
 	for _,item in ipairs(items) do
 		local setting = item.user_data
-		if setting and setting.apply and setting.canRefresh then
+		if setting and setting.apply and setting.refreshTypes then
 			local widget = item.widget.binder.widget
 			setting:apply(uitrSettings, widget)
 		elseif setting and setting.id then
@@ -243,7 +246,14 @@ function options_dialog:refreshHudUitrSettings()
 	end
 
 	uitr_util._setTempOptions(uitrSettings)
-	self._game.hud:refreshHud()
+
+	-- Run all refreshes if not refreshing for a single setting.
+	if refreshTypes[REFRESH.HUD] then
+		self._game.hud:refreshHud()
+	end
+	if refreshTypes[REFRESH.BOARDRIG] then
+		self._game.boardRig:refresh()
+	end
 end
 
 function options_dialog:refreshUitrMasks()
