@@ -1,4 +1,8 @@
 
+local DEBUG_KEYS = {
+	MF_LAYOUT = "UITRDEBUG_MF_LAYOUT",
+}
+
 local UITR_OPTIONS = {
 	{
 		id = "enabled",
@@ -57,7 +61,7 @@ local UITR_OPTIONS = {
 		check = true,
 	},
 
-	-- TODO: Remove parameters
+	-- DEBUG: Mainframe Layout
 	{
 		sectionHeader = true,
 
@@ -65,60 +69,70 @@ local UITR_OPTIONS = {
 		name = "  Layout Debug Visualization",
 		check = true,
 		value = false,
+		debugKey = DEBUG_KEYS.MF_LAYOUT,
 	},
 	{
 		id = "mainframeLayoutMagnitude",
 		name = "  Repulse Magnitude",
 		values={ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 },
 		value=5,
+		debugKey = DEBUG_KEYS.MF_LAYOUT,
 	},
 	{
 		id = "mainframeLayoutStaticMagnitude",
 		name = "  Repulse Magnitude for Statics",
 		values={ 0.5, 1, 2, 2.5, 3, 4, 5, 6, 7, 8, 9, 10 },
 		value=2,
+		debugKey = DEBUG_KEYS.MF_LAYOUT,
 	},
 	{
 		id = "mainframeLayoutScaleLimit",
 		name = "  Repulse Scaling Limit",
 		values={ 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0 },
 		value=0.4,
+		debugKey = DEBUG_KEYS.MF_LAYOUT,
 	},
 	{
 		id = "mainframeLayoutStaticScaleLimit",
 		name = "  Repulse Scaling Limit for Statics",
 		values={ 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0 },
 		value=0.6,
+		debugKey = DEBUG_KEYS.MF_LAYOUT,
 	},
 	{
 		id = "mainframeLayoutMaxSeparation",
 		name = "  Max Repulse Separation",
 		values={ 5, 7, 10, 12, 15, 17, 20, 25, 30, 35, 40, 45, 50, 55, 60 },
 		value=20,
+		debugKey = DEBUG_KEYS.MF_LAYOUT,
 	},
 	{
 		id = "mainframeLayoutOverlapLimit",
 		name = "  Horizontal overlap forcing",
 		values={ false, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 },
 		value=2,
+		debugKey = DEBUG_KEYS.MF_LAYOUT,
 	},
 	{
 		id = "mainframeLayoutStaticIceRadius",
 		name = "  Static boundary for mainframe devices",
 		values={ false, 1,3,5,7,9,11,13,15,17,19,21,23,25 },
 		value = false,
+		debugKey = DEBUG_KEYS.MF_LAYOUT,
 	},
 	{
 		id = "mainframeLayoutStaticActivateRadius",
 		name = "  Static boundary for activatables",
 		values={ false, 9,11,13,15,17,19,21,23,25, 31, 35, 41, 45, 51,  },
 		value = 31,
+		debugKey = DEBUG_KEYS.MF_LAYOUT,
 	},
 	{
 		id = "mainframeLayoutStaticTargetRadius",
 		name = "  Static boundary for ability targets",
 		values={ false, 9,11,13,15,17,19,21,23,25 },
-		value = 21
+		value = 21,
+		debugKey = DEBUG_KEYS.MF_LAYOUT,
 	},
 
 	-- QoL interface.
@@ -195,6 +209,14 @@ local UITR_OPTIONS = {
 		strings= STRINGS.UITWEAKSR.OPTIONS.SELECTION_FILTER_TILE_COLORS,
 	},
 }
+
+do
+	-- Trim debugging options
+	local array = include( "modules/array" )
+	array.removeIf( UITR_OPTIONS, function(setting)
+		return setting.debugKey and not config[setting.debugKey]
+	end )
+end
 
 for _,setting in ipairs( UITR_OPTIONS ) do
 	setting.canRefresh = not setting.needsReload and not setting.needsCampaign
@@ -348,6 +370,7 @@ end
 -- ===
 
 return {
+	DEBUG_KEYS = DEBUG_KEYS,
 	UITR_OPTIONS = UITR_OPTIONS,
 	checkEnabled = checkEnabled,
 	checkOption = checkOption,

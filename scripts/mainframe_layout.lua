@@ -75,6 +75,10 @@ function mainframe_layout:init()
 end
 
 function mainframe_layout:refreshTuningSettings()
+	if not config[uitr_util.DEBUG_KEYS.MF_LAYOUT] then
+		return
+	end
+
 	local uitrSettings = uitr_util.getOptions()
 	if self._lastSettingsID ~= uitrSettings._tempID then
 		self._tuning.debugViz = uitrSettings.mainframeLayoutDebug
