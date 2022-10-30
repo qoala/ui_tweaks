@@ -49,5 +49,35 @@ function world_hud:createWidget( groupKey, skinName, t, ... )
 		end
 	end
 
-	return oldCreateWidget(self, groupKey, skinName, t, ... )
+	local widget = oldCreateWidget(self, groupKey, skinName, t, ... )
+
+	if self._layouts[groupKey] and self._layouts[groupKey].dirtyLayout then
+		self._layouts[groupKey]:dirtyLayout()
+	end
+
+	return widget
+end
+
+
+local oldDestroyWidget = world_hud.destroyWidget
+function world_hud:destroyWidget( groupKey, ... )
+	local widget = oldDestroyWidget(self, groupKey, ... )
+
+	if self._layouts[groupKey] and self._layouts[groupKey].dirtyLayout then
+		self._layouts[groupKey]:dirtyLayout()
+	end
+
+	return widget
+end
+
+local oldGetWidgets = world_hud.getWidgets
+function world_hud:getWidgets( groupKey, ... )
+	local widget = oldGetWidgets(self, groupKey, ... )
+
+	-- Technically not dirty yet, but the caller may dirty the widgets.
+	if self._layouts[groupKey] and self._layouts[groupKey].dirtyLayout then
+		self._layouts[groupKey]:dirtyLayout()
+	end
+
+	return widget
 end

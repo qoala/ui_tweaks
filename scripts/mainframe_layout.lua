@@ -60,6 +60,7 @@ function mainframe_layout:init()
 
 	self._lastSettingsID = -1
 	self:refreshTuningSettings()
+	self._dirty = true
 end
 
 function mainframe_layout:refreshTuningSettings()
@@ -77,7 +78,12 @@ function mainframe_layout:refreshTuningSettings()
 		self._tuning.staticSpacerRadius["Activate"] = uitrSettings.mainframeLayoutStaticActivateTextRadius
 
 		self._lastSettingsID = uitrSettings._tempID
+		self._dirty = true
 	end
+end
+
+function mainframe_layout:dirtyLayout()
+	self._dirty = true
 end
 
 local function hasArm( widget )
@@ -93,50 +99,27 @@ function mainframe_layout.restoreWidgets( widgets )
 	end
 end
 
-function mainframe_layout:calculateLayout( screen, game, widgets )
-	-- UITR: Populate the list of statics from static widgets each time we calculate.
-	self._statics = {}
+function mainframe_layout:_refreshWidgets( screen, game, widgets )
+	-- Mark and Sweep
+	-- Unlike meatspace buttons, mainframe widgets are retained across refreshes.
+	-- So this layout is also retained and needs to cleanup layout elements for any widgets that disappeared.
+	local oldIDs = util.tkeys(self._layout)
 
-	local layoutsByPosition = {}
 	for i, widget in ipairs( widgets ) do
         assert( widget.worldx )
 
-		-- UITR: Use the ownerID (target unit ID) + skin name as the layout ID.
-		--       If the widget lacks an ownerID (such as the "rebooting" floater or an activatable device),
-		--       or lacks an "arm" child widget ("Target", instead of "BreakIce")
-		local layoutID = nil
-		if widget.layoutID and widget.ownerID and hasArm(widget) then
-			layoutID = widget.layoutID
-		elseif widget.ownerID and widget.getName and hasArm(widget) then
+		local layoutID
+		if widget.ownerID and widget.getName and hasArm(widget) then
+			-- Use the ownerID (target unit ID) + skin name as the layout ID.
+			-- Only perform layout on the widget if the widget has an ownerID and "arm" childWidget.
 			layoutID = tostring(widget.ownerID) .. ":" .. widget:getName()
-			widget.layoutID = layoutID
+			widget._layoutID = layoutID
+			widget._layoutStatic = nil
 		else
-			-- UITR: Other widgets should be drawn directly on their coordinates.
-			widget.layoutID = nil
+			-- uitr: other widgets should be drawn directly on their coordinates.
+			widget._layoutID = nil
 
-			if widget.getName and self._tuning.staticRadius[widget:getName()] then
-				-- UITR: Insert into the static forcing coordinates list to keep clear around this button.
-				local radius = self._tuning.staticRadius[widget:getName()]
-				local wx, wy = game:worldToWnd( widget.worldx, widget.worldy, widget.worldz )
-				table.insert(self._statics, { posx = wx, posy = wy, radius = radius })
-
-				if self._tuning.staticSpacerCount[widget:getName()] then
-					local spacerCount = self._tuning.staticSpacerCount[widget:getName()]
-					local spacerRadius = self._tuning.staticSpacerRadius[widget:getName()] or radius
-					local offset = math.floor(spacerRadius * 1.5)
-					local midpoint = spacerCount / 2  -- idx will range from 0 (the item above) to spacerCount
-					for i = 1, spacerCount do
-						table.insert(self._statics, {
-							posx = wx + i * offset,
-							posy = wy,
-							radius = spacerRadius,
-							_layoutLeft = i < midpoint,
-							_layoutRight = i > midpoint,
-							_layoutMid = i ~= spacerCount,
-						})
-					end
-				end
-			end
+			widget._layoutStatic = (widget.getName and self._tuning.staticRadius[widget:getName()])
 		end
 
 		if layoutID then
@@ -153,6 +136,8 @@ function mainframe_layout:calculateLayout( screen, game, widgets )
 						leaderWidget = leaderWidget
 					}
 				self._layout[ layoutID ] = layout
+			else
+				array.removeElement(oldIDs, layoutID)
 			end
 
 			-- UITR: Each layout entry only gets a single widget, unlike the meatspace button layout.
@@ -166,6 +151,60 @@ function mainframe_layout:calculateLayout( screen, game, widgets )
 				layout.widgets = { widget }
 				widget._layoutLeft = nil
 			end
+
+			-- UITR: We'll be drawing our own arm, thank you very much.
+			if hasArm(widget) then
+				widget.binder.arm:setVisible(false)
+			end
+		end
+	end
+
+	for i,oldID in ipairs(oldIDs) do
+		local layout = self._layout[oldID]
+		screen:removeWidget(layout.leaderWidget)
+		self._layout[oldID] = nil
+	end
+end
+
+function mainframe_layout:calculateLayout( screen, game, widgets )
+	if self._dirty then
+		-- UITR: Handle new item creation/destruction only when needed.
+		self:_refreshWidgets(screen, game, widgets)
+		self._dirty = false
+	end
+
+	-- UITR: Populate the list of statics from static widgets each time we calculate.
+	self._statics = {}
+
+	local layoutsByPosition = {}
+	for i, widget in ipairs( widgets ) do
+		if widget._layoutStatic then
+			-- UITR: Insert into the static forcing coordinates list to keep clear around this button.
+			local radius = self._tuning.staticRadius[widget:getName()]
+			assert(radius)
+			local wx, wy = game:worldToWnd( widget.worldx, widget.worldy, widget.worldz )
+			table.insert(self._statics, { posx = wx, posy = wy, radius = radius })
+
+			if self._tuning.staticSpacerCount[widget:getName()] then
+				local spacerCount = self._tuning.staticSpacerCount[widget:getName()]
+				local spacerRadius = self._tuning.staticSpacerRadius[widget:getName()] or radius
+				local offset = math.floor(spacerRadius * 1.5)
+				local midpoint = spacerCount / 2  -- idx will range from 0 (the item above) to spacerCount
+				for i = 1, spacerCount do
+					table.insert(self._statics, {
+						posx = wx + i * offset,
+						posy = wy,
+						radius = spacerRadius,
+						_layoutLeft = i < midpoint,
+						_layoutRight = i > midpoint,
+						_layoutMid = i ~= spacerCount,
+					})
+				end
+			end
+		elseif widget._layoutID then
+			local layout = self._layout[widget._layoutID]
+			assert(layout)
+
 
 			local wx, wy = game:worldToWnd( widget.worldx, widget.worldy, widget.layoutWorldz or widget.worldz )
 			layout.startx, layout.starty = wx, wy
@@ -189,27 +228,7 @@ function mainframe_layout:calculateLayout( screen, game, widgets )
 			else
 				layoutsByPosition[positionKey] = { layout }
 			end
-
-			-- UITR: We'll be drawing our own arm, thank you very much.
-			if hasArm(widget) then
-				widget.binder.arm:setVisible(false)
-			end
-
-			-- Mark...
-			layout.active = true
-		end
-	end
-
-	-- ...and Sweep
-	-- UITR: Unlike meatspace buttons, mainframe widgets are retained across refreshes.
-	--       So this layout is also retained and needs to cleanup layout elements for any widgets that disappeared.
-	for _,k in ipairs(util.tkeys(self._layout)) do
-		local layout = self._layout[k]
-		if layout.active then
-			layout.active = nil
-		else
-			screen:removeWidget(layout.leaderWidget)
-			self._layout[k] = nil
+		elseif widget._staticID == nil and widget._layoutID == nil then
 		end
 	end
 
@@ -232,12 +251,12 @@ function mainframe_layout:calculateLayout( screen, game, widgets )
 end
 
 function mainframe_layout:setPosition( widget )
-	if not widget.layoutID then
+	if not widget._layoutID then
 		-- UITR: This is a non-targeting widget, such as the 'rebooting' floater. Let the HUD draw it directly.
 		return false
 	end
 
-	local layout = self._layout[ widget.layoutID ]
+	local layout = self._layout[ widget._layoutID ]
 	if not layout then
 		return false
 	end
