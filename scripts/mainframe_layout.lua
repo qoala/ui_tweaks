@@ -97,10 +97,24 @@ function mainframe_layout:_destroyLayoutWidget( screen, l )
 	end
 end
 
+function mainframe_layout:_destroyAllStatics( screen )
+	if self._debugViz then
+		for _, l in ipairs( self._statics ) do
+			if l.debugRings then
+				for _, ring in ipairs( l.debugRings ) do
+					screen:removeWidget( ring )
+				end
+			end
+		end
+	end
+end
+
 function mainframe_layout:destroy( screen )
 	for _, l in pairs( self._layout ) do
 		self:_destroyLayoutWidget( screen, l )
 	end
+	self:_destroyAllStatics( screen )
+
 	self._layout = nil
 end
 
@@ -121,15 +135,7 @@ end
 
 function mainframe_layout:_refreshDirtyWidgets( screen, game, widgets )
 	-- UITR: Populate the list of statics from static widgets each time we calculate.
-	if self._debugViz then
-		for _, l in ipairs( self._statics ) do
-			if l.debugRings then
-				for _, ring in ipairs( l.debugRings ) do
-					screen:removeWidget( ring )
-				end
-			end
-		end
-	end
+	self:_destroyAllStatics( screen )
 	self._statics = {}
 	self._debugViz = self._tuning.debugViz
 
