@@ -69,14 +69,26 @@ local UITR_OPTIONS = {
 	{
 		id = "mainframeLayoutMagnitude",
 		name = "  Repulse Magnitude",
-		values={ 2, 3, 4, 5, 6, 7, 8, 9, 10 },
+		values={ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 },
 		value=5,
+	},
+	{
+		id = "mainframeLayoutStaticMagnitude",
+		name = "  Repulse Magnitude for Statics",
+		values={ 0.5, 1, 2, 2.5, 3, 4, 5, 6, 7, 8, 9, 10 },
+		value=2,
 	},
 	{
 		id = "mainframeLayoutScaleLimit",
 		name = "  Repulse Scaling Limit",
 		values={ 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0 },
 		value=0.4,
+	},
+	{
+		id = "mainframeLayoutStaticScaleLimit",
+		name = "  Repulse Scaling Limit for Statics",
+		values={ 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0 },
+		value=0.6,
 	},
 	{
 		id = "mainframeLayoutMaxSeparation",

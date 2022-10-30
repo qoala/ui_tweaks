@@ -16,10 +16,12 @@ local TUNING =
 	maxIters = 10,
 	debugViz = false,
 
-	-- Magnitude at which buttons/static regions push away at eachother (button_layout: 5)
+	-- Magnitude at which buttons push away from each other/static regions (button_layout: 5)
 	repulseMagnitude = 5,
-	-- Inverse squared magnitude distance is capped at this times combined radii. (button_layout: 40)
+	repulseStaticMagnitude = 2,
+	-- Magnitude starts falling off with inverse-squared distance past this fraction of the radii. (button_layout: 40 ~ 1.0)
 	repulseScaleCap = 0.4,
+	repulseStaticScaleCap = 0.6,
 	-- Repulsion is applied up to this amount of separation + bounding radii.
 	repulseMaxSep = 20,
 	-- Limit for additional force on horizontally-overlapping wide regions.
@@ -78,7 +80,9 @@ function mainframe_layout:refreshTuningSettings()
 		self._tuning.debugViz = uitrSettings.mainframeLayoutDebug
 
 		self._tuning.repulseMagnitude = uitrSettings.mainframeLayoutMagnitude
+		self._tuning.repulseStaticMagnitude = uitrSettings.mainframeLayoutStaticMagnitude
 		self._tuning.repulseScaleCap = uitrSettings.mainframeLayoutScaleLimit
+		self._tuning.repulseStaticScaleCap = uitrSettings.mainframeLayoutStaticScaleLimit
 		self._tuning.repulseMaxSep = uitrSettings.mainframeLayoutMaxSeparation
 		self._tuning.repulseOverlapLimit = uitrSettings.mainframeLayoutOverlapLimit
 
@@ -436,10 +440,10 @@ function mainframe_layout:hasOverlaps( layouts, statics )
 	return false
 end
 
-function mainframe_layout:updateForce( fx, fy, dx, dy, radius, dxForce, id0, id1 )
-	local SCALE_DIST = radius * self._tuning.repulseScaleCap
+function mainframe_layout:updateForce( fx, fy, mag, scaleCap, dx, dy, radius, dxForce, id0, id1 )
 	local MAX_DIST = radius + self._tuning.repulseMaxSep
-	local mag = self._tuning.repulseMagnitude
+	local SCALE_DIST = scaleCap * radius
+
 	local d = math.sqrt( dx*dx + dy*dy )
 	if d > MAX_DIST then
 		-- Far enough apart.
@@ -470,15 +474,19 @@ end
 
 function mainframe_layout:calculateForce( id0, l0, layouts, statics )
 	local fx, fy = 0, 0
+	local mag = self._tuning.repulseMagnitude
+	local scaleCap = self._tuning.repulseScaleCap
 	for id1, l1 in pairs(layouts) do
 		if id0 ~= id1 then
 			local dx, dy, dxForce = self:_getSeparationVector( l1, l0 )
-			fx, fy = self:updateForce( fx, fy, dx, dy, l0.radius + l1.radius, dxForce, id0,id1 )
+			fx, fy = self:updateForce( fx, fy, mag, scaleCap, dx, dy, l0.radius + l1.radius, dxForce, id0,id1 )
 		end
 	end
+	mag = self._tuning.repulseStaticMagnitude
+	scaleCap = self._tuning.repulseStaticScaleCap
 	for _, l1 in ipairs(statics) do
 		local dx, dy, dxForce = self:_getSeparationVector( l1, l0 )
-		fx, fy = self:updateForce( fx, fy, dx, dy, l0.radius + l1.radius, dxForce )
+		fx, fy = self:updateForce( fx, fy, mag, scaleCap, dx, dy, l0.radius + l1.radius, dxForce )
 	end
 
     return fx, fy
