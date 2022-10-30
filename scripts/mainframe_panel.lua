@@ -58,8 +58,17 @@ local oldRefreshBreakIceButton = panel.refreshBreakIceButton
 function panel:refreshBreakIceButton( widget, unit, ... )
 	oldRefreshBreakIceButton(self, widget, unit, ...)
 
-	if unit:getTraits().mainframe_program ~= nil and unit:getTraits().daemon_sniffed then
-		-- Widget is drawing the full daemon label.
-		widget.layoutWide = true
+	local sim = self._hud._game.simCore
+
+	if sim:getHideDaemons() and not unit:getTraits().daemon_sniffed then
+		widget.layoutState = "daemonHidden"
+	elseif unit:getTraits().mainframe_program ~= nil then
+		if unit:getTraits().daemon_sniffed then
+			widget.layoutState = "daemonKnown"
+		else
+			widget.layoutState = "daemonUnknown"
+		end
+	else
+		widget.layoutState = nil
 	end
 end

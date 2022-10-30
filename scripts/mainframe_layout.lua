@@ -25,11 +25,17 @@ local TUNING =
 	-- Limit for additional force on horizontally-overlapping wide regions.
 	repulseOverlapLimit = 2,
 
-	-- Overlap radius of layout items. (button_layout: 42)
-	itemRadius = 21,
-	-- Distance between horizontal centers of the rounded-rectangle bounding box.
-	-- Approx. difference in width between daemonKnown(234x60px) and daemonUnknown(61x61px)
-	wideItemWidth = 170,
+	-- Overlap radius of layout items.
+	itemRadius = 21,  -- (button_layout: 42)
+	itemStateRadius = {
+		["daemonKnown"] = 35,
+		["daemonUnknown"] = 35,
+	},
+	-- Distance between horizontal centers of a wide rounded-rectangle bounding box.
+	itemStateWidth = {
+		-- Approx. difference in width between daemonKnown(234x60px) and daemonUnknown(61x61px)
+		["daemonKnown"] = 170,
+	},
 
 	-- Overlap radius of the static bubble at the target circle for a layout item.
 	staticIceRadius = false,
@@ -75,8 +81,6 @@ function mainframe_layout:refreshTuningSettings()
 		self._tuning.repulseScaleCap = uitrSettings.mainframeLayoutScaleLimit
 		self._tuning.repulseMaxSep = uitrSettings.mainframeLayoutMaxSeparation
 		self._tuning.repulseOverlapLimit = uitrSettings.mainframeLayoutOverlapLimit
-
-		self._tuning.itemRadius = uitrSettings.mainframeLayoutItemRadius
 
 		self._tuning.staticIceRadius = uitrSettings.mainframeLayoutStaticIceRadius
 		self._tuning.staticRadius["Activate"] = uitrSettings.mainframeLayoutStaticActivateRadius
@@ -214,6 +218,10 @@ function mainframe_layout:_refreshDirtyWidgets( screen, game, widgets )
 				})
 			end
 
+			-- UITR: Select radius based on widget state.
+			layout.radius = self._tuning.itemStateRadius[widget.layoutState] or self._tuning.itemRadius
+			layout.width = self._tuning.itemStateWidth[widget.layoutState]
+
 			-- UITR: We'll be drawing our own arm, thank you very much.
 			if hasArm(widget) then
 				widget.binder.arm:setVisible(false)
@@ -235,10 +243,9 @@ function mainframe_layout:_refreshDirtyWidgets( screen, game, widgets )
 				layout.debugRings = nil
 			end
 			if layout.debugRings then
-				local radius = self._tuning.itemRadius
-				layout.debugRings[1].binder.ring:setScale( radius, radius )
-				layout.debugRings[2].binder.ring:setScale( radius, radius )
-				layout.debugRings[3].binder.ring:setScale( radius, radius )
+				layout.debugRings[1].binder.ring:setScale( layout.radius, layout.radius )
+				layout.debugRings[2].binder.ring:setScale( layout.radius, layout.radius )
+				layout.debugRings[3].binder.ring:setScale( layout.radius, layout.radius )
 			end
 		end
 	end
@@ -270,15 +277,12 @@ function mainframe_layout:calculateLayout( screen, game, widgets )
 		local ox, oy = -18, -59
 		layout.posxMin, layout.posy = layout.posxMin + ox, layout.posy + oy
 
-		if widget.layoutWide then
+		if layout.width then
 			-- Above is the left-most center, where the number is centered.
 			-- Calculate true center of the box and right-most center.
-			local width = self._tuning.wideItemWidth
-			layout.posxMid, layout.posxMax = layout.posxMin + width / 2, layout.posxMin + width
-			layout.posWidth = width
+			layout.posxMid, layout.posxMax = layout.posxMin + layout.width / 2, layout.posxMin + layout.width
 		else
 			layout.posxMid, layout.posxMax = layout.posxMin, layout.posxMin
-			layout.posWidth = 0
 		end
 
 		-- UITR: Track layouts that start on the exact same coordinate.
@@ -356,16 +360,16 @@ function mainframe_layout:setPosition( widget )
 
 	if layout.debugRings then
 		layout.debugRings[1]:setPosition( x, y )
-		if layout.posxMax == layout.posxMin then
-			layout.debugRings[2]:setVisible( false )
-			layout.debugRings[3]:setVisible( false )
-		else
+		if layout.width then
 			local xMid, yMid = widget:getScreen():wndToUI( layout.posxMid, layout.posy )
 			local xMax, yMax = widget:getScreen():wndToUI( layout.posxMax, layout.posy )
 			layout.debugRings[2]:setPosition( xMid, yMid )
 			layout.debugRings[3]:setPosition( xMax, yMax )
 			layout.debugRings[2]:setVisible( true )
 			layout.debugRings[3]:setVisible( true )
+		else
+			layout.debugRings[2]:setVisible( false )
+			layout.debugRings[3]:setVisible( false )
 		end
 	end
 
@@ -393,14 +397,12 @@ end
 -- Nearest separation vector between two horizontal lines defined by rounded-rectangle centers
 function mainframe_layout:_getSeparationVector( l0, l1 )
 	local dxForce
-	if (l0.posxMax == l0.posxMin) and (l1.posxMax == l1.posxMin) then
-		-- Both are point sources: use vector as-is.
-	elseif self._tuning.repulseOverlapLimit then
+	if (l0.width or l1.width) and self._tuning.repulseOverlapLimit then
 		-- Additional horizontal forcing to force the true centers away from each other.
 		-- Up to diameter, the force is limited to +/- repulsion magnitude.
 		-- Cap at [-limit, limit]
 		local limit = self._tuning.repulseOverlapLimit
-		local diameter = (l0.radius or self._tuning.itemRadius) + (l1.radius or self._tuning.itemRadius)
+		local diameter = l0.radius + l1.radius
 		dxForce = (l1.posxMid - l0.posxMid) / diameter
 		dxForce = math.max( -limit, math.min( limit, dxForce ) )
 	end
@@ -418,16 +420,14 @@ function mainframe_layout:_getSeparationVector( l0, l1 )
 end
 
 function mainframe_layout:hasOverlaps( layouts, statics )
-	local itemRadius = self._tuning.itemRadius
-	local itemDiameter = itemRadius * 2
 	for id0, l0 in pairs( layouts ) do
 		for id1, l1 in pairs(layouts) do
-			if id0 ~= id1 and self:_getSeparationDist( l0, l1 ) <= itemDiameter then
+			if id0 ~= id1 and self:_getSeparationDist( l0, l1 ) <= l0.radius + l1.radius then
 				return true
 			end
 		end
 		for _, l1 in ipairs(statics) do
-			if self:_getSeparationDist( l0, l1 ) <= itemRadius + l1.radius then
+			if self:_getSeparationDist( l0, l1 ) <= l0.radius + l1.radius then
 				return true
 			end
 		end
@@ -469,19 +469,16 @@ function mainframe_layout:updateForce( fx, fy, dx, dy, radius, dxForce, id0, id1
 end
 
 function mainframe_layout:calculateForce( id0, l0, layouts, statics )
-	local itemRadius = self._tuning.itemRadius
-	local itemDiameter = itemRadius * 2
-
 	local fx, fy = 0, 0
 	for id1, l1 in pairs(layouts) do
 		if id0 ~= id1 then
 			local dx, dy, dxForce = self:_getSeparationVector( l1, l0 )
-			fx, fy = self:updateForce( fx, fy, dx, dy, itemDiameter, dxForce, id0,id1 )
+			fx, fy = self:updateForce( fx, fy, dx, dy, l0.radius + l1.radius, dxForce, id0,id1 )
 		end
 	end
 	for _, l1 in ipairs(statics) do
 		local dx, dy, dxForce = self:_getSeparationVector( l1, l0 )
-		fx, fy = self:updateForce( fx, fy, dx, dy, itemRadius + l1.radius, dxForce )
+		fx, fy = self:updateForce( fx, fy, dx, dy, l0.radius + l1.radius, dxForce )
 	end
 
     return fx, fy

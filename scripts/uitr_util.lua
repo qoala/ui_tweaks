@@ -91,12 +91,6 @@ local UITR_OPTIONS = {
 		value=2,
 	},
 	{
-		id = "mainframeLayoutItemRadius",
-		name = "  Boundary radius of firewall widgets",
-		values={ 9,11,13,15,17,19,21,23,25, 31, 35, 41, 45, 51,  },
-		value = 21,
-	},
-	{
 		id = "mainframeLayoutStaticIceRadius",
 		name = "  Static boundary for mainframe devices",
 		values={ false, 1,3,5,7,9,11,13,15,17,19,21,23,25 },
