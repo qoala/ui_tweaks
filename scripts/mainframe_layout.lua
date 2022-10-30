@@ -10,8 +10,6 @@ local uitr_util = include( SCRIPT_PATHS.qed_uitr .. "/uitr_util" )
 
 -- ===
 
-local mainframe_layout = class( button_layout )
-
 local TUNING =
 {
 	-- Magnitude at which buttons/static regions push away at eachother (button_layout: 5)
@@ -53,6 +51,12 @@ local LEFT_SPACER = { _layoutLeft = true }
 local LEFTMID_SPACER = { _layoutLeft = true, _layoutMid = true }
 local RIGHT_SPACER = { _layoutRight = true }
 local RIGHTMID_SPACER = { _layoutRight = true, _layoutMid = true }
+
+
+local mainframe_layout = class( button_layout )
+
+-- This manages static avoidance points very differently.
+mainframe_layout.addStaticLayout = nil
 
 function mainframe_layout:init()
 	button_layout.init( self, 0, 0 ) -- Target lines vary around a semi-fixed offset, instead of radiating away from the current agent.
@@ -100,6 +104,9 @@ function mainframe_layout.restoreWidgets( widgets )
 end
 
 function mainframe_layout:_refreshWidgets( screen, game, widgets )
+	-- UITR: Populate the list of statics from static widgets each time we calculate.
+	self._statics = {}
+
 	-- Mark and Sweep
 	-- Unlike meatspace buttons, mainframe widgets are retained across refreshes.
 	-- So this layout is also retained and needs to cleanup layout elements for any widgets that disappeared.
@@ -114,12 +121,20 @@ function mainframe_layout:_refreshWidgets( screen, game, widgets )
 			-- Only perform layout on the widget if the widget has an ownerID and "arm" childWidget.
 			layoutID = tostring(widget.ownerID) .. ":" .. widget:getName()
 			widget._layoutID = layoutID
-			widget._layoutStatic = nil
 		else
-			-- uitr: other widgets should be drawn directly on their coordinates.
+			-- UITR: other widgets should be drawn directly on their coordinates.
 			widget._layoutID = nil
 
-			widget._layoutStatic = (widget.getName and self._tuning.staticRadius[widget:getName()])
+			if widget.getName and self._tuning.staticRadius[widget:getName()] then
+				-- UITR: Insert into the static forcing coordinates list to keep clear around this button.
+				local radius = self._tuning.staticRadius[widget:getName()]
+				table.insert(self._statics, {
+					worldx = widget.worldx,
+					worldy = widget.worldy,
+					worldz = widget.worldz,
+					radius = radius,
+				})
+			end
 		end
 
 		if layoutID then
@@ -130,14 +145,23 @@ function mainframe_layout:_refreshWidgets( screen, game, widgets )
 				-- UITR: Move to back.
 				screen:reorderWidget( leaderWidget, 1 )
 				leaderWidget.binder.line:appear( 0.5 )
-				layout =
-					{
-						widgets = { widget },
-						leaderWidget = leaderWidget
-					}
+				layout = {
+					widgets = { widget },
+					leaderWidget = leaderWidget
+				}
 				self._layout[ layoutID ] = layout
 			else
 				array.removeElement(oldIDs, layoutID)
+			end
+
+			-- UITR: Keep a small area clear around the target circle for this item.
+			if self._tuning.staticIceRadius then
+				table.insert(self._statics, {
+					worldx = widget.worldx,
+					worldy = widget.worldy,
+					worldz = widget.layoutWorldz or widget.worldz,
+					radius = self._tuning.staticIceRadius,
+				})
 			end
 
 			-- UITR: Each layout entry only gets a single widget, unlike the meatspace button layout.
@@ -173,65 +197,29 @@ function mainframe_layout:calculateLayout( screen, game, widgets )
 		self._dirty = false
 	end
 
-	-- UITR: Populate the list of statics from static widgets each time we calculate.
-	self._statics = {}
-
+	-- Initial positions of layout-positioned elements.
 	local layoutsByPosition = {}
-	for i, widget in ipairs( widgets ) do
-		if widget._layoutStatic then
-			-- UITR: Insert into the static forcing coordinates list to keep clear around this button.
-			local radius = self._tuning.staticRadius[widget:getName()]
-			assert(radius)
-			local wx, wy = game:worldToWnd( widget.worldx, widget.worldy, widget.worldz )
-			table.insert(self._statics, { posx = wx, posy = wy, radius = radius })
+	for _, layout in pairs( self._layout ) do
+		local widget = layout.widgets[1]
 
-			if self._tuning.staticSpacerCount[widget:getName()] then
-				local spacerCount = self._tuning.staticSpacerCount[widget:getName()]
-				local spacerRadius = self._tuning.staticSpacerRadius[widget:getName()] or radius
-				local offset = math.floor(spacerRadius * 1.5)
-				local midpoint = spacerCount / 2  -- idx will range from 0 (the item above) to spacerCount
-				for i = 1, spacerCount do
-					table.insert(self._statics, {
-						posx = wx + i * offset,
-						posy = wy,
-						radius = spacerRadius,
-						_layoutLeft = i < midpoint,
-						_layoutRight = i > midpoint,
-						_layoutMid = i ~= spacerCount,
-					})
-				end
-			end
-		elseif widget._layoutID then
-			local layout = self._layout[widget._layoutID]
-			assert(layout)
+		local wx, wy = game:worldToWnd( widget.worldx, widget.worldy, widget.layoutWorldz or widget.worldz )
+		layout.startx, layout.starty = wx, wy
+		layout.posx, layout.posy = wx, wy
 
+		-- UITR: Instead of radiating the offset away from a center point on the selected agent,
+		--       Use a fixed offset as the base offset.
+		local ox, oy = -18, -59
+		local radius = mathutil.dist2d( 0, 0, ox, oy )
+		layout.posx, layout.posy = layout.posx + ox, layout.posy + oy
 
-			local wx, wy = game:worldToWnd( widget.worldx, widget.worldy, widget.layoutWorldz or widget.worldz )
-			layout.startx, layout.starty = wx, wy
-			layout.posx, layout.posy = wx, wy
-
-			-- UITR: Keep a small area clear around the target circle for this item.
-			if self._tuning.staticIceRadius then
-				table.insert(self._statics, { posx = wx, posy = wy, radius = self._tuning.staticIceRadius })
-			end
-
-			-- UITR: Instead of radiating the offset away from a center point on the selected agent,
-			--       Use a fixed offset as the base offset.
-			local ox, oy = -18, -59
-			local radius = mathutil.dist2d( 0, 0, ox, oy )
-			layout.posx, layout.posy = layout.posx + ox, layout.posy + oy
-
-			-- UITR: Track layouts that start on the exact same coordinate.
-			local positionKey = tostring(layout.posx) .. "|" .. tostring(layout.posy)
-			if layoutsByPosition[positionKey] then
-				table.insert( layoutsByPosition[positionKey], layout )
-			else
-				layoutsByPosition[positionKey] = { layout }
-			end
-		elseif widget._staticID == nil and widget._layoutID == nil then
+		-- UITR: Track layouts that start on the exact same coordinate.
+		local positionKey = tostring(layout.posx) .. "|" .. tostring(layout.posy)
+		if layoutsByPosition[positionKey] then
+			table.insert( layoutsByPosition[positionKey], layout )
+		else
+			layoutsByPosition[positionKey] = { layout }
 		end
 	end
-
 	-- UITR: Vary overlapping positions so that they are able to separate in the later calculations.
 	--       Unlike base layout, only do this when there's an exact match, so that otherwise colinear items can remain colinear.
 	for _,layouts in pairs(layoutsByPosition) do
@@ -243,6 +231,12 @@ function mainframe_layout:calculateLayout( screen, game, widgets )
 		end
 	end
 
+	-- Positions of static barrier elements.
+	for _,static in ipairs(self._statics) do
+		static.posx, static.posy = game:worldToWnd( static.worldx, static.worldy, static.worldz )
+	end
+
+	-- Now, shift positions to reduce overlap.
 	local iters = 0
 	while iters < self._tuning.maxIters and self:hasOverlaps( self._layout, self._statics ) do
 		self:doPass( self._layout, self._statics )
