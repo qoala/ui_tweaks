@@ -105,7 +105,9 @@ function mainframe_layout:destroy( screen )
 end
 
 local function hasArm( widget )
-	return widget.binder and widget.binder.arm and not widget.binder.arm.isnull
+	if widget.getName and widget:getName() == "BreakIce" then
+		return widget.binder and widget.binder.arm and not widget.binder.arm.isnull
+	end
 end
 
 -- Restore modified widgets if we're destroyed by a settings change.
@@ -140,10 +142,10 @@ function mainframe_layout:_refreshDirtyWidgets( screen, game, widgets )
         assert( widget.worldx )
 
 		local layoutID
-		if widget.ownerID and widget.getName and hasArm(widget) then
-			-- Use the ownerID (target unit ID) + skin name as the layout ID.
+		if widget.ownerID and hasArm(widget) then
+			-- Use the ownerID (target unit ID) as the layout ID.
 			-- Only perform layout on the widget if the widget has an ownerID and "arm" childWidget.
-			layoutID = tostring(widget.ownerID) .. ":" .. widget:getName()
+			layoutID = widget.ownerID
 			widget._layoutID = layoutID
 		else
 			-- UITR: other widgets should be drawn directly on their coordinates.
@@ -412,7 +414,7 @@ function mainframe_layout:hasOverlaps( layouts, statics )
 	return false
 end
 
-function mainframe_layout:updateForce( fx, fy, dx, dy, radius )
+function mainframe_layout:updateForce( fx, fy, dx, dy, radius, id0, id1 )
 	local SCALE_DIST = radius * self._tuning.repulseScaleCap
 	local MAX_DIST = radius + self._tuning.repulseMaxSep
 	local mag = self._tuning.repulseMagnitude
@@ -421,16 +423,13 @@ function mainframe_layout:updateForce( fx, fy, dx, dy, radius )
 		-- Far enough apart.
 		return fx, fy
 	elseif d < 1 then
-		-- Too close.
-		if dx > 0 then
-			dx = 1
-		elseif dx < 0 then
-			dx = -1
-		end
-		if dy > 0 then
-			dy = 1
-		elseif dy < 0 then
-			dy = -1
+		-- Too close, but attempting to separate based on dx,dy leads to jumping.
+		if id0 == id1 then
+			return fx, fy
+		elseif id1 > id0 then
+			dx, dy = math.cos( 2*math.pi * (id1-id0 / 100) ), math.sin( 2*math.pi * (id1-id0 / 100 ))
+		else
+			dx, dy = -math.cos( 2*math.pi * (id0-id1 / 100) ), -math.sin( 2*math.pi * (id0-id1 / 100 ))
 		end
 	else
 		mag = mag * math.min( 1, (SCALE_DIST * SCALE_DIST) / (d*d)) -- inverse sqr mag.
@@ -449,7 +448,7 @@ function mainframe_layout:calculateForce( id0, l0, layouts, statics )
 	for id1, l1 in pairs(layouts) do
 		if id0 ~= id1 then
 			local dx, dy = self:_getSeparationVector( l1, l0 )
-			fx, fy = self:updateForce( fx, fy, dx, dy, itemDiameter )
+			fx, fy = self:updateForce( fx, fy, dx, dy, itemDiameter, id0,id1 )
 		end
 	end
 	for _, l1 in ipairs(statics) do
