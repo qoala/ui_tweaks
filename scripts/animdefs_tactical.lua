@@ -8,22 +8,89 @@ local BoundType = commondefs.BoundType
 --
 -- For items that do not in fact provide cover, or block sight, custom anims are substituted for tactical view.
 
+-- Pure graphical fixes (does not use tall/non-cover anims)
+local animdefs_fixes =
+{
+	-- Remove incorrect 1x1 cover anim.
+	publicterminal_glasswall1 =
+	{
+		build = { "data/anims/Unique_publicterminal/publicterminal_glasswall1.abld" },
+		anims = { "data/anims/Unique_publicterminal/publicterminal_glasswall1.adef" },
+		anim = "idle",
+		scale = 0.25,
+		boundType = BoundType.Wall,
+	},
+
+	-- Remove incorrect 1x1 cover anim.
+	holdingcell_1x1_celldoor1 =
+	{
+		build = { "data/anims/Unique_holdingcell/holdingcell_1x1_celldoor1.abld" },
+		anims = { "data/anims/Unique_holdingcell/holdingcell_1x1_celldoor1.adef" },
+		anim = "idle",
+		scale = 0.25,
+		boundType = BoundType.Wall,
+	},
+
+
+	-- ===
+	-- OMNI
+	-- ===
+
+	-- Fix BoundType.Wall2 on 1-tile prop.
+	decor_holostorage_1x1_wallgear2 =
+	{
+		build = { "data/anims/Final_holostorage/holostorage_1x1_wallgear2.abld" },
+		anims = { "data/anims/Final_holostorage/holostorage_1x1_wallgear2.adef" },
+		anim = "idle",
+		scale = 0.25,
+		boundType = BoundType.Wall,
+		filterSymbols = {{symbol="light",filter="default"}},
+	},
+
+	decor_holostorage_1x1_wallgear3 =
+	{
+		build = { "data/anims/Final_holostorage/holostorage_1x1_wallgear3.abld" },
+		anims = { "data/anims/Final_holostorage/holostorage_1x1_wallgear3.adef" },
+		anim = "idle",
+		scale = 0.25,
+		boundType = BoundType.Wall,
+		filterSymbols = {{symbol="light",filter="default"}},
+	},
+
+	-- ===
+	-- Mod-only (not used by vanilla game)
+	-- ===
+
+	-- Tall-cover, missing its tactical anim. Fixed below in the tactical list.
+	-- ftm_hall_bookshelf =
+	-- {
+	-- 	build = { "data/anims/FTM_hall/ftm_hall_object_2x1bookshelf.abld", "data/anims/general/mf_coverpieces_1x2.abld" },
+	-- 	anims = { "data/anims/FTM_hall/ftm_hall_object_2x1bookshelf.adef", "data/anims/general/mf_coverpieces_1x2.adef" },
+	-- 	symbol = "character",
+	-- 	scale = 0.25,
+	-- 	layer = Layer.Object,
+	-- 	boundType = BoundType.bound_2x1_med_med,
+	-- 	filterSymbols = {{symbol="icon",filter="default"},{symbol="light",filter="default"}},
+	-- },
+
+	-- Normal cover, missing its tactical anim.
+	ftm_hall_couch1 =
+	{
+		build = { "data/anims/FTM_hall/ftm_hall_object_2x1couch1.abld", "data/anims/general/mf_coverpieces_1x2.abld"  },
+		anims = { "data/anims/FTM_hall/ftm_hall_object_2x1couch1.adef", "data/anims/general/mf_coverpieces_1x2.adef" },
+		symbol = "character",
+		scale = 0.25,
+		layer = Layer.Object,
+		boundType = BoundType.bound_2x1_med_med,
+		filterSymbols = {{symbol="icon",filter="default"},{symbol="light",filter="default"}},
+	},
+}
+
+-- Non-cover and Sightblock tactical DECOR --
 local animdefs_tactical =
 {
-	-- Non-cover and Sightblock tactical DECOR --
-
-	-- this glass wall incorrectly has cover icons in vanilla
-    publicterminal_glasswall1 =
-    {
-        build = { "data/anims/Unique_publicterminal/publicterminal_glasswall1.abld" },
-        anims = { "data/anims/Unique_publicterminal/publicterminal_glasswall1.adef" },
-        anim = "idle",
-        scale = 0.25,
-        boundType = BoundType.Wall,
-    }, 
-	
 	-- FTM OFFICE --------------------------------------------------------------------------------------------
-	
+
 	ftm_hall_plant1=
 	{
 		build = { "data/anims/FTM_hall/ftm_hall_object_1x1plant1.abld", "data/anims/bcl/mf_tallcoverpieces_1x1.abld" },
@@ -81,7 +148,7 @@ local animdefs_tactical =
 		anim = "idle",
 		scale = 0.25,
 		boundType = BoundType.bound_1x1_med_med,
-	},	
+	},
 
 	decor_ko_office_lamp =
 	{
@@ -90,7 +157,7 @@ local animdefs_tactical =
 		anim = "idle",
 		scale = 0.25,
 		boundType = BoundType.bound_1x1_tall_med,
-	},	
+	},
 
 	decor_ko_office_bookshelf1 =
 	{
@@ -117,7 +184,7 @@ local animdefs_tactical =
 		anim = "idle",
 		scale = 0.25,
 		boundType = BoundType.bound_2x1_tall_med,
-	},	
+	},
 
 	-- KO LAB ---------------------------------------------------------------------------------------------
 
@@ -128,7 +195,7 @@ local animdefs_tactical =
 		anim = "idle",
 		scale = 0.25,
 		boundType = BoundType.bound_1x1_tall_med,
-	},		
+	},
 
 	decor_ko_lab_pit1 =
 	{
@@ -137,7 +204,7 @@ local animdefs_tactical =
 		anim = "idle",
 		scale = 0.25,
 		boundType = BoundType.Floor_2x3,
-	},	
+	},
 
 	decor_ko_lab_pit2 =
 	{
@@ -146,7 +213,7 @@ local animdefs_tactical =
 		anim = "idle",
 		scale = 0.25,
 		boundType = BoundType.Floor_2x3,
-	},	
+	},
 
 	-- KO BARRACKS ---------------------------------------------------------------------------------------------
 
@@ -157,7 +224,7 @@ local animdefs_tactical =
 		anim = "idle",
 		scale = 0.25,
 		boundType = BoundType.bound_1x1_tall_med,
-	},		
+	},
 
 	decor_ko_barracks_vendingmachine1 =
 	{
@@ -166,7 +233,7 @@ local animdefs_tactical =
 		anim = "idle",
 		scale = 0.25,
 		boundType = BoundType.bound_1x1_tall_med,
-	},	
+	},
 
 	-- KO HALL ---------------------------------------------------------------------------------------------
 
@@ -177,7 +244,7 @@ local animdefs_tactical =
 		anim = "idle",
 		scale = 0.25,
 		boundType = BoundType.bound_2x1_tall_med,
-	},	
+	},
 
 	-- SEIKAKU LAB ---------------------------------------------------------------------------------------------
 
@@ -188,7 +255,7 @@ local animdefs_tactical =
 		anim = "idle",
 		scale = 0.25,
 		boundType = BoundType.bound_1x1_tall_med,
-	},	
+	},
 
 	decor_sk_office_walldivider1 =
 	{
@@ -197,7 +264,7 @@ local animdefs_tactical =
 		anim = "idle",
 		scale = 0.25,
 		boundType = BoundType.bound_1x1_med_med,
-	},	
+	},
 
 	decor_sk_office_tv1 =
 	{
@@ -206,7 +273,7 @@ local animdefs_tactical =
 		anim = "idle",
 		scale = 0.25,
 		boundType = BoundType.bound_2x1_tall_med,
-	},	
+	},
 
 	decor_sk_bay_tallcrate1 =
 	{
@@ -224,7 +291,7 @@ local animdefs_tactical =
 		anim = "idle",
 		scale = 0.25,
 		boundType = BoundType.bound_1x1_tall_med,
-	},	
+	},
 
 	decor_plastek_psilab_bookshelf1 =
 	{
@@ -233,7 +300,7 @@ local animdefs_tactical =
 		anim = "idle",
 		scale = 0.25,
 		boundType = BoundType.bound_2x1_tall_med,
-	},	
+	},
 
 	decor_plastek_lab_cabinet1 =
 	{
@@ -242,7 +309,7 @@ local animdefs_tactical =
 		anim = "idle",
 		scale = 0.25,
 		boundType = BoundType.bound_1x1_med_med,
-	},	
+	},
 
 	decor_plastek_hall_bookshelf1 =
 	{
@@ -251,7 +318,7 @@ local animdefs_tactical =
 		anim = "idle",
 		scale = 0.25,
 		boundType = BoundType.bound_1x1_tall_med,
-	},		
+	},
 
 	decor_plastek_hall_bookshelf2 =
 	{
@@ -260,17 +327,7 @@ local animdefs_tactical =
 		anim = "idle",
 		scale = 0.25,
 		boundType = BoundType.bound_2x1_tall_med,
-	},	
-
-	-- vanilla uses 1x1 cover icon, but this anim is neither 1x1 nor cover.
-	holdingcell_1x1_celldoor1 =
-	{                            
-		build = { "data/anims/Unique_holdingcell/holdingcell_1x1_celldoor1.abld" },
-		anims = { "data/anims/Unique_holdingcell/holdingcell_1x1_celldoor1.adef" },
-		anim = "idle",
-		scale = 0.25,
-		boundType = BoundType.Wall,
-	},			
+	},
 
 	decor_cybernetics_object_2x1liquidpool1=
 	{
@@ -278,9 +335,25 @@ local animdefs_tactical =
 		anims = { "data/anims/Unique_cybernetics/cybernetics_2x1_liquidpool1.adef", "data/anims/hek/mf_noncoverpieces_1x2.adef" },
 		anim = "idle",
 		scale = 0.25,
-		boundType = BoundType.bound_2x1_med_med, 
+		boundType = BoundType.bound_2x1_med_med,
 	},
 
+	-- Mod-only --------------------------------------------------------------------------------------------
+
+	-- Actually tall-cover, missing its tactical anim.
+	ftm_hall_bookshelf =
+	{
+		build = { "data/anims/uitr/props/ftm_hall_object_2x1bookshelf.abld", "data/anims/bcl/mf_tallcoverpieces_1x2.abld" },
+		anims = { "data/anims/uitr/props/ftm_hall_object_2x1bookshelf.adef", "data/anims/bcl/mf_tallcoverpieces_1x2.adef" },
+		symbol = "character",
+		scale = 0.25,
+		layer = Layer.Object,
+		boundType = BoundType.bound_2x1_med_med,
+		filterSymbols = {{symbol="icon",filter="default"},{symbol="light",filter="default"}},
+	},
 }
 
-return animdefs_tactical
+return {
+	animdefs_fixes = animdefs_fixes,
+	animdefs_tactical = animdefs_tactical,
+}

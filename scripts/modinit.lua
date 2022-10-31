@@ -16,6 +16,7 @@ local function init( modApi )
 	SCRIPT_PATHS.qed_uitr = modApi:getScriptPath()
 
 	local dataPath = modApi:getDataPath()
+	KLEIResourceMgr.MountPackage( dataPath .. "/anims.kwad", "data" )
 	KLEIResourceMgr.MountPackage( dataPath .. "/gui.kwad", "data" )
 	KLEIResourceMgr.MountPackage( dataPath .. "/images.kwad", "data" )
 	KLEIResourceMgr.MountPackage( dataPath .. "/rrni_gui.kwad", "data" )
@@ -114,7 +115,11 @@ local function lateUnload( modApi, mod_options )
 	end
 
 	if uitr_util.checkOption("tacticalLampView") then
-		for name, animDef in pairs(include( scriptPath .. "/animdefs_tactical" )) do
+		local modAnimdefs = include( scriptPath .. "/animdefs_tactical" )
+		for name, animDef in pairs(modAnimdefs.animdefs_fixes) do
+			modApi:addAnimDef( name, animDef )
+		end
+		for name, animDef in pairs(modAnimdefs.animdefs_tactical) do
 			modApi:addAnimDef( name, animDef )
 		end
 	end

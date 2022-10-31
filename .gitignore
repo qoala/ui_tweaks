@@ -3,6 +3,7 @@
 
 # Build system
 makeconfig.mk
+anims/**/*.anim
 out/*
 
 # Invisible Inc.
