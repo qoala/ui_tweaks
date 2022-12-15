@@ -28,6 +28,8 @@ local function init( modApi )
 
 	-- mui (low-level graphical primitives)
 	include( modApi:getScriptPath() .. "/mui/mui" )
+	include( modApi:getScriptPath() .. "/mui/mui_group" )
+	include( modApi:getScriptPath() .. "/mui/mui_texture" )
 	include( modApi:getScriptPath() .. "/mui/mui_tooltip" ) -- Must be before abilityutil.
 
 	-- Features using the old pattern of "all changes for this feature in one file."
