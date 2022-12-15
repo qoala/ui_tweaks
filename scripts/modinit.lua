@@ -24,41 +24,47 @@ local function init( modApi )
 
 	include( modApi:getScriptPath() .. "/resources" ).initUitrResources()
 	include( modApi:getScriptPath() .. "/uitr_util" )
-	include( modApi:getScriptPath() .. "/mui" )
-
-	include( modApi:getScriptPath() .. "/mui_tooltip" ) -- Must be before abilityutil.
-
-	include( modApi:getScriptPath() .. "/doors_while_dragging" )
-	include( modApi:getScriptPath() .. "/empty_pockets" )
-	include( modApi:getScriptPath() .. "/item_dragdrop" )
-	include( modApi:getScriptPath() .. "/precise_ap" )
-	include( modApi:getScriptPath() .. "/step_carefully" )
-	include( modApi:getScriptPath() .. "/tracks" )
-	include( modApi:getScriptPath() .. "/xu_shank" )
-
 	include( modApi:getScriptPath() .. "/client_defs" )
-	include( modApi:getScriptPath() .. "/abilityutil" )
-	include( modApi:getScriptPath() .. "/agent_actions" )
-	include( modApi:getScriptPath() .. "/agent_panel" )
-	include( modApi:getScriptPath() .. "/agentrig" )
-	include( modApi:getScriptPath() .. "/board_rig" )
-	include( modApi:getScriptPath() .. "/button_layout" )
-	include( modApi:getScriptPath() .. "/hud" )
-	include( modApi:getScriptPath() .. "/engine" )
-	include( modApi:getScriptPath() .. "/mainframe_panel" )
-	include( modApi:getScriptPath() .. "/mission_scoring" )
-	include( modApi:getScriptPath() .. "/options_dialog" )
-	include( modApi:getScriptPath() .. "/simability" )
-	include( modApi:getScriptPath() .. "/simquery" )
-	include( modApi:getScriptPath() .. "/targeting" )
-	include( modApi:getScriptPath() .. "/world_hud" )
+
+	-- mui (low-level graphical primitives)
+	include( modApi:getScriptPath() .. "/mui/mui" )
+	include( modApi:getScriptPath() .. "/mui/mui_tooltip" ) -- Must be before abilityutil.
+
+	-- Features using the old pattern of "all changes for this feature in one file."
+	include( modApi:getScriptPath() .. "/features/doors_while_dragging" )
+	include( modApi:getScriptPath() .. "/features/empty_pockets" )
+	include( modApi:getScriptPath() .. "/features/item_dragdrop" )
+	include( modApi:getScriptPath() .. "/features/precise_ap" )
+	include( modApi:getScriptPath() .. "/features/step_carefully" )
+	include( modApi:getScriptPath() .. "/features/tracks" )
+	include( modApi:getScriptPath() .. "/features/xu_shank" )
+
+	-- sim-layer
+	include( modApi:getScriptPath() .. "/backend/abilityutil" )
+	include( modApi:getScriptPath() .. "/backend/engine" )
+	include( modApi:getScriptPath() .. "/backend/simability" )
+	include( modApi:getScriptPath() .. "/backend/simquery" )
+	-- inter-mission data layer
+	include( modApi:getScriptPath() .. "/backend/mission_scoring" )
+
+	-- hud & gameplay (high-level graphical controllers)
+	include( modApi:getScriptPath() .. "/hud/agent_actions" )
+	include( modApi:getScriptPath() .. "/hud/agent_panel" )
+	include( modApi:getScriptPath() .. "/hud/agentrig" )
+	include( modApi:getScriptPath() .. "/hud/board_rig" )
+	include( modApi:getScriptPath() .. "/hud/button_layout" )
+	include( modApi:getScriptPath() .. "/hud/hud" )
+	include( modApi:getScriptPath() .. "/hud/mainframe_panel" )
+	include( modApi:getScriptPath() .. "/hud/options_dialog" )
+	include( modApi:getScriptPath() .. "/hud/targeting" )
+	include( modApi:getScriptPath() .. "/hud/world_hud" )
 end
 
 local function lateInit( modApi )
 	local scriptPath = modApi:getScriptPath()
 
 	-- More Archived Agents has a copy of the same "Rescued agent status" fix, but doesn't guard against being applied a second time.
-	include( scriptPath .. "/mission_scoring_lateinit" )
+	include( scriptPath .. "/backend/mission_scoring_lateinit" )
 end
 
 -- Apply changes on both unload and load. We're controlled by the settings file, not campaign options.
@@ -69,11 +75,11 @@ local function unload( modApi )
 	-- Initialize fields in the settings file
 	uitr_util.initOptions()
 
-	modApi:insertUIElements( include( scriptPath.."/base_screen_inserts" ) )
-	modApi:modifyUIElements( include( scriptPath.."/base_screen_modifications" ) )
+	modApi:insertUIElements( include( scriptPath.."/screens/base_screen_inserts" ) )
+	modApi:modifyUIElements( include( scriptPath.."/screens/base_screen_modifications" ) )
 
 	if uitr_util.checkEnabled() then
-		modApi:insertUIElements( include( scriptPath.."/screen_inserts" ) )
+		modApi:insertUIElements( include( scriptPath.."/screens/screen_inserts" ) )
 	end
 end
 
@@ -110,22 +116,22 @@ local function lateUnload( modApi, mod_options )
 			RRNI_OPTIONS.NIAA = {}
 		end
 
-		local rrni_itemdefs = include( scriptPath .. "/rrni_itemdefs" )
+		local rrni_itemdefs = include( scriptPath .. "/patches/rrni_itemdefs" )
 		rrni_itemdefs.swapIcons(RRNI_OPTIONS)
 	end
 
 	if uitr_util.checkOption("tacticalLampView") then
-		local modAnimdefs = include( scriptPath .. "/animdefs_tactical" )
-		for name, animDef in pairs(modAnimdefs.animdefs_fixes) do
+		local modAnimdefs = include( scriptPath .. "/patches/animdefs" )
+		for name, animDef in pairs(modAnimdefs.animdefsFixup) do
 			modApi:addAnimDef( name, animDef )
 		end
-		for name, animDef in pairs(modAnimdefs.animdefs_tactical) do
+		for name, animDef in pairs(modAnimdefs.animdefsTactical) do
 			modApi:addAnimDef( name, animDef )
 		end
 	end
 
-	local patch_abilities = include( scriptPath .. "/patch_abilities" )
-	patch_abilities.applyOverwatchFlag()
+	local modAbilitydefs = include( scriptPath .. "/patches/abilitydefs" )
+	modAbilitydefs.patchOverwatchFlag()
 end
 
 local function lateLoad( modApi, options, params, mod_options )

@@ -9,7 +9,7 @@ local BoundType = commondefs.BoundType
 -- For items that do not in fact provide cover, or block sight, custom anims are substituted for tactical view.
 
 -- Pure graphical fixes (does not use tall/non-cover anims)
-local animdefs_fixes =
+local animdefsFixup =
 {
 	-- Remove incorrect 1x1 cover anim.
 	publicterminal_glasswall1 =
@@ -87,7 +87,7 @@ local animdefs_fixes =
 }
 
 -- Non-cover and Sightblock tactical DECOR --
-local animdefs_tactical =
+local animdefsTactical =
 {
 	-- FTM OFFICE --------------------------------------------------------------------------------------------
 
@@ -354,6 +354,6 @@ local animdefs_tactical =
 }
 
 return {
-	animdefs_fixes = animdefs_fixes,
-	animdefs_tactical = animdefs_tactical,
+	animdefsFixup = animdefsFixup,
+	animdefsTactical = animdefsTactical,
 }

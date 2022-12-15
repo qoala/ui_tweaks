@@ -5,7 +5,7 @@ local world_hud = include( "hud/hud-inworld" )
 local mui_defs = require( "mui/mui_defs" )
 
 local uitr_util = include( SCRIPT_PATHS.qed_uitr .. "/uitr_util" )
-local mainframe_layout = include( SCRIPT_PATHS.qed_uitr .. "/mainframe_layout" )
+local mainframe_layout = include( SCRIPT_PATHS.qed_uitr .. "/hud/mainframe_layout" )
 
 local panel = mainframe_panel.panel
 local MODE_HIDDEN = 0

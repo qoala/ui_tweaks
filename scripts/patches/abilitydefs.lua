@@ -27,7 +27,7 @@ local TRIGGERS_OVERWATCH_FUNCTIONS = {
 	useInvisiCloak = abilityutil.triggersOverwatchAfterCloaking,
 }
 
-local function applyOverwatchFlag( )
+local function patchOverwatchFlag( )
 	for _,abilityID in ipairs(TRIGGERS_OVERWATCH_ABILITIES) do
 		local ability = abilitydefs.lookupAbility(abilityID)
 		if ability and ability.triggersOverwatch == nil then
@@ -43,5 +43,5 @@ local function applyOverwatchFlag( )
 end
 
 return {
-	applyOverwatchFlag = applyOverwatchFlag,
+	patchOverwatchFlag = patchOverwatchFlag,
 }
