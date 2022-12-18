@@ -7,6 +7,8 @@ local function earlyInit( modApi )
 		"New Items And Augments",
 		-- Disable Action Camera overwrites client/gameplay/boardrig.
 		"Disable Action Camera",
+		-- Extract upvalues from mission_scoring, so must load before any other appends.
+		"Community Bug Fixes", "Escorts Fixed",
 	}
 end
 
