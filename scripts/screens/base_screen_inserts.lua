@@ -1,5 +1,5 @@
 local function addUitrSkins( filename )
-	return { filename, { "dependents" }, "uitr_skins.lua", }
+	return { filename, { "dependents" }, "uitr_skins.lua", 1 }
 end
 
 local inserts =

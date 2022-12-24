@@ -59,14 +59,6 @@ function abilityutil.triggersOverwatchAfterCloaking(self, sim, abilityOwner)
 end
 
 -- ===
--- Meta helpers
--- ===
-
-if not util.tooltip_section then
-	util.tooltip_section = uitr_util.extractUpvalue(util.tooltip.addSection, "tooltip_section")
-end
-
--- ===
 -- Tooltip section that replicates the appearance of a vanilla abilityutil.hotkey_tooltip/mui_tooltip
 -- ===
 
@@ -98,10 +90,9 @@ mui_tooltip_section.__concat = function( a, b )
 	end
 end
 
-local oneoff, oneoff2 = true, true -- TODO:remove
 function mui_tooltip_section:activate( screen )
 	if DEFAULT_TOOLTIP == nil then
-		DEFAULT_TOOLTIP = screen:createFromSkin("uitrTooltip")
+		DEFAULT_TOOLTIP = screen:createFromSkin("tooltip")
 	end
 	self._screen = screen
 	self._tooltipWidget = DEFAULT_TOOLTIP
@@ -119,9 +110,8 @@ function mui_tooltip_section:activate( screen )
 		tooltipLabel:setText( self._bodyTxt )
 	end
 
-	local footer = self._tooltipWidget.binder.footer
-	local hotkeyLabel = footer.binder.hotkey
-	local controllerHotkey = footer.binder.controllerHotkey
+	local hotkeyLabel = self._tooltipWidget.binder.hotkey
+	local controllerHotkeyImg = self._tooltipWidget.binder.controllerHotkey
 	local hasControllerHotkey = false
 	if self._hotkey then
         local binding = util.getKeyBinding( self._hotkey )
@@ -129,8 +119,8 @@ function mui_tooltip_section:activate( screen )
             local hotkeyName = mui_util.getBindingName( binding )
 		    hotkeyLabel:setText( string.format( "%s: <tthotkey>[ %s ]</>", STRINGS.UI.HUD_HOTKEY, hotkeyName ))
 			local ctrlBinding = util.getControllerBindingImage and util.getControllerBindingImage(binding)
-			if ctrlBinding then
-				controllerHotkey:setImage(ctrlBinding)
+			if ctrlBinding and not controllerHotkeyImg.isnull then
+				controllerHotkeyImg:setImage(ctrlBinding)
 				hasControllerHotkey = true
 			end
         else
@@ -156,32 +146,26 @@ function mui_tooltip_section:activate( screen )
 	tooltipBg:setPosition( (W * tw) / 2, H * -th / 2 )
 	--tooltipBg:setPosition( 0,0 )
 
+	local footer = self._tooltipWidget.binder.border
 	if #hotkeyLabel:getText() > 0 then
-		footer:setVisible(true)
-		local footerBg = footer.binder.border
 		local footerH = ymax_hotkey - ymin_hotkey
 		if hasControllerHotkey then
 			footerH = math.max(footerH, 25/H * (footerH >= 0 and 1 or -1))
-			controllerHotkey:setVisible(true)
-		else
-			controllerHotkey:setVisible(false)
+			controllerHotkeyImg:setVisible(true)
 		end
 		th = th + 2 * footerH
-		footer:setPosition(nil, H * (-th + math.abs(footerH)))
-		footerBg:setSize( W * tw, H * footerH + 8 )
-		footerBg:setPosition(W * tw / 2, nil)
-		controllerHotkey:setPosition(W * tw - 12 - 4, nil)
-		if oneoff then
-			oneoff = false
-			oneoff2 = true
-		end
+		local footerY = H * (-th + math.abs(footerH))
+
+		footer:setVisible(true)
+		footer:setSize( W * tw, H * footerH + 8 )
+		footer:setPosition(W * tw / 2, footerY)
+		hotkeyLabel:setPosition(nil, footerY)
+		controllerHotkeyImg:setPosition(W * tw - 12 - 4, footerY)
 	else
 		footer:setVisible(false)
-		if oneoff2 then
-			simlog("DEBUG hotkey footer ignored for %s", self._bodyTxt)
-			oneoff = true
-			oneoff2 = false
-		end
+	end
+	if not hasControllerHotkey and not controllerHotkeyImg.isnull then
+		controllerHotkeyImg:setVisible(false)
 	end
 
 	self._w, self._h = tw, th

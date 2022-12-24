@@ -34,6 +34,8 @@ local function init( modApi )
 	include( modApi:getScriptPath() .. "/mui/mui_texture" )
 	include( modApi:getScriptPath() .. "/mui/mui_tooltip" ) -- Must be before abilityutil.
 
+	include( modApi:getScriptPath() .. "/client_util" ) -- After mui_tooltip, before abilityutil.
+
 	-- Features using the old pattern of "all changes for this feature in one file."
 	include( modApi:getScriptPath() .. "/features/doors_while_dragging" )
 	include( modApi:getScriptPath() .. "/features/empty_pockets" )
