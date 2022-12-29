@@ -18,9 +18,10 @@ function util.tooltip_section:appendHeader( actionTxt, infoTxt, ... )
 	oldAppendHeader( self, actionTxt, infoTxt, ... )
 
 	local ctrlBinding = util.getControllerBindingImage and util.getControllerBindingImage(actionTxt)
-	if ctrlBinding then
+	local controllerHotkeyImg = widget.binder.controllerHotkey
+	if ctrlBinding and not controllerHotkeyImg.isnull then
 		local widget = self._children[#self._children]
-		widget.binder.controllerHotkey:setImage(ctrlBinding)
+		controllerHotkeyImg:setImage(ctrlBinding)
 
 		-- Overwrite vanilla callback
 		-- changes at CBF:
@@ -36,11 +37,11 @@ function util.tooltip_section:appendHeader( actionTxt, infoTxt, ... )
 				xpos = tw / 2 + 8 -- HACK: +8 mimics the slight left-padding that normally is inherited from the default line's position
 			end
 			local xmin, ymin, xmax, ymax = widget.binder.line:getStringBounds()
-			local h = math.max(ymax - ymin, 24)
+			local h = math.max(ymax - ymin, 24) -- CBF: Enforce minimum height for controller hotkey image.
 			local th = math.ceil(H * h / 2) * 2 + TOP_BUFFER
 			widget.binder.line:setSize( nil, th )
 			widget.binder.line:setPosition( xpos, (th / -2) - TOP_BUFFER )
-			widget.binder.controllerHotkey:setPosition( nil, (th / -2) - TOP_BUFFER )
+			widget.binder.controllerHotkey:setPosition( nil, (th / -2) - TOP_BUFFER ) -- CBF: Position controller hotkey image.
 		end
 	end
 end

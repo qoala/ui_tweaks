@@ -160,7 +160,9 @@ function mui_tooltip_section:activate( screen )
 		footer:setSize( W * tw, H * footerH + 8 )
 		footer:setPosition(W * tw / 2, footerY)
 		hotkeyLabel:setPosition(nil, footerY)
-		controllerHotkeyImg:setPosition(W * tw - 12 - 4, footerY)
+		if hasControllerHotkey then
+			controllerHotkeyImg:setPosition(W * tw - 12 - 4, footerY)
+		end
 	else
 		footer:setVisible(false)
 	end
