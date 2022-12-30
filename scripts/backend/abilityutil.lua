@@ -80,11 +80,15 @@ end
 
 mui_tooltip_section.__concat = function( a, b )
 	if type(b) == "string" and a.is_a and a:is_a(mui_tooltip_section) then
-		if (b == STRINGS.UI.HUD_CANCEL_TT) then
+		if util.getControllerBindingImage and b == STRINGS.UI.HUD_CANCEL_TT then
 			-- Track that we're displaying a 'Right Click' binding.
 			a._qedctrl_pseudoBindingTxt = STRINGS.UI.HUD_RIGHT_CLICK
+			-- Strip the previously-added newline and store the text separately.
+			a._bodyTxt = string.sub(a._bodyTxt, 1, -2)
+			a._pseudoHotkeyTxt = b
+		else
+			a._bodyTxt = (a._bodyTxt or "") .. b
 		end
-		a._bodyTxt = (a._bodyTxt or "") .. b
 		return a
 	elseif type(a) == "string" and b.is_a and b:is_a(mui_tooltip_section) then
 		b._bodyTxt = a .. (b._bodyTxt or "")
@@ -115,14 +119,27 @@ function mui_tooltip_section:activate( screen )
 	end
 
 	local hotkeyLabel = self._tooltipWidget.binder.hotkey
+	local hasHotkey = false
+	local hasPseudoHotkey = false
 	local controllerHotkeyImg = self._tooltipWidget.binder.controllerHotkey
 	local hasControllerHotkey = false
-	local hasPseudoControllerHotkey = false
-	if self._hotkey then
+	if self._pseudoHotkeyTxt then
+		hotkeyLabel:setText( self._pseudoHotkeyTxt )
+		hasPseudoHotkey = true
+
+		local ctrlBinding = (self._qedctrl_pseudoBindingTxt and util.getControllerBindingImage
+				and util.getControllerBindingImage(self._qedctrl_pseudoBindingTxt))
+		if ctrlBinding and not controllerHotkeyImg.isnull then
+			controllerHotkeyImg:setImage(ctrlBinding)
+			hasControllerHotkey = true
+		end
+	elseif self._hotkey then
         local binding = util.getKeyBinding( self._hotkey )
         if binding then
             local hotkeyName = mui_util.getBindingName( binding )
 		    hotkeyLabel:setText( string.format( "%s: <tthotkey>[ %s ]</>", STRINGS.UI.HUD_HOTKEY, hotkeyName ))
+			hasHotkey = true
+
 			local ctrlBinding = util.getControllerBindingImage and util.getControllerBindingImage(binding)
 			if ctrlBinding and not controllerHotkeyImg.isnull then
 				controllerHotkeyImg:setImage(ctrlBinding)
@@ -133,12 +150,6 @@ function mui_tooltip_section:activate( screen )
         end
 	else
 		hotkeyLabel:setText( nil )
-		local ctrlBinding = (self._qedctrl_pseudoBindingTxt and util.getControllerBindingImage
-				and util.getControllerBindingImage(self._qedctrl_pseudoBindingTxt))
-		if ctrlBinding and not controllerHotkeyImg.isnull then
-			controllerHotkeyImg:setImage(ctrlBinding)
-			hasPseudoControllerHotkey = true
-		end
 	end
 	local xmin_hotkey, ymin_hotkey, xmax_hotkey, ymax_hotkey = hotkeyLabel:getStringBounds()
 
@@ -158,31 +169,41 @@ function mui_tooltip_section:activate( screen )
 	--tooltipBg:setPosition( 0,0 )
 
 	local footer = self._tooltipWidget.binder.border
-	if #hotkeyLabel:getText() > 0 then
+	if hasHotkey or hasPseudoHotkey then
 		local footerH = ymax_hotkey - ymin_hotkey
+		local footerY
 		if hasControllerHotkey then
 			footerH = math.max(footerH, 25/H * (footerH >= 0 and 1 or -1))
 			controllerHotkeyImg:setVisible(true)
+		elseif not controllerHotkeyImg.isnull then
+			controllerHotkeyImg:setVisible(false)
 		end
-		th = th + 2 * footerH
-		local footerY = H * (-th + math.abs(footerH))
 
-		footer:setVisible(true)
-		footer:setSize( W * tw, H * footerH + 8 )
-		footer:setPosition(W * tw / 2, footerY)
+		if hasHotkey then
+			th = th + 2 * footerH
+			footerY = H * (-th + math.abs(footerH))
+
+			footer:setVisible(true)
+			footer:setSize( W * tw, H * footerH + 8 )
+			footer:setPosition(W * tw / 2, footerY)
+		else -- hasPseudoHotkey
+			th = th + footerH + 2 * 4/H
+			footerY = H * (-th + math.abs(footerH) / 2) + 4
+
+			footer:setVisible(false)
+			-- Resize the main background to cover both lines of text.
+			tooltipBg:setSize( W * tw, H * th )
+			tooltipBg:setPosition( (W * tw) / 2, H * -th / 2 )
+		end
 		hotkeyLabel:setPosition(nil, footerY)
 		if hasControllerHotkey then
 			controllerHotkeyImg:setPosition(W * tw - 12 - 4, footerY)
 		end
 	else
 		footer:setVisible(false)
-	end
-	if hasPseudoControllerHotkey then
-		controllerHotkeyImg:setVisible(true)
-		local hotkeyY = H * -th + 12 + 4
-		controllerHotkeyImg:setPosition(W * tw - 12 - 4, hotkeyY)
-	elseif not hasControllerHotkey and not controllerHotkeyImg.isnull then
-		controllerHotkeyImg:setVisible(false)
+		if not controllerHotkeyImg.isnull then
+			controllerHotkeyImg:setVisible(false)
+		end
 	end
 
 	self._w, self._h = tw, th
