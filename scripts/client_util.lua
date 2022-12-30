@@ -12,7 +12,6 @@ end
 
 -- ===
 
--- TODO: Why does this appended function never run?
 local oldAppendHeader = util.tooltip_section.appendHeader
 function util.tooltip_section:appendHeader( actionTxt, infoTxt, ... )
 	oldAppendHeader( self, actionTxt, infoTxt, ... )

@@ -20,7 +20,6 @@ end
 
 -- Overwrite base mui_tooltip:fitOnscreen
 -- changes at CBF:
--- TODO: Enforce minimum width if hotkeyLabel + controllerHotkeyImg are wider than the main label.
 local DEFAULT_TOOLTIP = nil
 function mui_tooltip:activate( screen )
 	self._screen = screen
@@ -68,7 +67,8 @@ function mui_tooltip:activate( screen )
 	local x, y, w, h = tooltipLabel:calculateBounds()
 	-- Full tooltip width and height, based off string contents bounds, in normalized UI space.
 	local X_FUDGE_FACTOR = 6 / W -- This one exists because the string bounds may be inset from the actual label, a delta not easily determined here.
-	local tw, th = math.max( xmax - xmin, xmax_hotkey - xmin_hotkey ), ymax - ymin
+	local controllerHotkeyW = hasControllerHotkey and (24 + 2*4)/H or 0
+	local tw, th = math.max( xmax - xmin, xmax_hotkey - xmin_hotkey + controllerHotkeyW ), ymax - ymin
 	tw = tw + 2 * math.abs(x) - w + X_FUDGE_FACTOR
 	th = th + 2 * math.abs(y) - h
 

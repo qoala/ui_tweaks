@@ -159,7 +159,8 @@ function mui_tooltip_section:activate( screen )
 	local x, y, w, h = tooltipLabel:calculateBounds()
 	-- Full tooltip width and height, based off string contents bounds, in normalized UI space.
 	local X_FUDGE_FACTOR = 6 / W -- This one exists because the string bounds may be inset from the actual label, a delta not easily determined here.
-	local tw, th = math.max( xmax - xmin, xmax_hotkey - xmin_hotkey ), ymax - ymin
+	local controllerHotkeyW = hasControllerHotkey and (24 + 2*4)/H or 0
+	local tw, th = math.max( xmax - xmin, xmax_hotkey - xmin_hotkey + controllerHotkeyW ), ymax - ymin
 	tw = tw + 2 * math.abs(x) - w + X_FUDGE_FACTOR
 	th = th + 2 * math.abs(y) - h
 
@@ -192,8 +193,8 @@ function mui_tooltip_section:activate( screen )
 
 			footer:setVisible(false)
 			-- Resize the main background to cover both lines of text.
-			tooltipBg:setSize( W * tw, H * th )
-			tooltipBg:setPosition( (W * tw) / 2, H * -th / 2 )
+			tooltipBg:setSize( nil, H * th )
+			tooltipBg:setPosition( nil, H * -th / 2 )
 		end
 		hotkeyLabel:setPosition(nil, footerY)
 		if hasControllerHotkey then
