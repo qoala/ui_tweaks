@@ -12,6 +12,12 @@ local function earlyInit( modApi )
 	}
 end
 
+local function forceClientUtilPackageLoad()
+	-- Some mods incorrectly load client/client_util, which messes up appends.
+	include("client_util")
+	include("client/client_util")
+end
+
 local function init( modApi )
 	-- (This mod doesn't set its own script path, but relies on checking if other mods have done so)
 	rawset(_G,"SCRIPT_PATHS",rawget(_G,"SCRIPT_PATHS") or {})
@@ -23,6 +29,8 @@ local function init( modApi )
 	KLEIResourceMgr.MountPackage( dataPath .. "/images.kwad", "data" )
 	KLEIResourceMgr.MountPackage( dataPath .. "/rrni_gui.kwad", "data" )
 	KLEIResourceMgr.MountPackage( dataPath .. "/tlv_anims.kwad", "data" )
+
+	forceClientUtilPackageLoad()
 
 	include( modApi:getScriptPath() .. "/resources" ).initUitrResources()
 	include( modApi:getScriptPath() .. "/uitr_util" )
