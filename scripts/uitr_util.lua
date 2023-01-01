@@ -338,27 +338,37 @@ local function extractUpvalue(fn, name)
     end
 end
 
--- Overwrite a class' base class to force method-override/-append propagation to subclasses.
+-- Force method-override/-append propagation to subclasses.
 -- oldFnMapping is a table of function names to the old function implementations. If the given class has the old function, it's replaced with the current superclass function.
 -- If the given class already overrode it from the old function, it's assumed to either internally call the superclass method or have a good reason not to.
 -- Call from :init, obtaining the current class via getmetatable
-local function propagateSuperclass(c, superClass, oldFnMapping, sentinelKey, logName)
+local function propagateSuperclass(c, superClass, oldFnMapping, newKeys, sentinelKey, logName)
     if c and not c[sentinelKey] then
         logName = logName or tostring(c)
         simlog("LOG_UITRMETA", "%s init for %s", logName, sentinelKey)
         c[sentinelKey] = true
 
-        for fnName, oldFn in pairs(oldFnMapping) do
-            if (c[fnName] == oldFn) then
-                simlog("LOG_UITRMETA", "%s replacing %s", logName, fnName)
-                c[fnName] = superClass[fnName]
+        if newKeys then
+            for _, k in ipairs(newKeys) do
+                if c[k] == nil then
+                    simlog("LOG_UITRMETA", "%s adding %s", logName, k)
+                    c[k] = superClass[k]
+                end
+            end
+        end
+        if oldFnMapping then
+            for fnName, oldFn in pairs(oldFnMapping) do
+                if (c[fnName] == oldFn) then
+                    simlog("LOG_UITRMETA", "%s replacing %s", logName, fnName)
+                    c[fnName] = superClass[fnName]
+                end
             end
         end
     end
 end
 
--- Overwrite a class' base class to force method-override/-append propagation to subclasses.
--- (More invasive than propagateSuperclassMethods)
+-- Overwrite a class' base class and force method-override/-append propagation to subclasses.
+-- (More invasive than propagateSuperclass)
 -- For each symbol in oldBaseClass, if it is unchanged in the given class and different in the new base class, it's replaced with the one from then new base class.
 -- If the given class already overrode it from the old base class, it's assumed to either internally call the superclass method or have a good reason not to.
 -- Call from :init, obtaining the current class via getmetatable

@@ -35,6 +35,7 @@ local function init(modApi)
     include(modApi:getScriptPath() .. "/resources").initUitrResources()
     include(modApi:getScriptPath() .. "/uitr_util")
     include(modApi:getScriptPath() .. "/client_defs")
+    include(modApi:getScriptPath() .. "/simdefs")
 
     -- mui (low-level graphical primitives)
     include(modApi:getScriptPath() .. "/mui/mui")

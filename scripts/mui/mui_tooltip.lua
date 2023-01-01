@@ -11,7 +11,7 @@ mui_tooltip._uitrmeta_muiTooltipFitOnscreen = true
 local oldInit = mui_tooltip.init
 function mui_tooltip:init(header, ...)
     uitr_util.propagateSuperclass(
-            getmetatable(self), mui_tooltip, OLD_FN_MAPPING, "_uitrmeta_muiTooltipFitOnscreen",
+            getmetatable(self), mui_tooltip, OLD_FN_MAPPING, nil, "_uitrmeta_muiTooltipFitOnscreen",
             header)
 
     oldInit(self, header, ...)
@@ -144,6 +144,6 @@ end
 do
     local util = include("client_util")
     uitr_util.propagateSuperclass(
-            util.tooltip, mui_tooltip, OLD_FN_MAPPING, "_uitrmeta_muiTooltipFitOnscreen",
+            util.tooltip, mui_tooltip, OLD_FN_MAPPING, nil, "_uitrmeta_muiTooltipFitOnscreen",
             "util.tooltip")
 end
