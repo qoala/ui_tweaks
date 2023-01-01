@@ -410,3 +410,24 @@ function boardrig:unchainCells(id, ...)
 
     oldUnchainCells(self, id, ...)
 end
+
+-- Overwrite selectUnit
+-- Changes at UITR: Don't fail to deselect debug units without rigs.
+function boardrig:selectUnit(unit)
+    if unit ~= self.selectedUnit then
+        if self.selectedUnit and self.selectedUnit:isValid() then
+            local unitRig = self:getUnitRig(self.selectedUnit:getID())
+            -- UITR: nil check on unitRig. (on the other side, isAgent is sufficient)
+            if unitRig and unitRig.selectedToggle then
+                unitRig:selectedToggle(false)
+            end
+        end
+        if unit and unit:isValid() and unit:getTraits().isAgent then
+            local unitRig = self:getUnitRig(unit:getID())
+            if unitRig.selectedToggle then
+                unitRig:selectedToggle(true)
+            end
+        end
+    end
+    self.selectedUnit = unit
+end
