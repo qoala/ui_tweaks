@@ -77,9 +77,11 @@ def addElement(frame, imgName, *, imgFrame = 0, depth = 0, tfm = None, colors = 
   return el
 
 PARAMS = type('CoordinateParams', (object,), {
-    # 0,-88 +/- 115,115/sclY = top corners of the 1x1 cover boxes. -20y to hover slightly over them.
+    # 0,-88 +/- 115,115/sclY = top corners of the 1x1 cover boxes.
+    # y = 88 - 20 to hover slightly over them.
+    # y = 0 for the ground layer.
     'x0': 0,
-    'y0': -88 - 20,
+    'y0': 0,
     'sclD': 115,
     # Isometric projection compresses Y axis.
     'projX': 1,
