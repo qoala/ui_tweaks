@@ -71,6 +71,7 @@ local function init(modApi)
     include(modApi:getScriptPath() .. "/hud/hud")
     include(modApi:getScriptPath() .. "/hud/mainframe_panel")
     include(modApi:getScriptPath() .. "/hud/options_dialog")
+    include(modApi:getScriptPath() .. "/hud/smokerig")
     include(modApi:getScriptPath() .. "/hud/targeting")
     include(modApi:getScriptPath() .. "/hud/world_hud")
 end

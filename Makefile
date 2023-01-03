@@ -45,12 +45,16 @@ out/rrni_gui.kwad: rrni_gui.kwad
 ## kwads and contained files
 #
 
+rawanims := $(patsubst %.py,%.xml,$(shell find anims -type f -name "animation.py"))
 anims := $(patsubst %.anim.d,%.anim,$(shell find anims -type d -name "*.anim.d"))
 gui_files := $(wildcard gui/**/*.png)
 images_files := $(wildcard images/**/*.png)
 
-$(anims): %.anim: $(wildcard %.anim.d/*.xml $.anim.d/*.png)
-	cd $*.anim.d && zip ../$(notdir $@) *.xml *.png
+$(rawanims): %.xml: $(wildcard %.py %.vanilla.xml)
+	python3 $*.py
+
+$(anims): %.anim: $(wildcard %.anim.d/*.xml %.anim.d/*.png)
+	cd $*.anim.d && zip ../$(notdir $@) animation.xml build.xml *.png
 
 
 out/anims.kwad out/gui.kwad out/images.kwad: $(anims) $(gui_files) $(images_files)

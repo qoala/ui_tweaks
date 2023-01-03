@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="26.192343mm"
+   height="26.192343mm"
+   viewBox="0 0 26.192343 26.192343"
+   version="1.1"
+   id="svg8"
+   inkscape:version="1.0.1 (3bc2e813f5, 2020-09-07)"
+   sodipodi:docname="sphere.svg"
+   inkscape:export-filename=".\sphere.png"
+   inkscape:export-xdpi="193.95"
+   inkscape:export-ydpi="193.95">
+  <defs
+     id="defs2">
+    <inkscape:path-effect
+       effect="powerclip"
+       id="path-effect873"
+       is_visible="true"
+       lpeversion="1"
+       inverse="true"
+       flatten="false"
+       hide_clip="false"
+       message="Use fill-rule evenodd on &lt;b&gt;fill and stroke&lt;/b&gt; dialog if no flatten result after convert clip to paths." />
+    <inkscape:path-effect
+       effect="powerclip"
+       id="path-effect864"
+       is_visible="true"
+       lpeversion="1"
+       inverse="true"
+       flatten="false"
+       hide_clip="false"
+       message="Use fill-rule evenodd on &lt;b&gt;fill and stroke&lt;/b&gt; dialog if no flatten result after convert clip to paths." />
+    <inkscape:path-effect
+       effect="powerclip"
+       id="path-effect1032"
+       is_visible="true"
+       lpeversion="1"
+       inverse="true"
+       flatten="false"
+       hide_clip="false"
+       message="Use fill-rule evenodd on &lt;b&gt;fill and stroke&lt;/b&gt; dialog if no flatten result after convert clip to paths." />
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient993">
+      <stop
+         style="stop-color:#ffffff;stop-opacity:1;"
+         offset="0"
+         id="stop989" />
+      <stop
+         style="stop-color:#ffffff;stop-opacity:1"
+         offset="0.18529838"
+         id="stop1000" />
+      <stop
+         style="stop-color:#e5e5e5;stop-opacity:1"
+         offset="1"
+         id="stop991" />
+    </linearGradient>
+    <inkscape:perspective
+       sodipodi:type="inkscape:persp3d"
+       inkscape:vp_x="0 : -122.30766 : 1"
+       inkscape:vp_y="0 : 999.99997 : 0"
+       inkscape:vp_z="210.00001 : -122.30766 : 1"
+       inkscape:persp3d-origin="105.00001 : -171.80765 : 1"
+       id="perspective24" />
+    <filter
+       inkscape:collect="always"
+       style="color-interpolation-filters:sRGB"
+       id="filter1247"
+       x="-0.06349764"
+       width="1.1269953"
+       y="-0.06349764"
+       height="1.1269953">
+      <feGaussianBlur
+         inkscape:collect="always"
+         stdDeviation="0.56793959"
+         id="feGaussianBlur1249" />
+    </filter>
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath1266">
+      <circle
+         style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.264583;stroke-opacity:1"
+         id="circle1268"
+         cx="159.89401"
+         cy="141.95648"
+         r="10.733116" />
+    </clipPath>
+    <filter
+       inkscape:collect="always"
+       style="color-interpolation-filters:sRGB"
+       id="filter947"
+       x="-0.17262016"
+       width="1.3452403"
+       y="-0.21628166"
+       height="1.4325633">
+      <feGaussianBlur
+         inkscape:collect="always"
+         stdDeviation="0.29630855"
+         id="feGaussianBlur949" />
+    </filter>
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath975">
+      <circle
+         style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.264583;stroke-opacity:1"
+         id="circle977"
+         cx="156.46706"
+         cy="137.65218"
+         r="10.733116"
+         transform="rotate(36.87)" />
+    </clipPath>
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath979">
+      <circle
+         style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.264583;stroke-opacity:1"
+         id="circle981"
+         cx="156.46706"
+         cy="137.65218"
+         r="10.733116" />
+    </clipPath>
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath983">
+      <circle
+         style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.264583;stroke-opacity:1"
+         id="circle985"
+         cx="156.46706"
+         cy="137.65218"
+         r="10.733116" />
+    </clipPath>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient993"
+       id="linearGradient995"
+       x1="148.52129"
+       y1="126.71274"
+       x2="164.78238"
+       y2="148.44377"
+       gradientUnits="userSpaceOnUse" />
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath869">
+      <circle
+         style="display:none;opacity:0.8;fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.264583;stroke-opacity:1"
+         id="circle871"
+         cx="156.46706"
+         cy="137.65218"
+         r="10.733116"
+         d="m 167.20017,137.65218 a 10.733116,10.733116 0 0 1 -10.73311,10.73311 10.733116,10.733116 0 0 1 -10.73312,-10.73311 10.733116,10.733116 0 0 1 10.73312,-10.73312 10.733116,10.733116 0 0 1 10.73311,10.73312 z" />
+      <path
+         id="lpe_path-effect873"
+         style="display:block;opacity:0.8;fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.264583;stroke-opacity:1"
+         class="powerclip"
+         d="m 139.23394,120.41906 h 34.46623 v 34.46623 h -34.46623 z m 27.96623,17.23312 a 10.733116,10.733116 0 0 0 -10.73311,-10.73312 10.733116,10.733116 0 0 0 -10.73312,10.73312 10.733116,10.733116 0 0 0 10.73312,10.73311 10.733116,10.733116 0 0 0 10.73311,-10.73311 z" />
+    </clipPath>
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="4.9388277"
+     inkscape:cx="73.825193"
+     inkscape:cy="39.137284"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer4"
+     inkscape:document-rotation="0"
+     showgrid="false"
+     lock-margins="true"
+     fit-margin-top="1"
+     fit-margin-left="1"
+     fit-margin-right="1"
+     fit-margin-bottom="1"
+     inkscape:window-width="1920"
+     inkscape:window-height="991"
+     inkscape:window-x="-9"
+     inkscape:window-y="-9"
+     inkscape:window-maximized="1"
+     inkscape:snap-page="false" />
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:groupmode="layer"
+     id="layer3"
+     inkscape:label="bg"
+     style="display:none">
+    <rect
+       style="fill:#666666;fill-opacity:1;stroke:#ffffff;stroke-width:0.264583;stroke-opacity:1"
+       id="rect998"
+       width="26.192343"
+       height="26.192343"
+       x="0"
+       y="0" />
+  </g>
+  <g
+     inkscape:label="sphere"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-143.37089,-124.556)"
+     style="display:inline;opacity:0.5">
+    <circle
+       style="fill:#999999;fill-opacity:1;stroke-width:0.264583"
+       id="path863"
+       cx="156.46706"
+       cy="137.65218"
+       clip-path="url(#clipPath983)"
+       r="10.733116" />
+    <circle
+       style="fill:#dddddd;fill-opacity:1;stroke-width:0.264583;filter:url(#filter1247)"
+       id="path865"
+       cx="154.36705"
+       cy="134.85217"
+       r="10.733116"
+       clip-path="url(#clipPath979)" />
+    <ellipse
+       style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-opacity:1;filter:url(#filter947)"
+       id="path945"
+       cx="42.581993"
+       cy="195.00206"
+       rx="2.4946332"
+       ry="0.85002315"
+       transform="rotate(-36.87)"
+       clip-path="url(#clipPath975)" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer2"
+     inkscape:label="outline"
+     style="display:inline;opacity:0.8">
+    <path
+       style="fill:none;fill-opacity:1;stroke:url(#linearGradient995);stroke-width:3;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="circle1305"
+       transform="translate(-143.37088,-124.556)"
+       clip-path="url(#clipPath869)"
+       inkscape:path-effect="#path-effect873"
+       sodipodi:type="arc"
+       sodipodi:cx="156.46706"
+       sodipodi:cy="137.65218"
+       sodipodi:rx="10.733116"
+       sodipodi:ry="10.733116"
+       d="m 167.20017,137.65218 a 10.733116,10.733116 0 0 1 -10.73311,10.73311 10.733116,10.733116 0 0 1 -10.73312,-10.73311 10.733116,10.733116 0 0 1 10.73312,-10.73312 10.733116,10.733116 0 0 1 10.73311,10.73312 z" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer4"
+     inkscape:label="alignment-dots"
+     style="display:none">
+    <circle
+       style="display:inline;opacity:0.8;fill:#e5e5e5;stroke:#000000;stroke-width:3"
+       id="path864"
+       cx="13.096171"
+       cy="13.096171"
+       r="1.3393023" />
+  </g>
+</svg>

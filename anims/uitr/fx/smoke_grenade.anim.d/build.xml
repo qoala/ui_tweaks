@@ -1,0 +1,8 @@
+<Build name="MF_CoverPieces_1x1.fla">
+  <Symbol name="sphere">
+    <Frame framenum="0" duration="1" image="sphere" w="200" h="200" x="0" y="0" />
+  </Symbol>
+  <Symbol name="smoke_particles_lt0">
+    <Frame framenum="0" duration="1" image="smoke_particles_lt0-0-1" w="208" h="192" x="-3.749496" y="5.900497" />
+  </Symbol>
+</Build>
