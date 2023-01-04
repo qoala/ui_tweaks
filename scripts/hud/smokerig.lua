@@ -7,7 +7,6 @@ local smokerig = include("gameplay/smokerig").rig
 
 local uitr_util = include(SCRIPT_PATHS.qed_uitr .. "/uitr_util")
 
-
 -- ===
 -- Copy vanilla helper functions for refresh. No changes.
 
@@ -31,10 +30,47 @@ end
 
 -- ===
 
+-- UITR: Extract color selection, because we only want to create 1 render filter per rig.
+-- Returns true if there's been a change.
+function smokerig:_refreshColorDef()
+    local color = self:getUnit():getTraits().gasColor
+    if not color and self._color then
+        self._color = nil
+        self._tacticalRenderFilter = cdefs.RENDER_FILTERS["default"]
+
+        return true
+    elseif not self._color or (self._color.r ~= color.r) or (self._color.g ~= color.g) or
+            (self._color.b ~= color.b) or (color.r and self._color.r ~= color.r) then
+        self._color = {
+            r = color.r,
+            g = color.g,
+            b = color.b,
+            -- Mod:Neptune: Allow gas color to specify alpha
+            a = color.a or 1,
+        }
+        self._tacticalRenderFilter = {
+            shader = KLEIAnim.SHADER_FOW,
+            r = color.r,
+            g = color.g,
+            b = color.b,
+            a = color.a or 1,
+            lum = 0.5,
+        }
+        return true
+    end
+end
+
+local function applyColor(fx, color)
+    fx._prop:setColor(color.r, color.g, color.b, color.a)
+    fx._prop:setSymbolModulate("smoke_particles_lt0", color.r, color.g, color.b, color.a)
+end
+
 -- Overwrite :refresh()
 -- Changes at CBF, UITR
 function smokerig:refresh()
     self:_base().refresh(self)
+
+    local colorUpdated = self:_refreshColorDef()
 
     -- Smoke aint got no ghosting behaviour.
     local unit = self:getUnit()
@@ -49,12 +85,11 @@ function smokerig:refresh()
             local fx = createSmokeFx(self, "uitr/fx/smoke_grenade", cell.x, cell.y, 0.1)
             fx._prop:setFrame(math.random(1, fx._prop:getFrameCount()))
             self.smokeFx[cell] = fx
-            if self:getUnit():getTraits().gasColor then
-                local color = self:getUnit():getTraits().gasColor
-                fx._prop:setColor(color.r, color.g, color.b, 1)
-                fx._prop:setSymbolModulate("smoke_particles_lt0", color.r, color.g, color.b, 1)
-                fx._prop:setSymbolModulate("sphere", color.r, color.g, color.b, 1)
+            if self._color then
+                applyColor(fx, self._color)
             end
+        elseif colorUpdated and self._color then
+            applyColor(fx, self._color)
         end
     end
     local edgeUnits = unit:getSmokeEdge() or {}
@@ -69,11 +104,11 @@ function smokerig:refresh()
                 local fx = createSmokeFx(self, "fx/smoke_grenade_test2", edgeUnit:getLocation())
                 fx._prop:setFrame(math.random(1, fx._prop:getFrameCount()))
                 self.smokeFx[unitID] = fx
-                if self:getUnit():getTraits().gasColor then
-                    local color = self:getUnit():getTraits().gasColor
-                    fx._prop:setColor(color.r, color.g, color.b, 1)
-                    fx._prop:setSymbolModulate("smoke_particles_lt0", color.r, color.g, color.b, 1)
+                if self._color then
+                    applyColor(fx, self._color)
                 end
+            elseif colorUpdated and self._color then
+                applyColor(fx, self._color)
             end
         end
     end
@@ -91,7 +126,13 @@ function smokerig:refresh()
         -- UITR: Switch between tactical and in-world effect animations.
         -- TODO: Keep a listener alive for this. This rig is destroyed before the animations finish.
         if activeCells[cell] then
-            fx._prop:setCurrentSymbol(gfxOptions.bTacticalView and "tactical" or "effect")
+            if gfxOptions.bTacticalView then
+                fx._prop:setCurrentSymbol("tactical")
+                fx._prop:setRenderFilter(self._tacticalRenderFilter)
+            else
+                fx._prop:setCurrentSymbol("effect")
+                fx._prop:setRenderFilter(cdefs.RENDER_FILTERS["default"])
+            end
         end
     end
 end
