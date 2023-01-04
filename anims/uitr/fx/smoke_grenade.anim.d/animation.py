@@ -37,7 +37,7 @@ def buildAnim(root, name, frameFn, *, fnKwargs=None, frameCount=1, frameIdx0=0, 
 
 def _applyTransformCoord(el, tfm, idx, coord):
   if tfm and (
-      type(tfm) is dict and tfm.get(1) or type(tfm) is list and len(tfm) > 1
+      type(tfm) is dict and tfm.get(idx) or type(tfm) is list and len(tfm) > idx
       ) and tfm[idx].get(coord) is not None:
     val = tfm[idx][coord]
   elif coord == 'a' or coord == 'd': # scale factors
@@ -87,10 +87,19 @@ PARAMS = type('CoordinateParams', (object,), {
     'projX': 1,
     'projY': 1/1.8})
 
-def _tfmXY(dx = 0, dy = 0, *, size = 1):
-  return [
-      {'a': PARAMS.projX, 'd': PARAMS.projY, 'tx': PARAMS.x0, 'ty': PARAMS.y0},
-      {'a': size, 'd': size, 'tx': PARAMS.sclD * dx, 'ty': PARAMS.sclD * dy }]
+def _tfmXY(dx = 0, dy = 0, *, size = 1, projectDeltaOnly = True):
+  if projectDeltaOnly:
+    # Projection only affects translation coordinates.
+    return {1:
+        {'a': size, 'd': size,
+          'tx': PARAMS.x0 + PARAMS.projX * PARAMS.sclD * dx,
+          'ty': PARAMS.y0 + PARAMS.projY * PARAMS.sclD * dy}}
+  else:
+    # Projection also reshapes the image.
+    return [
+        {'a': PARAMS.projX, 'd': PARAMS.projY, 'tx': PARAMS.x0, 'ty': PARAMS.y0},
+        {'a': size, 'd': size / PARAMS.projY, 'tx': PARAMS.sclD * dx, 'ty': PARAMS.sclD * dy }]
+
 def buildTestFrame(frame, t, tMax, *, size=0.375, drawTest=DRAW_TEST_COVER_BOX):
   del t, tMax
   if drawTest:

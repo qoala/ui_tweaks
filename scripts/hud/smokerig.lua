@@ -89,6 +89,7 @@ function smokerig:refresh()
     for cell, fx in pairs(self.smokeFx) do
         fx._prop:setVisible(not gfxOptions.bMainframeMode)
         -- UITR: Switch between tactical and in-world effect animations.
+        -- TODO: Keep a listener alive for this. This rig is destroyed before the animations finish.
         if activeCells[cell] then
             fx._prop:setCurrentSymbol(gfxOptions.bTacticalView and "tactical" or "effect")
         end
