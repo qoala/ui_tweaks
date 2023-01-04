@@ -339,7 +339,7 @@
          id="lpe_path-effect1275"
          style="display:inline;opacity:0.5;fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.197103;stroke-opacity:1"
          class="powerclip"
-         d="M -4.1706848,0.65838528 H 30.363028 V 25.533957 H -4.1706848 Z M 23.863028,13.096171 A 10.766856,5.9377861 0 0 0 13.096171,7.1583853 10.766856,5.9377861 0 0 0 2.3293152,13.096171 10.766856,5.9377861 0 0 0 13.096171,19.033957 10.766856,5.9377861 0 0 0 23.863028,13.096171 Z" />
+         d="M -3.6706848,1.1583853 H 29.863028 V 25.033957 H -3.6706848 Z M 23.863028,13.096171 A 10.766856,5.9377861 0 0 0 13.096171,7.1583853 10.766856,5.9377861 0 0 0 2.3293152,13.096171 10.766856,5.9377861 0 0 0 13.096171,19.033957 10.766856,5.9377861 0 0 0 23.863028,13.096171 Z" />
     </clipPath>
   </defs>
   <sodipodi:namedview
@@ -378,7 +378,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -437,7 +437,7 @@
        inkscape:label="hs-outline"
        style="display:inline;opacity:1">
       <path
-         style="display:inline;opacity:0.33;fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;stroke-dashoffset:0"
+         style="display:inline;opacity:0.5;fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;stroke-dashoffset:0"
          id="circle876-9-6"
          clip-path="url(#clipPath1271)"
          inkscape:path-effect="#path-effect1275"
