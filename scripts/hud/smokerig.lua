@@ -39,8 +39,8 @@ function smokerig:_refreshColorDef()
         self._tacticalRenderFilter = cdefs.RENDER_FILTERS["default"]
 
         return true
-    elseif not self._color or (self._color.r ~= color.r) or (self._color.g ~= color.g) or
-            (self._color.b ~= color.b) or (color.r and self._color.r ~= color.r) then
+    elseif color and (not self._color or (self._color.r ~= color.r) or (self._color.g ~= color.g) or
+            (self._color.b ~= color.b) or (color.r and self._color.r ~= color.r)) then
         self._color = {
             r = color.r,
             g = color.g,
