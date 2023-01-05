@@ -10,6 +10,13 @@ local UI_TWEAKS_STRINGS = {
         PRECISE_ICONS_TIP = "Label stim, paralyzer, cloak, etc with the different level of item.\nCREDIT: RolandJ",
         TACTICAL_LAMP_VIEW = "Tactical Lamp View",
         TACTICAL_LAMP_VIEW_TIP = "Distinct graphics for tall cover (book cases, etc) and non-cover (some lamps, etc) items.\nCREDIT: Benjamin C. Lewis, Hekateras",
+        TACTICAL_CLOUDS = "Tactical Cloud Effects",
+        TACTICAL_CLOUDS_TIP = "Less-obscuring graphics for clouds in tactical view. Can also be enabled for in-world view if so desired.",
+        TACTICAL_CLOUD_OPTIONS = {
+            "OFF (VANILLA)",
+            "ON",
+            "ALWAYS",
+        },
         COLORED_TRACKS = "Colored Guard Tracks",
         COLORED_TRACKS_TIP = "Guards get uniquely colored tracks and interest points",
         COLORED_TRACKS_A = "PALETTE A",

@@ -61,6 +61,14 @@ local UITR_OPTIONS = {
         needsReload = true,
     },
     {
+        id = "tacticalClouds",
+        name = STRINGS.UITWEAKSR.OPTIONS.TACTICAL_CLOUDS,
+        tip = STRINGS.UITWEAKSR.OPTIONS.TACTICAL_CLOUDS_TIP,
+        values = {false, 1, 2},
+        value = 1,
+        strings = STRINGS.UITWEAKSR.OPTIONS.TACTICAL_CLOUD_OPTIONS,
+    },
+    {
         id = "coloredTracks",
         name = STRINGS.UITWEAKSR.OPTIONS.COLORED_TRACKS,
         tip = STRINGS.UITWEAKSR.OPTIONS.COLORED_TRACKS_TIP,

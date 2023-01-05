@@ -74,7 +74,8 @@ function cloudFxAppend:update(rig)
     self._prop:setVisible(not gfxOptions.bMainframeMode)
 
     -- UITR: Switch between tactical and in-world effect animations.
-    if gfxOptions.bTacticalView then
+    local tacticalCloudsOpt = uitr_util.checkOption("tacticalClouds")
+    if tacticalCloudsOpt ~= false and (gfxOptions.bTacticalView or tacticalCloudsOpt == 2) then
         self._prop:setCurrentSymbol("tactical")
         self._prop:setRenderFilter(rig._tacticalRenderFilter)
     else
