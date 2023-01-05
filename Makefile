@@ -7,7 +7,7 @@
 
 include makeconfig.mk
 
-.PHONY: build install clean distclean
+.PHONY: build install clean distclean cleanOut cleanGenAnims
 .SECONDEXPANSION:
 
 files := modinfo.txt scripts.zip anims.kwad gui.kwad images.kwad rrni_gui.kwad tlv_anims.kwad
@@ -27,7 +27,8 @@ $(installfiles): %: out/$$(@F)
 	$(ensuredir)
 	cp $< $@
 
-clean:
+clean: cleanOut cleanGenAnims
+cleanOut:
 	rm tactical-lamp-mod/build/*
 	rm out/*
 
@@ -57,13 +58,16 @@ images_files := $(wildcard images/**/*.png)
 $(rawanims): %.xml: %.py $$(wildcard $$*.vanilla.xml)
 	python3 $*.py
 
-$(anims): %.anim: $$(wildcard $$*.anim.d/animation.xml $$*.anim.d/build.xml $$*.anim.d/*.png)
+$(anims): %.anim: $$*.anim.d/animation.xml $$*.anim.d/build.xml $$(wildcard $$*.anim.d/*.png)
 	cd $*.anim.d && zip ../$(notdir $@) animation.xml build.xml *.png
 
 
 out/anims.kwad out/gui.kwad out/images.kwad: $(anims) $(gui_files) $(images_files)
 	$(ensuredir)
 	$(KWAD_BUILDER) -i build.lua -o out
+
+cleanGenAnims:
+	rm $(rawanims)
 
 #
 ## scripts
