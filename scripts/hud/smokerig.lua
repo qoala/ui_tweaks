@@ -65,6 +65,35 @@ local function applyColor(fx, color)
     fx._prop:setSymbolModulate("smoke_particles_lt0", color.r, color.g, color.b, color.a)
 end
 
+-- UITR: Move visibility update from smokerig:refresh to the FX's own update methods.
+-- The rig is deleted before the FX has finished and we need to keep updating from graphics options.
+local cloudFxAppend = {}
+local edgeFxAppend = {}
+function cloudFxAppend:update(rig)
+    local gfxOptions = rig._boardRig._game:getGfxOptions()
+    self._prop:setVisible(not gfxOptions.bMainframeMode)
+
+    -- UITR: Switch between tactical and in-world effect animations.
+    if gfxOptions.bTacticalView then
+        self._prop:setCurrentSymbol("tactical")
+        self._prop:setRenderFilter(rig._tacticalRenderFilter)
+    else
+        self._prop:setCurrentSymbol("effect")
+        self._prop:setRenderFilter(cdefs.RENDER_FILTERS["default"])
+    end
+end
+function edgeFxAppend:update(rig)
+    local gfxOptions = rig._boardRig._game:getGfxOptions()
+    self._prop:setVisible(not gfxOptions.bMainframeMode)
+end
+local function appendFx(fx, rig, append)
+    local oldUpdate = fx.update
+    function fx:update()
+        append.update(self, rig)
+        return oldUpdate(self)
+    end
+end
+
 -- Overwrite :refresh()
 -- Changes at CBF, UITR
 function smokerig:refresh()
@@ -83,6 +112,7 @@ function smokerig:refresh()
         if self.smokeFx[cell] == nil then
             -- UITR: Use custom FX that also contains tactical sprites.
             local fx = createSmokeFx(self, "uitr/fx/smoke_grenade", "effect", cell.x, cell.y)
+            appendFx(fx, self, cloudFxAppend)
             fx._prop:setFrame(math.random(1, fx._prop:getFrameCount()))
             self.smokeFx[cell] = fx
             if self._color then
@@ -104,6 +134,7 @@ function smokerig:refresh()
                 -- UITR: Define both main and edge in a single anim, with different root characters.
                 local fx = createSmokeFx(
                         self, "uitr/fx/smoke_grenade", "edgeeffect", edgeUnit:getLocation())
+                appendFx(fx, self, edgeFxAppend)
                 fx._prop:setFrame(math.random(1, fx._prop:getFrameCount()))
                 self.smokeFx[unitID] = fx
                 if self._color then
@@ -122,19 +153,5 @@ function smokerig:refresh()
         end
     end
 
-    local gfxOptions = self._boardRig._game:getGfxOptions()
-    for cell, fx in pairs(self.smokeFx) do
-        fx._prop:setVisible(not gfxOptions.bMainframeMode)
-        -- UITR: Switch between tactical and in-world effect animations.
-        -- TODO: Keep a listener alive for this. This rig is destroyed before the animations finish.
-        if activeCells[cell] then
-            if gfxOptions.bTacticalView then
-                fx._prop:setCurrentSymbol("tactical")
-                fx._prop:setRenderFilter(self._tacticalRenderFilter)
-            else
-                fx._prop:setCurrentSymbol("effect")
-                fx._prop:setRenderFilter(cdefs.RENDER_FILTERS["default"])
-            end
-        end
-    end
+    -- UITR: Moved the visibility update (hides in mainframe mode) to the individual FX updates.
 end
