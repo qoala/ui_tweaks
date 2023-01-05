@@ -119,10 +119,12 @@ def buildOrbitFrame(frame, t, tMax, *, drawTest=DRAW_TEST_COVER_BOX,
     # Tactical cover sprite for checking scale & alignment.
     addElement(frame, 'MF_cover_1x1_tac', tfm=[{'a': 2.5, 'd': 2.5}, {'tx': 0.3, 'ty': -16.349}])
 
-  if fade:
+  if fade and t < fade:
     # Volumetric expansion up to 2x radius.
-    size = size * (1 + 1 * (t/tMax)**(1/3))
-    alpha = 1 - (t/tMax)**(2/3)
+    size = size * (1 + 1 * (t/fade)**(1/3))
+    alpha = 1 - (t/fade)**(2/3)
+  elif fade:
+      return # Past completion of the fade. Add empty frames to match in-world anim.
   else:
     alpha = 1
 
@@ -144,10 +146,12 @@ def buildEdgeFrame(frame, t, tMax, *, drawTest=DRAW_TEST_COVER_BOX,
     # Tactical cover sprite for checking scale & alignment.
     addElement(frame, 'MF_cover_1x1_tac', tfm=[{'a': 2.5, 'd': 2.5}, {'tx': 0.3, 'ty': -16.349}])
 
-  if fade:
+  if fade and t < fade:
     # Volumetric expansion up to 3x radius.
-    size = size * (1 + 2 * (t/tMax)**(1/3))
-    alpha = 1 - (t/tMax)**(2/3)
+    size = size * (1 + 2 * (t/fade)**(1/3))
+    alpha = 1 - (t/fade)**(2/3)
+  elif fade:
+      return # Past completion of the fade. Add empty frames to match in-world anim.
   else:
     alpha = 1
 
@@ -180,18 +184,14 @@ def buildDocumentTree():
   buildAnim(root, 'loop', symbol='tactical', frameFn=buildOrbitFrame, frameCount=100)
   # To match the vanilla in-world anim, start the pst anim at idx=100.
   # Then, pad the rest of pst's duration with empty frames, for the same reason.
-  pstAnim = buildAnim(root, 'pst', symbol='tactical', frameFn=buildOrbitFrame,
-      frameCount=75, frameIdx0=100, fnKwargs={'fade': True, 'period': 100})
-  for i in range(100-len(pstAnim)):
-    addFrame(pstAnim, frameIdx0=100)
+  buildAnim(root, 'pst', symbol='tactical', frameFn=buildOrbitFrame,
+      frameCount=100, frameIdx0=100, fnKwargs={'fade': 75, 'period': 100})
 
   buildAnim(root, 'loop', symbol='tactical_edge', frameFn=buildEdgeFrame, frameCount=100,
             fnKwargs={})
-  pstAnim = buildAnim(root, 'pst', symbol='tactical_edge', frameFn=buildEdgeFrame,
-                      frameCount=75, frameIdx0=100,
-                      fnKwargs={'fade': True, 'period': 100})
-  for i in range(100-len(pstAnim)):
-    addFrame(pstAnim, frameIdx0=100)
+  buildAnim(root, 'pst', symbol='tactical_edge', frameFn=buildEdgeFrame,
+                      frameCount=100, frameIdx0=100,
+                      fnKwargs={'fade': 75, 'period': 100})
 
   return ET.ElementTree(root)
 
