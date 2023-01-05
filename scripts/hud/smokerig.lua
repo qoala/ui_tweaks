@@ -63,6 +63,7 @@ end
 local function applyColor(fx, color)
     fx._prop:setColor(color.r, color.g, color.b, color.a)
     fx._prop:setSymbolModulate("smoke_particles_lt0", color.r, color.g, color.b, color.a)
+    fx._prop:setSymbolModulate("edge_smoke_particles_lt0", color.r, color.g, color.b, color.a)
 end
 
 -- UITR: Move visibility update from smokerig:refresh to the FX's own update methods.
@@ -86,6 +87,16 @@ end
 function edgeFxAppend:update(rig)
     local gfxOptions = rig._boardRig._game:getGfxOptions()
     self._prop:setVisible(not gfxOptions.bMainframeMode)
+
+    -- UITR: Switch between tactical and in-world effect animations.
+    local tacticalCloudsOpt = uitr_util.checkOption("tacticalClouds")
+    if tacticalCloudsOpt ~= false and (gfxOptions.bTacticalView or tacticalCloudsOpt == 2) then
+        self._prop:setCurrentSymbol("tactical_edge")
+        self._prop:setRenderFilter(rig._tacticalRenderFilter)
+    else
+        self._prop:setCurrentSymbol("effect_edge")
+        self._prop:setRenderFilter(cdefs.RENDER_FILTERS["default"])
+    end
 end
 local function appendFx(fx, rig, append)
     local oldUpdate = fx.update
@@ -134,7 +145,7 @@ function smokerig:refresh()
             if self.smokeFx[unitID] == nil then
                 -- UITR: Define both main and edge in a single anim, with different root characters.
                 local fx = createSmokeFx(
-                        self, "uitr/fx/smoke_grenade", "edgeeffect", edgeUnit:getLocation())
+                        self, "uitr/fx/smoke_grenade", "effect_edge", edgeUnit:getLocation())
                 appendFx(fx, self, edgeFxAppend)
                 fx._prop:setFrame(math.random(1, fx._prop:getFrameCount()))
                 self.smokeFx[unitID] = fx

@@ -113,21 +113,22 @@ def buildTestFrame(frame, t, tMax, *, size=0.375, drawTest=DRAW_TEST_COVER_BOX):
   addElement(frame, 'sphere', tfm=_tfmXY(-1,  0, size=size))
 
 def buildOrbitFrame(frame, t, tMax, *, drawTest=DRAW_TEST_COVER_BOX,
-    size=0.6, radius=1/math.sqrt(2), orbCount=4, rpm=1,
-    fade=False):
+                    size=0.6, radius=1/math.sqrt(2), orbCount=4, period=None, fade=False):
+  """Spheres orbit around a circle that fits in the tile bounds."""
   if drawTest:
     # Tactical cover sprite for checking scale & alignment.
     addElement(frame, 'MF_cover_1x1_tac', tfm=[{'a': 2.5, 'd': 2.5}, {'tx': 0.3, 'ty': -16.349}])
 
   if fade:
-    # Volumetric expansion up to 1.5x radius.
+    # Volumetric expansion up to 2x radius.
     size = size * (1 + 1 * (t/tMax)**(1/3))
     alpha = 1 - (t/tMax)**(2/3)
   else:
     alpha = 1
 
+  tN = t / (period or tMax) # Normalized t.
   def tfmOrbit(orbIdx):
-    angle = (orbIdx / orbCount + t / tMax / rpm) * 2 * math.pi
+    angle = (orbIdx / orbCount + tN) * 2 * math.pi
     return {
         'tfm': _tfmXY(radius * math.cos(angle), radius * math.sin(angle), size=size),
         # Alpha decreases as it moves towards the background.
@@ -135,6 +136,41 @@ def buildOrbitFrame(frame, t, tMax, *, drawTest=DRAW_TEST_COVER_BOX,
         }
   for i in range(orbCount):
     addElement(frame, 'sphere', **tfmOrbit(i))
+
+def buildEdgeFrame(frame, t, tMax, *, drawTest=DRAW_TEST_COVER_BOX,
+                   size=0.6 * 0.5, radius=1.5, orbCount=4, period=None, fade=False):
+  """Spheres travel along the edge of the tile bounds."""
+  if drawTest:
+    # Tactical cover sprite for checking scale & alignment.
+    addElement(frame, 'MF_cover_1x1_tac', tfm=[{'a': 2.5, 'd': 2.5}, {'tx': 0.3, 'ty': -16.349}])
+
+  if fade:
+    # Volumetric expansion up to 3x radius.
+    size = size * (1 + 2 * (t/tMax)**(1/3))
+    alpha = 1 - (t/tMax)**(2/3)
+  else:
+    alpha = 1
+
+  tN = t / (period or tMax) # Normalized t.
+  def addEdgeOrb(orbIdx):
+    # Distance within a single side.
+    tSide, sideN = math.modf((tN + orbIdx / orbCount) * 4)
+    sideN = sideN % 4
+    # TODO: hide edges that don't touch the cloud.
+    if sideN == 0:
+      x, y = tSide, 1 - tSide
+    elif sideN == 1:
+      x, y = 1 - tSide, -tSide
+    elif sideN == 2:
+      x, y = -tSide, -1 + tSide
+    else:
+      x, y = -1 + tSide, tSide
+    tfm = _tfmXY(radius * x, radius * y, size=size)
+    # Alpha fades to 0 at the corners.
+    colors = {3: {3: alpha * (0.5 - 0.5 * math.cos(tSide * 2 * math.pi))}}
+    addElement(frame, 'sphere', tfm=tfm, colors=colors)
+  for i in range(orbCount):
+    addEdgeOrb(i)
 
 def buildDocumentTree():
   root = ET.Element('Anims')
@@ -145,7 +181,15 @@ def buildDocumentTree():
   # To match the vanilla in-world anim, start the pst anim at idx=100.
   # Then, pad the rest of pst's duration with empty frames, for the same reason.
   pstAnim = buildAnim(root, 'pst', symbol='tactical', frameFn=buildOrbitFrame,
-      frameCount=75, frameIdx0=100, fnKwargs={'fade': True, 'rpm': 4})
+      frameCount=75, frameIdx0=100, fnKwargs={'fade': True, 'period': 100})
+  for i in range(100-len(pstAnim)):
+    addFrame(pstAnim, frameIdx0=100)
+
+  buildAnim(root, 'loop', symbol='tactical_edge', frameFn=buildEdgeFrame, frameCount=100,
+            fnKwargs={})
+  pstAnim = buildAnim(root, 'pst', symbol='tactical_edge', frameFn=buildEdgeFrame,
+                      frameCount=75, frameIdx0=100,
+                      fnKwargs={'fade': True, 'period': 100})
   for i in range(100-len(pstAnim)):
     addFrame(pstAnim, frameIdx0=100)
 
