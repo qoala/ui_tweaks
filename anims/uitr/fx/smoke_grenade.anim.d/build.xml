@@ -5,4 +5,7 @@
   <Symbol name="smoke_particles_lt0">
     <Frame framenum="0" duration="1" image="smoke_particles_lt0-0-1" w="208" h="192" x="-3.749496" y="5.900497" />
   </Symbol>
+  <Symbol name="edge_smoke_particles_lt0">
+    <Frame framenum="0" duration="1" image="edge_smoke_particles_lt0-0-1" w="168" h="168" x="-5.024498" y="-8.899498" />
+  </Symbol>
 </Build>

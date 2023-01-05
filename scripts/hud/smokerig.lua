@@ -10,7 +10,7 @@ local uitr_util = include(SCRIPT_PATHS.qed_uitr .. "/uitr_util")
 -- ===
 -- Copy vanilla helper functions for refresh. No changes.
 
-local function createSmokeFx(rig, kanim, x, y, scale)
+local function createSmokeFx(rig, kanim, rootSymbol, x, y)
     local fxmgr = rig._boardRig._game.fxmgr
     x, y = rig._boardRig:cellToWorld(x, y)
 
@@ -18,9 +18,9 @@ local function createSmokeFx(rig, kanim, x, y, scale)
         x = x,
         y = y,
         kanim = kanim,
-        symbol = "effect",
+        symbol = rootSymbol,
         anim = "loop",
-        scale = scale,
+        scale = 0.1,
         loop = true,
         layer = rig._boardRig:getLayer(),
     }
@@ -82,14 +82,14 @@ function smokerig:refresh()
         activeCells[cell] = true
         if self.smokeFx[cell] == nil then
             -- UITR: Use custom FX that also contains tactical sprites.
-            local fx = createSmokeFx(self, "uitr/fx/smoke_grenade", cell.x, cell.y, 0.1)
+            local fx = createSmokeFx(self, "uitr/fx/smoke_grenade", "effect", cell.x, cell.y)
             fx._prop:setFrame(math.random(1, fx._prop:getFrameCount()))
             self.smokeFx[cell] = fx
             if self._color then
                 applyColor(fx, self._color)
             end
         elseif colorUpdated and self._color then
-            applyColor(fx, self._color)
+            applyColor(self.smokeFx[cell], self._color)
         end
     end
     local edgeUnits = unit:getSmokeEdge() or {}
@@ -101,14 +101,16 @@ function smokerig:refresh()
                 (not edgeUnit.isActiveForSmokeCloud or edgeUnit:isActiveForSmokeCloud(cloudID)) then
             activeEdgeUnits[unitID] = true
             if self.smokeFx[unitID] == nil then
-                local fx = createSmokeFx(self, "fx/smoke_grenade_test2", edgeUnit:getLocation())
+                -- UITR: Define both main and edge in a single anim, with different root characters.
+                local fx = createSmokeFx(
+                        self, "uitr/fx/smoke_grenade", "edgeeffect", edgeUnit:getLocation())
                 fx._prop:setFrame(math.random(1, fx._prop:getFrameCount()))
                 self.smokeFx[unitID] = fx
                 if self._color then
                     applyColor(fx, self._color)
                 end
             elseif colorUpdated and self._color then
-                applyColor(fx, self._color)
+                applyColor(self.smokeFx[unitID], self._color)
             end
         end
     end
