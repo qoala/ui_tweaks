@@ -1,6 +1,7 @@
 """
 Generates an animation.xml definition with tactical anims alongside the vanilla in-world anims.
 """
+import collections
 import io
 import math
 import os
@@ -139,8 +140,11 @@ def buildOrbitFrame(frame, t, tMax, *, drawTest=DRAW_TEST_COVER_BOX,
   for i in range(orbCount):
     addElement(frame, 'sphere', **tfmOrbit(i))
 
+Dirs = collections.namedtuple('Directions', 'a b c d', defaults=[False, False, False, False])
+
 def buildEdgeFrame(frame, t, tMax, *, drawTest=DRAW_TEST_COVER_BOX,
-                   size=0.6 * 0.5, radius=1.5, orbCount=4, period=None, fade=False):
+                   size=0.6 * 0.5, radius=1.5, orbCount=4, period=None, fade=False,
+                   dirs=Dirs(True, True, True, True)):
   """Spheres travel along the edge of the tile bounds."""
   if drawTest:
     # Tactical cover sprite for checking scale & alignment.
@@ -149,29 +153,50 @@ def buildEdgeFrame(frame, t, tMax, *, drawTest=DRAW_TEST_COVER_BOX,
   if fade and t < fade:
     # Volumetric expansion up to 3x radius.
     size = size * (1 + 2 * (t/fade)**(1/3))
-    alpha = 1 - (t/fade)**(2/3)
+    alphaGlobal = 1 - (t/fade)**(2/3)
   elif fade:
       return # Past completion of the fade. Add empty frames to match in-world anim.
   else:
-    alpha = 1
+    alphaGlobal = 1
 
   tN = t / (period or tMax) # Normalized t.
   def addEdgeOrb(orbIdx):
     # Distance within a single side.
-    tSide, sideN = math.modf((tN + orbIdx / orbCount) * 4)
-    sideN = sideN % 4
-    # TODO: hide edges that don't touch the cloud.
-    if sideN == 0:
+    tSide, sideIdx = math.modf((tN + orbIdx / orbCount) * 4)
+    sideIdx = sideIdx % 4
+    localFade = False
+    if sideIdx == 0:
+      if not dirs.a:
+        return
+      if (tSide < 0.5 and not dirs.d) or (tSide > 0.5 and not dirs.b):
+        localFade = True
       x, y = tSide, 1 - tSide
-    elif sideN == 1:
+    elif sideIdx == 1:
+      if not dirs.b:
+        return
+      if (tSide < 0.5 and not dirs.a) or (tSide > 0.5 and not dirs.c):
+        localFade = True
       x, y = 1 - tSide, -tSide
-    elif sideN == 2:
+    elif sideIdx == 2:
+      if not dirs.c:
+        return
+      if (tSide < 0.5 and not dirs.b) or (tSide > 0.5 and not dirs.d):
+        localFade = True
       x, y = -tSide, -1 + tSide
     else:
+      if not dirs.d:
+        return
+      if (tSide < 0.5 and not dirs.c) or (tSide > 0.5 and not dirs.a):
+        localFade = True
       x, y = -1 + tSide, tSide
+
     tfm = _tfmXY(radius * x, radius * y, size=size)
     # Alpha fades to 0 at the corners.
-    colors = {3: {3: alpha * (0.5 - 0.5 * math.cos(tSide * 2 * math.pi))}}
+    if localFade:
+      alphaLocal = 0.5 - 0.5 * math.cos(tSide * 2 * math.pi)
+    else:
+      alphaLocal = 1
+    colors = {3: {3: alphaGlobal * alphaLocal}}
     addElement(frame, 'sphere', tfm=tfm, colors=colors)
   for i in range(orbCount):
     addEdgeOrb(i)
@@ -185,13 +210,30 @@ def buildDocumentTree():
   # To match the vanilla in-world anim, start the pst anim at idx=100.
   # Then, pad the rest of pst's duration with empty frames, for the same reason.
   buildAnim(root, 'pst', symbol='tactical', frameFn=buildOrbitFrame,
-      frameCount=100, frameIdx0=100, fnKwargs={'fade': 75, 'period': 100})
+            frameCount=100, frameIdx0=100, fnKwargs={'fade': 75})
 
-  buildAnim(root, 'loop', symbol='tactical_edge', frameFn=buildEdgeFrame, frameCount=100,
-            fnKwargs={})
-  buildAnim(root, 'pst', symbol='tactical_edge', frameFn=buildEdgeFrame,
-                      frameCount=100, frameIdx0=100,
-                      fnKwargs={'fade': 75, 'period': 100})
+  edgeDirs = [
+    ['_E_',  '', Dirs(d=True)],
+    ['_SE_', '', Dirs(d=True, c=True)],
+    ['_S_',  '', Dirs(c=True)],
+    ['_SW_', '', Dirs(c=True, b=True)],
+    ['_W_',  '', Dirs(b=True)],
+    ['_NW_', '', Dirs(b=True, a=True)],
+    ['_N_',  '', Dirs(a=True)],
+    ['_NE_', '', Dirs(a=True, d=True)],
+    ['_E_W_',  '_1_1', Dirs(b=True, d=True)],
+    ['_N_S_',  '_1_1', Dirs(a=True, c=True)],
+    ['_E_',  '_3', Dirs(a=True, d=True, c=True)],
+    ['_S_',  '_3', Dirs(d=True, c=True, b=True)],
+    ['_W_',  '_3', Dirs(c=True, b=True, a=True)],
+    ['_N_',  '_3', Dirs(b=True, a=True, d=True)],
+    ['', '_full', Dirs(a=True, b=True, c=True, d=True)]
+  ]
+  for animSuffix, symSuffix, dirs in edgeDirs:
+    buildAnim(root, 'loop' + animSuffix, symbol='tactical_edge' + symSuffix, frameFn=buildEdgeFrame,
+              frameCount=100, fnKwargs={'dirs': dirs})
+    buildAnim(root, 'pst' + animSuffix, symbol='tactical_edge' + symSuffix, frameFn=buildEdgeFrame,
+              frameCount=100, frameIdx0=100, fnKwargs={'fade': 75, 'dirs': dirs})
 
   return ET.ElementTree(root)
 
