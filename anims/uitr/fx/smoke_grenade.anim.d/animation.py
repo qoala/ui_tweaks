@@ -122,7 +122,7 @@ def buildOrbitFrame(frame, t, tMax, *, drawTest=DRAW_TEST_COVER_BOX,
   if fade:
     # Volumetric expansion up to 1.5x radius.
     size = size * (1 + 1 * (t/tMax)**(1/3))
-    alpha = 1 - (t/tMax)
+    alpha = 1 - (t/tMax)**(2/3)
   else:
     alpha = 1
 
@@ -145,7 +145,7 @@ def buildDocumentTree():
   # To match the vanilla in-world anim, start the pst anim at idx=100.
   # Then, pad the rest of pst's duration with empty frames, for the same reason.
   pstAnim = buildAnim(root, 'pst', symbol='tactical', frameFn=buildOrbitFrame,
-      frameCount=25, frameIdx0=100, fnKwargs={'fade': True, 'rpm': 4})
+      frameCount=75, frameIdx0=100, fnKwargs={'fade': True, 'rpm': 4})
   for i in range(100-len(pstAnim)):
     addFrame(pstAnim, frameIdx0=100)
 
