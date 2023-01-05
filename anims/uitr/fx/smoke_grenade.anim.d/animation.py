@@ -10,6 +10,20 @@ import sys
 import xml.etree.ElementTree as ET
 
 DRAW_TEST_COVER_BOX = False
+PARAMS = type('RenderParams', (object,), {
+    # 0,-88 +/- 115,115/sclY = top corners of the 1x1 cover boxes.
+    # y = 88 - 20 to hover slightly over them.
+    # y = 0 for the ground layer.
+    'x0': 0,
+    'y0': 0,
+    'sclD': 115,
+    # Isometric projection compresses Y axis.
+    'projX': 1,
+    'projY': 1/1.8,
+    'size': 0.6,
+    'orbCount': 3,
+    'period': 300})
+
 
 def addAnim(root, name, *, symbol = 'effect', frameCount = 1, frameRate = 30):
   anim = ET.SubElement(root, 'anim')
@@ -77,17 +91,6 @@ def addElement(frame, imgName, *, imgFrame = 0, depth = 0, tfm = None, colors = 
         _applyColorCoord(el, colors, i, j)
   return el
 
-PARAMS = type('CoordinateParams', (object,), {
-    # 0,-88 +/- 115,115/sclY = top corners of the 1x1 cover boxes.
-    # y = 88 - 20 to hover slightly over them.
-    # y = 0 for the ground layer.
-    'x0': 0,
-    'y0': 0,
-    'sclD': 115,
-    # Isometric projection compresses Y axis.
-    'projX': 1,
-    'projY': 1/1.8})
-
 def _tfmXY(dx = 0, dy = 0, *, size = 1, projectDeltaOnly = True):
   if projectDeltaOnly:
     # Projection only affects translation coordinates.
@@ -114,7 +117,8 @@ def buildTestFrame(frame, t, tMax, *, size=0.375, drawTest=DRAW_TEST_COVER_BOX):
   addElement(frame, 'sphere', tfm=_tfmXY(-1,  0, size=size))
 
 def buildOrbitFrame(frame, t, tMax, *, drawTest=DRAW_TEST_COVER_BOX,
-                    size=0.6, radius=1/math.sqrt(2), orbCount=4, period=None, fade=False):
+                    size=PARAMS.size, radius=1/math.sqrt(2), orbCount=PARAMS.orbCount,
+                    period=PARAMS.period, fade=False):
   """Spheres orbit around a circle that fits in the tile bounds."""
   if drawTest:
     # Tactical cover sprite for checking scale & alignment.
@@ -143,8 +147,8 @@ def buildOrbitFrame(frame, t, tMax, *, drawTest=DRAW_TEST_COVER_BOX,
 Dirs = collections.namedtuple('Directions', 'a b c d', defaults=[False, False, False, False])
 
 def buildEdgeFrame(frame, t, tMax, *, drawTest=DRAW_TEST_COVER_BOX,
-                   size=0.6 * 0.5, radius=1.5, orbCount=4, period=None, fade=False,
-                   dirs=Dirs(True, True, True, True)):
+                   size=PARAMS.size * 0.5, radius=1.5, orbCount=PARAMS.orbCount,
+                   period=PARAMS.period, fade=False, dirs=Dirs(True, True, True, True)):
   """Spheres travel along the edge of the tile bounds."""
   if drawTest:
     # Tactical cover sprite for checking scale & alignment.
