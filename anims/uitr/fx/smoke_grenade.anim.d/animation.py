@@ -7,6 +7,7 @@ import math
 import os
 import re
 import sys
+import types
 import xml.etree.ElementTree as ET
 
 DRAW_TEST_COVER_BOX = False
@@ -42,17 +43,33 @@ def addFrame(anim, frameIdx0=0):
   frame.set('y', str(0))
   return frame
 
-def buildAnim(root, name, frameFn, *, fnKwargs=None, frameCount=1, frameIdx0=0, **kwargs):
+def buildAnim(root, name, frameFns, *, fnKwargs=None, frameCount=1, frameIdx0=0,
+              drawTest=DRAW_TEST_COVER_BOX, **kwargs):
+  """
+  Define an animation sequence for the given root symbol and animation name using the given
+  function(s) for defining each frame.
+  """
   anim = addAnim(root, name, frameCount=frameCount, **kwargs)
+  if isinstance(frameFns, types.FunctionType):
+    frameFns = [frameFns,]
+    if fnKwargs is not None:
+      fnKwargs = [fnKwargs]
   if fnKwargs is None:
-    fnKwargs = {}
+    fnKwargs = [{}] * len(frameFns)
+
   for i in range(frameCount):
-    frameFn(addFrame(anim, frameIdx0=frameIdx0), i, frameCount, **fnKwargs)
+    frame = addFrame(anim, frameIdx0=frameIdx0)
+    if drawTest:
+      # Tactical cover sprite for checking scale & alignment.
+      addElement(frame, 'MF_cover_1x1_tac', tfm=[{'a': 2.5, 'd': 2.5}, {'tx': 0.3, 'ty': -16.349}])
+    for fn, fkw in zip(frameFns, fnKwargs):
+      fn(frame, i, frameCount, **fkw)
+
   return anim
 
 def _applyTransformCoord(el, tfm, idx, coord):
   if tfm and (
-      type(tfm) is dict and tfm.get(idx) or type(tfm) is list and len(tfm) > idx
+      isinstance(tfm, dict) and tfm.get(idx) or isinstance(tfm, list) and len(tfm) > idx
       ) and tfm[idx].get(coord) is not None:
     val = tfm[idx][coord]
   elif coord == 'a' or coord == 'd': # scale factors
@@ -104,26 +121,18 @@ def _tfmXY(dx = 0, dy = 0, *, size = 1, projectDeltaOnly = True):
         {'a': PARAMS.projX, 'd': PARAMS.projY, 'tx': PARAMS.x0, 'ty': PARAMS.y0},
         {'a': size, 'd': size / PARAMS.projY, 'tx': PARAMS.sclD * dx, 'ty': PARAMS.sclD * dy }]
 
-def buildTestFrame(frame, t, tMax, *, size=0.375, drawTest=DRAW_TEST_COVER_BOX):
+def buildTestFrame(frame, t, tMax, *, size=0.375):
   del t, tMax
-  if drawTest:
-    # Tactical cover sprite for checking scale & alignment.
-    addElement(frame, 'MF_cover_1x1_tac', tfm=[{'a': 2.5, 'd': 2.5}, {'tx': 0.3, 'ty': -16.349}])
-
   addElement(frame, 'sphere', tfm=_tfmXY( 0,  0, size=size))
   addElement(frame, 'sphere', tfm=_tfmXY( 0,  1, size=size))
   addElement(frame, 'sphere', tfm=_tfmXY( 0, -1, size=size))
   addElement(frame, 'sphere', tfm=_tfmXY( 1,  0, size=size))
   addElement(frame, 'sphere', tfm=_tfmXY(-1,  0, size=size))
 
-def buildOrbitFrame(frame, t, tMax, *, drawTest=DRAW_TEST_COVER_BOX,
+def buildOrbitFrame(frame, t, tMax, *,
                     size=PARAMS.size, radius=1/math.sqrt(2), orbCount=PARAMS.orbCount,
                     period=PARAMS.period, fade=False):
   """Spheres orbit around a circle that fits in the tile bounds."""
-  if drawTest:
-    # Tactical cover sprite for checking scale & alignment.
-    addElement(frame, 'MF_cover_1x1_tac', tfm=[{'a': 2.5, 'd': 2.5}, {'tx': 0.3, 'ty': -16.349}])
-
   if fade and t < fade:
     # Volumetric expansion up to 2x radius.
     size = size * (1 + 1 * (t/fade)**(1/3))
@@ -146,14 +155,10 @@ def buildOrbitFrame(frame, t, tMax, *, drawTest=DRAW_TEST_COVER_BOX,
 
 Dirs = collections.namedtuple('Directions', 'a b c d', defaults=[False, False, False, False])
 
-def buildEdgeFrame(frame, t, tMax, *, drawTest=DRAW_TEST_COVER_BOX,
+def buildEdgeFrame(frame, t, tMax, *,
                    size=PARAMS.size * 0.5, radius=1.5, orbCount=PARAMS.orbCount,
                    period=PARAMS.period, fade=False, dirs=Dirs(True, True, True, True)):
   """Spheres travel along the edge of the tile bounds."""
-  if drawTest:
-    # Tactical cover sprite for checking scale & alignment.
-    addElement(frame, 'MF_cover_1x1_tac', tfm=[{'a': 2.5, 'd': 2.5}, {'tx': 0.3, 'ty': -16.349}])
-
   if fade and t < fade:
     # Volumetric expansion up to 3x radius.
     size = size * (1 + 2 * (t/fade)**(1/3))
@@ -205,13 +210,9 @@ def buildEdgeFrame(frame, t, tMax, *, drawTest=DRAW_TEST_COVER_BOX,
   for i in range(orbCount):
     addEdgeOrb(i)
 
-def buildPulseFrame(frame, t, tMax, *, drawTest=DRAW_TEST_COVER_BOX,
+def buildPulseFrame(frame, t, tMax, *,
                     sizeMin=0.8, sizeMax=1.6, alphaMax=0.25, period=PARAMS.period, fade=False):
   """Constant-size sphere in the middle, with outer layers that pulse outwards and fade."""
-  if drawTest:
-    # Tactical cover sprite for checking scale & alignment.
-    addElement(frame, 'MF_cover_1x1_tac', tfm=[{'a': 2.5, 'd': 2.5}, {'tx': 0.3, 'ty': -16.349}])
-
   if fade and t < fade:
     i0 = t/fade
   elif fade:
@@ -238,13 +239,13 @@ def buildPulseFrame(frame, t, tMax, *, drawTest=DRAW_TEST_COVER_BOX,
 def buildDocumentTree():
   root = ET.Element('Anims')
 
-  # buildAnim(root, 'loop', frameFn=buildTestFrame, fnKwargs={'drawTest'=True})
+  # buildAnim(root, 'loop', frameFns=buildTestFrame, drawTest=True)
 
   # === Smoke cloud tiles
-  buildAnim(root, 'loop', symbol='tactical', frameFn=buildOrbitFrame, frameCount=100)
+  buildAnim(root, 'loop', symbol='tactical', frameFns=buildOrbitFrame, frameCount=100)
   # To match the vanilla in-world anim, start the pst anim at idx=100.
   # Then, pad the rest of pst's duration with empty frames, for the same reason.
-  buildAnim(root, 'pst', symbol='tactical', frameFn=buildOrbitFrame,
+  buildAnim(root, 'pst', symbol='tactical', frameFns=buildOrbitFrame,
             frameCount=100, frameIdx0=100, fnKwargs={'fade': 75})
 
   # === Smoke edge tiles
@@ -266,16 +267,29 @@ def buildDocumentTree():
     ['', '_full', Dirs(a=True, b=True, c=True, d=True)]
   ]
   for animSuffix, symSuffix, dirs in edgeDirs:
-    buildAnim(root, 'loop' + animSuffix, symbol='tactical_edge' + symSuffix, frameFn=buildEdgeFrame,
-              frameCount=100, fnKwargs={'orbCount': 6, 'dirs': dirs})
-    buildAnim(root, 'pst' + animSuffix, symbol='tactical_edge' + symSuffix, frameFn=buildEdgeFrame,
-              frameCount=100, frameIdx0=100, fnKwargs={'orbCount': 6, 'fade': 75, 'dirs': dirs})
+    edgeKwargs = {
+      'orbCount': 6,
+      'dirs': dirs
+    }
+    buildAnim(root, 'loop' + animSuffix, symbol='tactical_edge' + symSuffix,
+              frameFns=buildEdgeFrame,
+              frameCount=100, fnKwargs=edgeKwargs)
+    edgeKwargs['fade'] = 75
+    buildAnim(root, 'pst' + animSuffix, symbol='tactical_edge' + symSuffix, frameFns=buildEdgeFrame,
+              frameCount=100, frameIdx0=100, fnKwargs=edgeKwargs)
 
   # === Transparent cloud tiles
-  buildAnim(root, 'loop', symbol='tactical_transparent', frameFn=buildPulseFrame,
-            frameCount=100, fnKwargs={'period': 50})
-  buildAnim(root, 'pst', symbol='tactical_transparent', frameFn=buildPulseFrame,
-            frameCount=100, fnKwargs={'fade': 75, 'period': 50})
+  pulseKwargs = {
+    'sizeMin': 0.8,
+    'sizeMax': 1.6,
+    'alphaMax': 0.25,
+    'period': 50,
+  }
+  buildAnim(root, 'loop', symbol='tactical_transparent', frameFns=buildPulseFrame,
+            frameCount=100, fnKwargs=pulseKwargs)
+  pulseKwargs['fade'] = 75
+  buildAnim(root, 'pst', symbol='tactical_transparent', frameFns=buildPulseFrame,
+            frameCount=100, fnKwargs=pulseKwargs)
 
   return ET.ElementTree(root)
 
