@@ -20,10 +20,7 @@ PARAMS = type('RenderParams', (object,), {
     'sclD': 115,
     # Isometric projection compresses Y axis.
     'projX': 1,
-    'projY': 1/1.8,
-    'size': 0.6,
-    'orbCount': 3,
-    'period': 300})
+    'projY': 1/1.8})
 
 
 def addAnim(root, name, *, symbol = 'effect', frameCount = 1, frameRate = 30):
@@ -130,12 +127,11 @@ def buildTestFrame(frame, t, tMax, *, size=0.375):
   addElement(frame, 'sphere', tfm=_tfmXY(-1,  0, size=size))
 
 def buildOrbitFrame(frame, t, tMax, *,
-                    size=PARAMS.size, radius=1/math.sqrt(2), orbCount=PARAMS.orbCount,
-                    period=PARAMS.period, fade=False):
+                    size, fadeSize, radius=1/math.sqrt(2), orbCount, period, fade=False):
   """Spheres orbit around a circle that fits in the tile bounds."""
   if fade and t < fade:
-    # Volumetric expansion up to 2x radius.
-    size = size * (1 + 1 * (t/fade)**(1/3))
+    # Volumetric expansion.
+    size = size + (fadeSize - size) * (t/fade)**(1/3)
     alpha = 1 - (t/fade)**(2/3)
   elif fade:
       return # Past completion of the fade. Add empty frames to match in-world anim.
@@ -156,12 +152,12 @@ def buildOrbitFrame(frame, t, tMax, *,
 Dirs = collections.namedtuple('Directions', 'a b c d', defaults=[False, False, False, False])
 
 def buildEdgeFrame(frame, t, tMax, *,
-                   size=PARAMS.size * 0.5, radius=1.5, orbCount=PARAMS.orbCount,
-                   period=PARAMS.period, fade=False, dirs=Dirs(True, True, True, True)):
+                   size, fadeSize, radius, orbCount, period, fade=False,
+                   dirs=Dirs(True, True, True, True)):
   """Spheres travel along the edge of the tile bounds."""
   if fade and t < fade:
-    # Volumetric expansion up to 3x radius.
-    size = size * (1 + 2 * (t/fade)**(1/3))
+    # Volumetric expansion.
+    size = size + (fadeSize - size) * (t/fade)**(1/3)
     alphaGlobal = 1 - (t/fade)**(2/3)
   elif fade:
       return # Past completion of the fade. Add empty frames to match in-world anim.
@@ -211,7 +207,7 @@ def buildEdgeFrame(frame, t, tMax, *,
     addEdgeOrb(i)
 
 def buildPulseFrame(frame, t, tMax, *,
-                    sizeMin=0.8, sizeMax=1.6, alphaMax=0.25, period=PARAMS.period, fade=False):
+                    sizeMin, sizeMax, alphaMax, period, fade=False):
   """Constant-size sphere in the middle, with outer layers that pulse outwards and fade."""
   if fade and t < fade:
     i0 = t/fade
@@ -238,15 +234,22 @@ def buildPulseFrame(frame, t, tMax, *,
 
 def buildDocumentTree():
   root = ET.Element('Anims')
+  # To match the vanilla in-world anim, start the pst anim at idx=100.
 
   # buildAnim(root, 'loop', frameFns=buildTestFrame, drawTest=True)
 
   # === Smoke cloud tiles
-  buildAnim(root, 'loop', symbol='tactical', frameFns=buildOrbitFrame, frameCount=100)
-  # To match the vanilla in-world anim, start the pst anim at idx=100.
-  # Then, pad the rest of pst's duration with empty frames, for the same reason.
+  orbitKwargs = {
+    'size': 0.6,
+    'fadeSize': 1.2, # 2x expansion.
+    'orbCount': 3,
+    'period': 300
+  }
+  buildAnim(root, 'loop', symbol='tactical', frameFns=buildOrbitFrame,
+            frameCount=100, fnKwargs=orbitKwargs)
+  orbitKwargs['fade'] = 75
   buildAnim(root, 'pst', symbol='tactical', frameFns=buildOrbitFrame,
-            frameCount=100, frameIdx0=100, fnKwargs={'fade': 75})
+            frameCount=100, frameIdx0=100, fnKwargs=orbitKwargs)
 
   # === Smoke edge tiles
   edgeDirs = [
@@ -268,7 +271,11 @@ def buildDocumentTree():
   ]
   for animSuffix, symSuffix, dirs in edgeDirs:
     edgeKwargs = {
+      'size': 0.3,
+      'fadeSize': 0.9, # 3x expansion.
+      'radius': 1.5,
       'orbCount': 6,
+      'period': 300,
       'dirs': dirs
     }
     buildAnim(root, 'loop' + animSuffix, symbol='tactical_edge' + symSuffix,
