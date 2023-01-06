@@ -206,7 +206,7 @@ def buildEdgeFrame(frame, t, tMax, *, drawTest=DRAW_TEST_COVER_BOX,
     addEdgeOrb(i)
 
 def buildPulseFrame(frame, t, tMax, *, drawTest=DRAW_TEST_COVER_BOX,
-                    sizeMin=0.8, sizeMax=1.6, alphaMax=0.5, period=PARAMS.period, fade=False):
+                    sizeMin=0.8, sizeMax=1.6, alphaMax=0.25, period=PARAMS.period, fade=False):
   """Constant-size sphere in the middle, with outer layers that pulse outwards and fade."""
   if drawTest:
     # Tactical cover sprite for checking scale & alignment.
