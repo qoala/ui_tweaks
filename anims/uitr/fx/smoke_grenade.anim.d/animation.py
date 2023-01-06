@@ -127,14 +127,14 @@ def buildTestFrame(frame, t, tMax, *, size=0.375):
   addElement(frame, 'sphere', tfm=_tfmXY(-1,  0, size=size))
 
 def buildOrbitFrame(frame, t, tMax, *,
-                    size, fadeSize, radius=1/math.sqrt(2), orbCount, period, fade=False):
+                    size, fadeOutSize, radius=1/math.sqrt(2), orbCount, period, fadeOut=False):
   """Spheres orbit around a circle that fits in the tile bounds."""
-  if fade and t < fade:
+  if fadeOut and t < fadeOut:
     # Volumetric expansion.
-    size = size + (fadeSize - size) * (t/fade)**(1/3)
-    alpha = 1 - (t/fade)**(2/3)
-  elif fade:
-      return # Past completion of the fade. Add empty frames to match in-world anim.
+    size = size + (fadeOutSize - size) * (t/fadeOut)**(1/3)
+    alpha = 1 - (t/fadeOut)**(2/3)
+  elif fadeOut:
+    return # Past completion of the fadeOut. Add empty frames to match in-world anim.
   else:
     alpha = 1
 
@@ -152,73 +152,108 @@ def buildOrbitFrame(frame, t, tMax, *,
 Dirs = collections.namedtuple('Directions', 'a b c d', defaults=[False, False, False, False])
 
 def buildEdgeFrame(frame, t, tMax, *,
-                   size, fadeSize, radius, orbCount, period, fade=False,
+                   size, fadeOutSize, radius, orbCount, period, fadeOut=False,
+                   lifetime=False, lifecycleOverlap=3, lifecycleStepFn=None, lifecycleStep=1,
+                   lifecycleFadeOut=False,
                    dirs=Dirs(True, True, True, True)):
   """Spheres travel along the edge of the tile bounds."""
-  if fade and t < fade:
+  if fadeOut and t < fadeOut:
     # Volumetric expansion.
-    size = size + (fadeSize - size) * (t/fade)**(1/3)
-    alphaGlobal = 1 - (t/fade)**(2/3)
-  elif fade:
-      return # Past completion of the fade. Add empty frames to match in-world anim.
+    size = size + (fadeOutSize - size) * (t/fadeOut)**(1/3)
+    alphaGlobal = 1 - (t/fadeOut)**(2/3)
+  elif fadeOut:
+    return # Past completion of the fadeOut. Add empty frames to match in-world anim.
   else:
     alphaGlobal = 1
 
   tN = t / (period or tMax) # Normalized t.
-  def addEdgeOrb(orbIdx):
+  def addEdgeOrb(orbIdx, alphaOrb, sizeOrb, testColor=False):
     # Distance within a single side.
     tSide, sideIdx = math.modf((tN + orbIdx / orbCount) * 4)
     sideIdx = sideIdx % 4
-    localFade = False
+    sideFade = False
     if sideIdx == 0:
       if not dirs.a:
         return
       if (tSide < 0.5 and not dirs.d) or (tSide > 0.5 and not dirs.b):
-        localFade = True
+        sideFade = True
       x, y = tSide, 1 - tSide
     elif sideIdx == 1:
       if not dirs.b:
         return
       if (tSide < 0.5 and not dirs.a) or (tSide > 0.5 and not dirs.c):
-        localFade = True
+        sideFade = True
       x, y = 1 - tSide, -tSide
     elif sideIdx == 2:
       if not dirs.c:
         return
       if (tSide < 0.5 and not dirs.b) or (tSide > 0.5 and not dirs.d):
-        localFade = True
+        sideFade = True
       x, y = -tSide, -1 + tSide
     else:
       if not dirs.d:
         return
       if (tSide < 0.5 and not dirs.c) or (tSide > 0.5 and not dirs.a):
-        localFade = True
+        sideFade = True
       x, y = -1 + tSide, tSide
 
-    tfm = _tfmXY(radius * x, radius * y, size=size)
-    # Alpha fades to 0 at the corners.
-    if localFade:
+    tfm = _tfmXY(radius * x, radius * y, size=(size if sizeOrb is None else sizeOrb))
+    # Alpha fades to 0 at the corners when the next/prev side isn't present.
+    if sideFade:
       alphaLocal = 0.5 - 0.5 * math.cos(tSide * 2 * math.pi)
     else:
       alphaLocal = 1
-    colors = {3: {3: alphaGlobal * alphaLocal}}
+    # Alpha decreases slightly with movement between fg and bg.
+    if y < 0:
+      alphaLocal *= (1 + 0.4 * y)
+    colors = {3: {3: alphaGlobal * alphaLocal * alphaOrb}}
+    if testColor:
+      colors[2] = {2: 0}
     addElement(frame, 'sphere', tfm=tfm, colors=colors)
-  for i in range(orbCount):
-    addEdgeOrb(i)
+
+  # for i in range(orbCount):
+  if lifetime:
+    assert lifecycleOverlap >= 2
+    tI, idx = math.modf(lifecycleOverlap * t / lifetime)
+    idx = int(idx)
+    if lifecycleStepFn:
+      def iFn(i): return lifecycleStepFn(i) % orbCount
+    else:
+      def iFn(i): return (lifecycleStep * i) % orbCount
+    # Middle lifecycle stages
+    orbs = [[iFn(idx - i), 1, None,] for i in range(1, lifecycleOverlap - 1)]
+    # First lifecycle stage fades in.
+    orbs.insert(0, [iFn(idx), 0.5 - 0.5 * math.cos(tI * math.pi), None,])
+    # Last lifecycle stage fades out.
+    orbs.append([iFn(idx - lifecycleOverlap + 1), 0.5 + 0.5 * math.cos(tI * math.pi), None,])
+    if lifecycleFadeOut:
+      orbs = orbs[idx:] # Remove orbs that start after the fade begins.
+      if orbs:
+        # Volumetric fadeout on the currently fading element.
+        orbs[-1][1] = 1 - tI**(2/3)
+        orbs[-1][2] = size + (fadeOutSize - size) * tI**(1/3)
+  else:
+    orbs = [[i, 1, None] for i in range(orbCount)]
+  for i, orbAlpha, orbSize in orbs:
+    addEdgeOrb(i, orbAlpha, orbSize)
+  # if True:
+  #   testIdx = 0
+  #   for i in range(orbCount):
+  #     addEdgeOrb(i, 0.3 if i == testIdx else 0.1, i == testIdx)
 
 def buildPulseFrame(frame, t, tMax, *,
-                    sizeMin, sizeMax, alphaMax, period, fade=False):
-  """Constant-size sphere in the middle, with outer layers that pulse outwards and fade."""
-  if fade and t < fade:
-    i0 = t/fade
-  elif fade:
-      return # Past completion of the fade. Add empty frames to match in-world anim.
+                    sizeMin, sizeMax, alphaMax, period, fadeOut=False):
+  """Constant-size sphere in the middle, with outer layers that pulse outwards and fadeOut."""
+  if fadeOut and t < fadeOut:
+    i0 = t/fadeOut
+  elif fadeOut:
+    return # Past completion of the fadeOut. Add empty frames to match in-world anim.
   else:
     i0 = 0
 
   def addPulseOrb(i):
     """Properties as a function of an individual orb's i from 0 to 1."""
-    # Volumetric expansion and fade.
+    # Volumetric expansion and fadeOut.
     size = sizeMin + (sizeMax - sizeMin) * i**(1/3)
     alpha = alphaMax * (1 - i**(2/3))
     tfm = _tfmXY(0, 0, size=size)
@@ -229,8 +264,9 @@ def buildPulseFrame(frame, t, tMax, *,
   addPulseOrb(i0)
 
   # Pulsing sphere(s)
-  i = i0 + (1 - i0) * math.modf(t / period)[0]
-  addPulseOrb(i)
+  if period:
+    i = i0 + (1 - i0) * math.modf(t / period)[0]
+    addPulseOrb(i)
 
 def buildDocumentTree():
   root = ET.Element('Anims')
@@ -239,17 +275,34 @@ def buildDocumentTree():
   # buildAnim(root, 'loop', frameFns=buildTestFrame, drawTest=True)
 
   # === Smoke cloud tiles
-  orbitKwargs = {
-    'size': 0.6,
-    'fadeSize': 1.2, # 2x expansion.
-    'orbCount': 3,
-    'period': 300
+  # orbitKwargs = {
+  #   'size': 0.6,
+  #   'fadeOutSize': 1.2, # 2x expansion.
+  #   'orbCount': 3,
+  #   'period': 300,
+  # }
+  edgeKwargs = {
+    'size': 0.3,
+    'fadeOutSize': 0.9, # 3x expansion.
+    'radius': 1.5,
+    'orbCount': 13,
+    'period': 100 * 13/6,
+    'lifetime': 75,
+    'lifecycleOverlap': 3,
+    'lifecycleStep': 5,
   }
-  buildAnim(root, 'loop', symbol='tactical', frameFns=buildOrbitFrame,
-            frameCount=100, fnKwargs=orbitKwargs)
-  orbitKwargs['fade'] = 75
-  buildAnim(root, 'pst', symbol='tactical', frameFns=buildOrbitFrame,
-            frameCount=100, frameIdx0=100, fnKwargs=orbitKwargs)
+  pulseKwargs = {
+    'sizeMin': 0.6,
+    'sizeMax': 1.0,
+    'alphaMax': 1.0,
+    'period': False,
+  }
+  buildAnim(root, 'loop', symbol='tactical', frameFns=[buildEdgeFrame, buildPulseFrame],
+            frameCount=100, fnKwargs=[edgeKwargs, pulseKwargs])
+  edgeKwargs['lifecycleFadeOut'] = True
+  pulseKwargs['fadeOut'] = 75
+  buildAnim(root, 'pst', symbol='tactical', frameFns=[buildEdgeFrame, buildPulseFrame],
+            frameCount=100, frameIdx0=100, fnKwargs=[edgeKwargs, pulseKwargs])
 
   # === Smoke edge tiles
   edgeDirs = [
@@ -272,16 +325,16 @@ def buildDocumentTree():
   for animSuffix, symSuffix, dirs in edgeDirs:
     edgeKwargs = {
       'size': 0.3,
-      'fadeSize': 0.9, # 3x expansion.
+      'fadeOutSize': 0.9, # 3x expansion.
       'radius': 1.5,
-      'orbCount': 6,
-      'period': 300,
+      'orbCount': 5,
+      'period': 250,
       'dirs': dirs
     }
     buildAnim(root, 'loop' + animSuffix, symbol='tactical_edge' + symSuffix,
               frameFns=buildEdgeFrame,
               frameCount=100, fnKwargs=edgeKwargs)
-    edgeKwargs['fade'] = 75
+    edgeKwargs['fadeOut'] = 75
     buildAnim(root, 'pst' + animSuffix, symbol='tactical_edge' + symSuffix, frameFns=buildEdgeFrame,
               frameCount=100, frameIdx0=100, fnKwargs=edgeKwargs)
 
@@ -294,7 +347,7 @@ def buildDocumentTree():
   }
   buildAnim(root, 'loop', symbol='tactical_transparent', frameFns=buildPulseFrame,
             frameCount=100, fnKwargs=pulseKwargs)
-  pulseKwargs['fade'] = 75
+  pulseKwargs['fadeOut'] = 75
   buildAnim(root, 'pst', symbol='tactical_transparent', frameFns=buildPulseFrame,
             frameCount=100, fnKwargs=pulseKwargs)
 
