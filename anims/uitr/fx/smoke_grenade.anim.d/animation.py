@@ -205,17 +205,49 @@ def buildEdgeFrame(frame, t, tMax, *, drawTest=DRAW_TEST_COVER_BOX,
   for i in range(orbCount):
     addEdgeOrb(i)
 
+def buildPulseFrame(frame, t, tMax, *, drawTest=DRAW_TEST_COVER_BOX,
+                    sizeMin=0.8, sizeMax=1.6, alphaMax=0.5, period=PARAMS.period, fade=False):
+  """Constant-size sphere in the middle, with outer layers that pulse outwards and fade."""
+  if drawTest:
+    # Tactical cover sprite for checking scale & alignment.
+    addElement(frame, 'MF_cover_1x1_tac', tfm=[{'a': 2.5, 'd': 2.5}, {'tx': 0.3, 'ty': -16.349}])
+
+  if fade and t < fade:
+    i0 = t/fade
+  elif fade:
+      return # Past completion of the fade. Add empty frames to match in-world anim.
+  else:
+    i0 = 0
+
+  def addPulseOrb(i):
+    """Properties as a function of an individual orb's i from 0 to 1."""
+    # Volumetric expansion and fade.
+    size = sizeMin + (sizeMax - sizeMin) * i**(1/3)
+    alpha = alphaMax * (1 - i**(2/3))
+    tfm = _tfmXY(0, 0, size=size)
+    colors = {3: {3: alpha}}
+    addElement(frame, 'sphere', tfm=tfm, colors=colors)
+
+  # Constant sphere
+  addPulseOrb(i0)
+
+  # Pulsing sphere(s)
+  i = i0 + (1 - i0) * math.modf(t / period)[0]
+  addPulseOrb(i)
+
 def buildDocumentTree():
   root = ET.Element('Anims')
 
   # buildAnim(root, 'loop', frameFn=buildTestFrame, fnKwargs={'drawTest'=True})
 
+  # === Smoke cloud tiles
   buildAnim(root, 'loop', symbol='tactical', frameFn=buildOrbitFrame, frameCount=100)
   # To match the vanilla in-world anim, start the pst anim at idx=100.
   # Then, pad the rest of pst's duration with empty frames, for the same reason.
   buildAnim(root, 'pst', symbol='tactical', frameFn=buildOrbitFrame,
             frameCount=100, frameIdx0=100, fnKwargs={'fade': 75})
 
+  # === Smoke edge tiles
   edgeDirs = [
     ['_E_',  '', Dirs(d=True)],
     ['_SE_', '', Dirs(d=True, c=True)],
@@ -235,9 +267,15 @@ def buildDocumentTree():
   ]
   for animSuffix, symSuffix, dirs in edgeDirs:
     buildAnim(root, 'loop' + animSuffix, symbol='tactical_edge' + symSuffix, frameFn=buildEdgeFrame,
-              frameCount=100, fnKwargs={'dirs': dirs})
+              frameCount=100, fnKwargs={'orbCount': 6, 'dirs': dirs})
     buildAnim(root, 'pst' + animSuffix, symbol='tactical_edge' + symSuffix, frameFn=buildEdgeFrame,
-              frameCount=100, frameIdx0=100, fnKwargs={'fade': 75, 'dirs': dirs})
+              frameCount=100, frameIdx0=100, fnKwargs={'orbCount': 6, 'fade': 75, 'dirs': dirs})
+
+  # === Transparent cloud tiles
+  buildAnim(root, 'loop', symbol='tactical_transparent', frameFn=buildPulseFrame,
+            frameCount=100, fnKwargs={'period': 50})
+  buildAnim(root, 'pst', symbol='tactical_transparent', frameFn=buildPulseFrame,
+            frameCount=100, fnKwargs={'fade': 75, 'period': 50})
 
   return ET.ElementTree(root)
 

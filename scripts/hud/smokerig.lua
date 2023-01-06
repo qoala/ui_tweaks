@@ -53,13 +53,15 @@ FALLBACK_FACING = {symbol = "tactical_edge_full", facing = simdefs.DIR_E}
 -- Returns true if there's been a change.
 function smokerig:_refreshColorDef()
     local color = self:getUnit():getTraits().gasColor
+    local tacticalColor = self:getUnit():getTraits().gasColorTactical or color
     if not color and self._color then
         self._color = nil
+        self._tacticalSymbol = nil
         self._tacticalRenderFilter = cdefs.RENDER_FILTERS["default"]
 
         return true
     elseif color and (not self._color or (self._color.r ~= color.r) or (self._color.g ~= color.g) or
-            (self._color.b ~= color.b) or (color.r and self._color.r ~= color.r)) then
+            (self._color.b ~= color.b) or (self._color.a ~= (color.a or 1))) then
         self._color = {
             r = color.r,
             g = color.g,
@@ -67,15 +69,29 @@ function smokerig:_refreshColorDef()
             -- Mod:Neptune: Allow gas color to specify alpha
             a = color.a or 1,
         }
+        self._tacticalSymbol = self._color.a < 0.5 and "tactical_transparent" or "tactical"
         self._tacticalRenderFilter = {
             shader = KLEIAnim.SHADER_FOW,
-            r = color.r,
-            g = color.g,
-            b = color.b,
-            a = color.a or 1,
+            r = tacticalColor.r,
+            g = tacticalColor.g,
+            b = tacticalColor.b,
+            a = tacticalColor.a or 1,
             lum = 0.5,
         }
         return true
+    elseif tacticalColor and ((self._tacticalRenderFilter.r ~= tacticalColor.r) or
+            (self._tacticalRenderFilter.g ~= tacticalColor.g) or
+            (self._tacticalRenderFilter.b ~= tacticalColor.b) or
+            (self._tacticalRenderFilter.a ~= (tacticalColor.a or 1))) then
+        self._tacticalRenderFilter = {
+            shader = KLEIAnim.SHADER_FOW,
+            r = tacticalColor.r,
+            g = tacticalColor.g,
+            b = tacticalColor.b,
+            a = tacticalColor.a or 1,
+            lum = 0.5,
+        }
+        return false -- Nothing to do for this in smokerig:refresh().
     end
 end
 
@@ -96,7 +112,7 @@ function cloudFxAppend:update(rig)
     -- UITR: Switch between tactical and in-world effect animations.
     local tacticalCloudsOpt = uitr_util.checkOption("tacticalClouds")
     if tacticalCloudsOpt ~= false and (gfxOptions.bTacticalView or tacticalCloudsOpt == 2) then
-        self._prop:setCurrentSymbol("tactical")
+        self._prop:setCurrentSymbol(rig._tacticalSymbol or "tactical")
         self._prop:setRenderFilter(rig._tacticalRenderFilter)
     else
         self._prop:setCurrentSymbol("effect")
