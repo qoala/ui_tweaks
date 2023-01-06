@@ -187,6 +187,29 @@ local TILE_FILTER_COLORS = {
 
 -- this version colours the HUD circle at the agent's feet instead of the agent. In the table above, I have marked with *** the filters I think look best here. The others were all picked for agent filtering. - Hek
 
+local function shouldHighlightAgent(uiTweaks, unit, isTacticalView)
+    if uiTweaks.selectionFilterAgentColor == false then
+        return
+    end
+    if isTacticalView then
+        return uiTweaks.selectionFilterAgentTactical
+    else
+        -- Don't override invisible filtering.
+        return uiTweaks.selectionFilterAgentInWorld and not unit:getTraits().invisible
+    end
+end
+local function shouldHighlightTile(uiTweaks, isTacticalView)
+    if uiTweaks.selectionFilterTileColor == false then
+        return
+    end
+    if isTacticalView then
+        return uiTweaks.selectionFilterTileTactical
+    else
+        -- Don't override invisible filtering.
+        return uiTweaks.selectionFilterTileInWorld
+    end
+end
+
 local oldRefreshRenderFilter = agentrig.refreshRenderFilter
 function agentrig:refreshRenderFilter(...)
     local uiTweaks = uitr_util:getOptions()
@@ -217,9 +240,7 @@ function agentrig:refreshRenderFilter(...)
         local gfxOptions = self._boardRig._game:getGfxOptions()
         -- (Agent)
         -- Doesn't override cloaking in non-tactical view
-        if (uiTweaks.selectionFilterAgentColor ~= false and
-                (uiTweaks.selectionFilterAgentTacticalOnly == false or gfxOptions.bTacticalView) and
-                (gfxOptions.bTacticalView or not unit:getTraits().invisible)) then
+        if shouldHighlightAgent(uiTweaks, unit, gfxOptions.bTacticalView) then
             local agentColor = uiTweaks.selectionFilterAgentColor or "BLUE_SHADE"
             local agentFilter
             if gfxOptions.bTacticalView then
@@ -231,7 +252,7 @@ function agentrig:refreshRenderFilter(...)
             self._prop:setRenderFilter(agentFilter)
         end
         -- (Floor tile HUD circle)
-        if self._HUDteamCircle and uiTweaks.selectionFilterTileColor ~= false then
+        if self._HUDteamCircle and shouldHighlightTile(uiTweaks, gfxOptions.bTacticalView) then
             local tileColor = uiTweaks.selectionFilterTileColor or "CYAN_SHADE"
             local tileFilter = TILE_FILTER_COLORS[tileColor] or cdefs.RENDER_FILTERS["default"]
             self._HUDteamCircle:setRenderFilter(tileFilter)

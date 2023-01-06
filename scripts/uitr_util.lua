@@ -223,13 +223,24 @@ local UITR_OPTIONS = {
         strings = STRINGS.UITWEAKSR.OPTIONS.SELECTION_FILTER_AGENT_COLORS,
         refreshTypes = {[REFRESH.BOARDRIG] = true},
         maskFn = function(self, value)
-            return {selectionFilterAgentTacticalOnly = (value ~= false)}
+            return {
+                selectionFilterAgentInWorld = (value ~= false),
+                selectionFilterAgentTacticalOnly = (value ~= false),
+            }
         end,
     },
     {
-        id = "selectionFilterAgentTacticalOnly",
-        name = STRINGS.UITWEAKSR.OPTIONS.SELECTION_FILTER_AGENT_TACTICAL,
-        tip = STRINGS.UITWEAKSR.OPTIONS.SELECTION_FILTER_AGENT_TACTICAL_TIP,
+        id = "selectionFilterAgentInWorld",
+        name = STRINGS.UITWEAKSR.OPTIONS.SELECTION_FILTER_INWORLD,
+        tip = STRINGS.UITWEAKSR.OPTIONS.SELECTION_FILTER_INWORLD_TIP,
+        check = true,
+        value = false,
+        refreshTypes = {[REFRESH.BOARDRIG] = true},
+    },
+    {
+        id = "selectionFilterAgentTactical",
+        name = STRINGS.UITWEAKSR.OPTIONS.SELECTION_FILTER_TACTICAL,
+        tip = STRINGS.UITWEAKSR.OPTIONS.SELECTION_FILTER_TACTICAL_TIP,
         check = true,
         refreshTypes = {[REFRESH.BOARDRIG] = true},
     },
@@ -240,6 +251,27 @@ local UITR_OPTIONS = {
         values = {false, "WHITE_SHADE", "CYAN_SHADE", "BLUE_SHADE"},
         value = "CYAN_SHADE",
         strings = STRINGS.UITWEAKSR.OPTIONS.SELECTION_FILTER_TILE_COLORS,
+        refreshTypes = {[REFRESH.BOARDRIG] = true},
+        maskFn = function(self, value)
+            return {
+                selectionFilterTileInWorld = (value ~= false),
+                selectionFilterTileTactical = (value ~= false),
+            }
+        end,
+    },
+    {
+        id = "selectionFilterTileInWorld",
+        name = STRINGS.UITWEAKSR.OPTIONS.SELECTION_FILTER_INWORLD,
+        tip = STRINGS.UITWEAKSR.OPTIONS.SELECTION_FILTER_INWORLD_TIP,
+        check = true,
+        refreshTypes = {[REFRESH.BOARDRIG] = true},
+    },
+    {
+        id = "selectionFilterTileTactical",
+        name = STRINGS.UITWEAKSR.OPTIONS.SELECTION_FILTER_TACTICAL,
+        tip = STRINGS.UITWEAKSR.OPTIONS.SELECTION_FILTER_TACTICAL_TIP,
+        check = true,
+        value = false,
         refreshTypes = {[REFRESH.BOARDRIG] = true},
     },
 }
@@ -319,6 +351,14 @@ local function initOptions()
     end
 
     local uitr = settingsFile.data.uitr
+    -- Migrate deprecated options.
+    if uitr["selectionFilterAgentTacticalOnly"] ~= nil then
+        if uitr["selectionFilterAgentInWorld"] == nil then
+            uitr["selectionFilterAgentInWorld"] = not uitr["selectionFilterAgentTacticalOnly"]
+        end
+        uitr["selectionFilterAgentTacticalOnly"] = nil
+    end
+    -- Otherwise, init defaults.
     for _, optionDef in ipairs(UITR_OPTIONS) do
         if uitr[optionDef.id] == nil or
                 (optionDef.values and not array.find(optionDef.values, uitr[optionDef.id])) then
