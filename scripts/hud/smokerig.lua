@@ -53,7 +53,13 @@ FALLBACK_FACING = {symbol = "tactical_edge_full", facing = simdefs.DIR_E}
 -- Returns true if there's been a change.
 function smokerig:_refreshColorDef()
     local color = self:getUnit():getTraits().gasColor
-    local tacticalColor = self:getUnit():getTraits().gasColorTactical or color
+    local tacticalColor = self:getUnit():getTraits().gasColorTactical
+
+    local opaqueTrait = self:getUnit():getTraits().gasOpaque
+    local isTransparent = (opaqueTrait == false) or
+                                  (opaqueTrait == nil and color and color.a and color.a < 0.5)
+    self._tacticalSymbol = isTransparent and "tactical_transparent" or "tactical_sightblock"
+
     if not color and self._color then
         self._color = nil
         self._tacticalSymbol = nil
@@ -69,15 +75,19 @@ function smokerig:_refreshColorDef()
             -- Mod:Neptune: Allow gas color to specify alpha
             a = color.a or 1,
         }
-        self._tacticalSymbol = self._color.a < 0.5 and "tactical_transparent" or "tactical"
-        self._tacticalRenderFilter = {
-            shader = KLEIAnim.SHADER_FOW,
-            r = tacticalColor.r,
-            g = tacticalColor.g,
-            b = tacticalColor.b,
-            a = tacticalColor.a or 1,
-            lum = 0.5,
-        }
+        if isTransparent or tacticalColor then
+            tacticalColor = tacticalColor or color
+            self._tacticalRenderFilter = {
+                shader = KLEIAnim.SHADER_FOW,
+                r = tacticalColor.r,
+                g = tacticalColor.g,
+                b = tacticalColor.b,
+                a = tacticalColor.a or 1,
+                lum = 0.5,
+            }
+        else
+            self._tacticalRenderFilter = cdefs.RENDER_FILTERS["default"]
+        end
         return true
     elseif tacticalColor and ((self._tacticalRenderFilter.r ~= tacticalColor.r) or
             (self._tacticalRenderFilter.g ~= tacticalColor.g) or
