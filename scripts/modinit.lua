@@ -1,3 +1,5 @@
+local DEBUG_ANIMS = config.UITR and config.UITR.DEBUG_ANIMS
+
 local function earlyInit(modApi)
     modApi.requirements = {
         -- step_carefully must wrap the frost grenade astar_handler changes.
@@ -74,6 +76,11 @@ local function init(modApi)
     include(modApi:getScriptPath() .. "/hud/smokerig")
     include(modApi:getScriptPath() .. "/hud/targeting")
     include(modApi:getScriptPath() .. "/hud/world_hud")
+
+    if config.DEV then
+        local debugDecoRig = include(modApi:getScriptPath() .. "/hud/uitrdebug_decorig")
+        package.loaded["gameplay/uitrdebug_decorig"] = debugDecoRig
+    end
 end
 
 local function lateInit(modApi)
@@ -137,13 +144,22 @@ local function lateUnload(modApi, mod_options)
         rrni_itemdefs.swapIcons(RRNI_OPTIONS)
     end
 
+    local modAnimdefs = include(scriptPath .. "/patches/animdefs")
     if uitr_util.checkOption("tacticalLampView") then
-        local modAnimdefs = include(scriptPath .. "/patches/animdefs")
         for name, animDef in pairs(modAnimdefs.animdefsFixup) do
             modApi:addAnimDef(name, animDef)
         end
         for name, animDef in pairs(modAnimdefs.animdefsTactical) do
             modApi:addAnimDef(name, animDef)
+        end
+    end
+    if DEBUG_ANIMS then
+        for name, animDef in pairs(modAnimdefs.animdefsCoverTest) do
+            modApi:addAnimDef(name, animDef)
+        end
+        local modPropDefs = include(scriptPath .. "/patches/propdefs")
+        for name, propDef in pairs(modPropDefs.propdefsCoverTest) do
+            modApi:addPropDef(name, propDef, false)
         end
     end
 

@@ -3,6 +3,13 @@ local commondefs = include("sim/unitdefs/commondefs")
 local Layer = commondefs.Layer
 local BoundType = commondefs.BoundType
 
+local function abld(file)
+    return file .. ".abld"
+end
+local function adef(file)
+    return file .. ".adef"
+end
+
 -------------------------------------------------------------------
 -- Data for anim definitions.
 --
@@ -89,18 +96,19 @@ local animdefsFixup = {
 }
 
 -- Non-cover and Sightblock tactical DECOR --
+local NONCOVER_1_1 = "data/anims/hek/mf_noncoverpieces_1x1"
+local NONCOVER_1_2 = "data/anims/hek/mf_noncoverpieces_1x2"
+local NONCOVER_2_3 = "data/anims/hek/mf_noncoverpieces_2x3"
+local TALL_1_1 = "data/anims/uitr/cover/mf_tallcoverpieces_1x1"
+local TALL_1_2 = "data/anims/uitr/cover/mf_tallcoverpieces_1x2"
+local TALL_NONCOVER_1_1 = "data/anims/uitr/cover/mf_tallnoncover_1x1"
 local animdefsTactical = {
+
     -- FTM OFFICE --------------------------------------------------------------------------------------------
 
     ftm_hall_plant1 = {
-        build = {
-            "data/anims/FTM_hall/ftm_hall_object_1x1plant1.abld",
-            "data/anims/bcl/mf_tallcoverpieces_1x1.abld",
-        },
-        anims = {
-            "data/anims/FTM_hall/ftm_hall_object_1x1plant1.adef",
-            "data/anims/bcl/mf_tallcoverpieces_1x1.adef",
-        },
+        build = {"data/anims/FTM_hall/ftm_hall_object_1x1plant1.abld", abld(TALL_1_1)},
+        anims = {"data/anims/FTM_hall/ftm_hall_object_1x1plant1.adef", adef(TALL_1_1)},
         symbol = "character",
         scale = 0.25,
         layer = Layer.Object,
@@ -109,14 +117,8 @@ local animdefsTactical = {
     },
 
     ftm_hall_plant2 = {
-        build = {
-            "data/anims/FTM_hall/ftm_hall_object_1x1plant2.abld",
-            "data/anims/bcl/mf_tallcoverpieces_1x1.abld",
-        },
-        anims = {
-            "data/anims/FTM_hall/ftm_hall_object_1x1plant2.adef",
-            "data/anims/bcl/mf_tallcoverpieces_1x1.adef",
-        },
+        build = {"data/anims/FTM_hall/ftm_hall_object_1x1plant2.abld", abld(TALL_1_1)},
+        anims = {"data/anims/FTM_hall/ftm_hall_object_1x1plant2.adef", adef(TALL_1_1)},
         symbol = "character",
         scale = 0.25,
         layer = Layer.Object,
@@ -127,14 +129,8 @@ local animdefsTactical = {
     -- FTM LAB -----------------------------------------------------------------------------------------------
 
     ftm_lab_closet1 = {
-        build = {
-            "data/anims/FTM_lab/ftm_lab_object_1x1closet1.abld",
-            "data/anims/bcl/mf_tallcoverpieces_1x1.abld",
-        },
-        anims = {
-            "data/anims/FTM_lab/ftm_lab_object_1x1closet1.adef",
-            "data/anims/bcl/mf_tallcoverpieces_1x1.adef",
-        },
+        build = {"data/anims/FTM_lab/ftm_lab_object_1x1closet1.abld", abld(TALL_1_1)},
+        anims = {"data/anims/FTM_lab/ftm_lab_object_1x1closet1.adef", adef(TALL_1_1)},
         symbol = "character",
         scale = 0.25,
         layer = Layer.Object,
@@ -145,14 +141,8 @@ local animdefsTactical = {
     -- FTM SECURITY ------------------------------------------------------------------------------------------
 
     ftm_security_1x1locker = {
-        build = {
-            "data/anims/FTM_security/ftm_security_object_1x1locker.abld",
-            "data/anims/bcl/mf_tallcoverpieces_1x1.abld",
-        },
-        anims = {
-            "data/anims/FTM_security/ftm_security_object_1x1locker.adef",
-            "data/anims/bcl/mf_tallcoverpieces_1x1.adef",
-        },
+        build = {"data/anims/FTM_security/ftm_security_object_1x1locker.abld", abld(TALL_1_1)},
+        anims = {"data/anims/FTM_security/ftm_security_object_1x1locker.adef", adef(TALL_1_1)},
         symbol = "character",
         scale = 0.25,
         layer = Layer.Object,
@@ -177,56 +167,32 @@ local animdefsTactical = {
     },
 
     decor_ko_office_lamp = {
-        build = {
-            "data/anims/KO_office/ko_office_decor_lamp1.abld",
-            "data/anims/hek/mf_noncoverpieces_1x1.abld",
-        },
-        anims = {
-            "data/anims/KO_office/ko_office_decor_lamp1.adef",
-            "data/anims/hek/mf_noncoverpieces_1x1.adef",
-        },
+        build = {"data/anims/KO_office/ko_office_decor_lamp1.abld", abld(NONCOVER_1_1)},
+        anims = {"data/anims/KO_office/ko_office_decor_lamp1.adef", adef(NONCOVER_1_1)},
         anim = "idle",
         scale = 0.25,
         boundType = BoundType.bound_1x1_tall_med,
     },
 
     decor_ko_office_bookshelf1 = {
-        build = {
-            "data/anims/KO_office/ko_office_object_2x1bookshelf1.abld",
-            "data/anims/bcl/mf_tallcoverpieces_1x2.abld",
-        },
-        anims = {
-            "data/anims/KO_office/ko_office_object_2x1bookshelf1.adef",
-            "data/anims/bcl/mf_tallcoverpieces_1x2.adef",
-        },
+        build = {"data/anims/KO_office/ko_office_object_2x1bookshelf1.abld", abld(TALL_1_2)},
+        anims = {"data/anims/KO_office/ko_office_object_2x1bookshelf1.adef", adef(TALL_1_2)},
         anim = "idle",
         scale = 0.25,
         boundType = BoundType.bound_2x1_tall_med,
     },
 
     decor_ko_office_bookshelf2 = {
-        build = {
-            "data/anims/KO_office/ko_office_object_2x1bookshelf2.abld",
-            "data/anims/bcl/mf_tallcoverpieces_1x2.abld",
-        },
-        anims = {
-            "data/anims/KO_office/ko_office_object_2x1bookshelf2.adef",
-            "data/anims/bcl/mf_tallcoverpieces_1x2.adef",
-        },
+        build = {"data/anims/KO_office/ko_office_object_2x1bookshelf2.abld", abld(TALL_1_2)},
+        anims = {"data/anims/KO_office/ko_office_object_2x1bookshelf2.adef", adef(TALL_1_2)},
         anim = "idle",
         scale = 0.25,
         boundType = BoundType.bound_2x1_tall_med,
     },
 
     decor_ko_office_cabinet1 = {
-        build = {
-            "data/anims/KO_office/ko_office_object_2x1tvcabinet1.abld",
-            "data/anims/bcl/mf_tallcoverpieces_1x2.abld",
-        },
-        anims = {
-            "data/anims/KO_office/ko_office_object_2x1tvcabinet1.adef",
-            "data/anims/bcl/mf_tallcoverpieces_1x2.adef",
-        },
+        build = {"data/anims/KO_office/ko_office_object_2x1tvcabinet1.abld", abld(TALL_1_2)},
+        anims = {"data/anims/KO_office/ko_office_object_2x1tvcabinet1.adef", adef(TALL_1_2)},
         anim = "idle",
         scale = 0.25,
         boundType = BoundType.bound_2x1_tall_med,
@@ -235,42 +201,24 @@ local animdefsTactical = {
     -- KO LAB ---------------------------------------------------------------------------------------------
 
     decor_ko_lab_tallcase1 = {
-        build = {
-            "data/anims/KO_lab/ko_lab_object_1x1tallcase1.abld",
-            "data/anims/bcl/mf_tallcoverpieces_1x1.abld",
-        },
-        anims = {
-            "data/anims/KO_lab/ko_lab_object_1x1tallcase1.adef",
-            "data/anims/bcl/mf_tallcoverpieces_1x1.adef",
-        },
+        build = {"data/anims/KO_lab/ko_lab_object_1x1tallcase1.abld", abld(TALL_1_1)},
+        anims = {"data/anims/KO_lab/ko_lab_object_1x1tallcase1.adef", adef(TALL_1_1)},
         anim = "idle",
         scale = 0.25,
         boundType = BoundType.bound_1x1_tall_med,
     },
 
     decor_ko_lab_pit1 = {
-        build = {
-            "data/anims/KO_lab/ko_lab_object_2x3pit1.abld",
-            "data/anims/hek/mf_noncoverpieces_2x3.abld",
-        },
-        anims = {
-            "data/anims/KO_lab/ko_lab_object_2x3pit1.adef",
-            "data/anims/hek/mf_noncoverpieces_2x3.adef",
-        },
+        build = {"data/anims/KO_lab/ko_lab_object_2x3pit1.abld", abld(NONCOVER_2_3)},
+        anims = {"data/anims/KO_lab/ko_lab_object_2x3pit1.adef", adef(NONCOVER_2_3)},
         anim = "idle",
         scale = 0.25,
         boundType = BoundType.Floor_2x3,
     },
 
     decor_ko_lab_pit2 = {
-        build = {
-            "data/anims/KO_lab/ko_lab_object_2x3pit2.abld",
-            "data/anims/hek/mf_noncoverpieces_2x3.abld",
-        },
-        anims = {
-            "data/anims/KO_lab/ko_lab_object_2x3pit2.adef",
-            "data/anims/hek/mf_noncoverpieces_2x3.adef",
-        },
+        build = {"data/anims/KO_lab/ko_lab_object_2x3pit2.abld", abld(NONCOVER_2_3)},
+        anims = {"data/anims/KO_lab/ko_lab_object_2x3pit2.adef", adef(NONCOVER_2_3)},
         anim = "idle",
         scale = 0.25,
         boundType = BoundType.Floor_2x3,
@@ -279,14 +227,8 @@ local animdefsTactical = {
     -- KO BARRACKS ---------------------------------------------------------------------------------------------
 
     decor_ko_barracks_fridge1 = {
-        build = {
-            "data/anims/KO_Barracks/ko_barracks_object_1x1fridge1.abld",
-            "data/anims/bcl/mf_tallcoverpieces_1x1.abld",
-        },
-        anims = {
-            "data/anims/KO_Barracks/ko_barracks_object_1x1fridge1.adef",
-            "data/anims/bcl/mf_tallcoverpieces_1x1.adef",
-        },
+        build = {"data/anims/KO_Barracks/ko_barracks_object_1x1fridge1.abld", abld(TALL_1_1)},
+        anims = {"data/anims/KO_Barracks/ko_barracks_object_1x1fridge1.adef", adef(TALL_1_1)},
         anim = "idle",
         scale = 0.25,
         boundType = BoundType.bound_1x1_tall_med,
@@ -295,11 +237,11 @@ local animdefsTactical = {
     decor_ko_barracks_vendingmachine1 = {
         build = {
             "data/anims/KO_Barracks/ko_barracks_object_1x1vendingmachine1.abld",
-            "data/anims/bcl/mf_tallcoverpieces_1x1.abld",
+            abld(TALL_1_1),
         },
         anims = {
             "data/anims/KO_Barracks/ko_barracks_object_1x1vendingmachine1.adef",
-            "data/anims/bcl/mf_tallcoverpieces_1x1.adef",
+            adef(TALL_1_1),
         },
         anim = "idle",
         scale = 0.25,
@@ -309,14 +251,8 @@ local animdefsTactical = {
     -- KO HALL ---------------------------------------------------------------------------------------------
 
     decor_ko_hall_bookshelf1 = {
-        build = {
-            "data/anims/KO_Hall/ko_hall_object_2x1bookshelf1.abld",
-            "data/anims/bcl/mf_tallcoverpieces_1x2.abld",
-        },
-        anims = {
-            "data/anims/KO_Hall/ko_hall_object_2x1bookshelf1.adef",
-            "data/anims/bcl/mf_tallcoverpieces_1x2.adef",
-        },
+        build = {"data/anims/KO_Hall/ko_hall_object_2x1bookshelf1.abld", abld(TALL_1_2)},
+        anims = {"data/anims/KO_Hall/ko_hall_object_2x1bookshelf1.adef", adef(TALL_1_2)},
         anim = "idle",
         scale = 0.25,
         boundType = BoundType.bound_2x1_tall_med,
@@ -325,14 +261,8 @@ local animdefsTactical = {
     -- SEIKAKU LAB ---------------------------------------------------------------------------------------------
 
     decor_sk_office_shelf1 = {
-        build = {
-            "data/anims/Seikaku_office/seikaku_office_object_1x1shelf1.abld",
-            "data/anims/bcl/mf_tallcoverpieces_1x1.abld",
-        },
-        anims = {
-            "data/anims/Seikaku_office/seikaku_office_object_1x1shelf1.adef",
-            "data/anims/bcl/mf_tallcoverpieces_1x1.adef",
-        },
+        build = {"data/anims/Seikaku_office/seikaku_office_object_1x1shelf1.abld", abld(TALL_1_1)},
+        anims = {"data/anims/Seikaku_office/seikaku_office_object_1x1shelf1.adef", adef(TALL_1_1)},
         anim = "idle",
         scale = 0.25,
         boundType = BoundType.bound_1x1_tall_med,
@@ -341,11 +271,11 @@ local animdefsTactical = {
     decor_sk_office_walldivider1 = {
         build = {
             "data/anims/Seikaku_office/seikaku_office_object_1x1walldivider.abld",
-            "data/anims/bcl/mf_tallnoncoverpieces_1x1.abld",
+            abld(TALL_NONCOVER_1_1),
         },
         anims = {
             "data/anims/Seikaku_office/seikaku_office_object_1x1walldivider.adef",
-            "data/anims/bcl/mf_tallcoverpieces_1x1.adef",
+            adef(TALL_NONCOVER_1_1),
         },
         anim = "idle",
         scale = 0.25,
@@ -353,14 +283,8 @@ local animdefsTactical = {
     },
 
     decor_sk_office_tv1 = {
-        build = {
-            "data/anims/Seikaku_office/seikaku_office_object_2x1tv.abld",
-            "data/anims/bcl/mf_tallcoverpieces_1x2.abld",
-        },
-        anims = {
-            "data/anims/Seikaku_office/seikaku_office_object_2x1tv.adef",
-            "data/anims/bcl/mf_tallcoverpieces_1x2.adef",
-        },
+        build = {"data/anims/Seikaku_office/seikaku_office_object_2x1tv.abld", abld(TALL_1_2)},
+        anims = {"data/anims/Seikaku_office/seikaku_office_object_2x1tv.adef", adef(TALL_1_2)},
         anim = "idle",
         scale = 0.25,
         boundType = BoundType.bound_2x1_tall_med,
@@ -369,11 +293,11 @@ local animdefsTactical = {
     decor_sk_bay_tallcrate1 = {
         build = {
             "data/anims/Seikaku_robobay/seikaku_robobay_object_1x1tallcrate.abld",
-            "data/anims/bcl/mf_tallcoverpieces_1x1.abld",
+            abld(TALL_1_1),
         },
         anims = {
             "data/anims/Seikaku_robobay/seikaku_robobay_object_1x1tallcrate.adef",
-            "data/anims/bcl/mf_tallcoverpieces_1x1.adef",
+            adef(TALL_1_1),
         },
         anim = "idle",
         scale = 0.25,
@@ -381,14 +305,8 @@ local animdefsTactical = {
     },
 
     decor_plastek_psilab_cabinet1 = {
-        build = {
-            "data/anims/Plastek_psilab/plastek_psilab_object_1x1cabinet1.abld",
-            "data/anims/bcl/mf_tallcoverpieces_1x1.abld",
-        },
-        anims = {
-            "data/anims/Plastek_psilab/plastek_psilab_object_1x1cabinet1.adef",
-            "data/anims/bcl/mf_tallcoverpieces_1x1.adef",
-        },
+        build = {"data/anims/Plastek_psilab/plastek_psilab_object_1x1cabinet1.abld", abld(TALL_1_1)},
+        anims = {"data/anims/Plastek_psilab/plastek_psilab_object_1x1cabinet1.adef", adef(TALL_1_1)},
         anim = "idle",
         scale = 0.25,
         boundType = BoundType.bound_1x1_tall_med,
@@ -397,11 +315,11 @@ local animdefsTactical = {
     decor_plastek_psilab_bookshelf1 = {
         build = {
             "data/anims/Plastek_psilab/plastek_psilab_object_2x1bookshelf1.abld",
-            "data/anims/bcl/mf_tallcoverpieces_1x2.abld",
+            abld(TALL_1_2),
         },
         anims = {
             "data/anims/Plastek_psilab/plastek_psilab_object_2x1bookshelf1.adef",
-            "data/anims/bcl/mf_tallcoverpieces_1x2.adef",
+            adef(TALL_1_2),
         },
         anim = "idle",
         scale = 0.25,
@@ -409,42 +327,24 @@ local animdefsTactical = {
     },
 
     decor_plastek_lab_cabinet1 = {
-        build = {
-            "data/anims/Plastek_Lab/plastek_lab_object_1x1cabinet1.abld",
-            "data/anims/bcl/mf_tallcoverpieces_1x1.abld",
-        },
-        anims = {
-            "data/anims/Plastek_Lab/plastek_lab_object_1x1cabinet1.adef",
-            "data/anims/bcl/mf_tallcoverpieces_1x1.adef",
-        },
+        build = {"data/anims/Plastek_Lab/plastek_lab_object_1x1cabinet1.abld", abld(TALL_1_1)},
+        anims = {"data/anims/Plastek_Lab/plastek_lab_object_1x1cabinet1.adef", adef(TALL_1_1)},
         anim = "idle",
         scale = 0.25,
         boundType = BoundType.bound_1x1_med_med,
     },
 
     decor_plastek_hall_bookshelf1 = {
-        build = {
-            "data/anims/Plastek_hall/plastek_hall_object_1x1bookshelf1.abld",
-            "data/anims/bcl/mf_tallcoverpieces_1x1.abld",
-        },
-        anims = {
-            "data/anims/Plastek_hall/plastek_hall_object_1x1bookshelf1.adef",
-            "data/anims/bcl/mf_tallcoverpieces_1x1.adef",
-        },
+        build = {"data/anims/Plastek_hall/plastek_hall_object_1x1bookshelf1.abld", abld(TALL_1_1)},
+        anims = {"data/anims/Plastek_hall/plastek_hall_object_1x1bookshelf1.adef", adef(TALL_1_1)},
         anim = "idle",
         scale = 0.25,
         boundType = BoundType.bound_1x1_tall_med,
     },
 
     decor_plastek_hall_bookshelf2 = {
-        build = {
-            "data/anims/Plastek_hall/plastek_hall_object_2x1bookshelf2.abld",
-            "data/anims/bcl/mf_tallcoverpieces_1x2.abld",
-        },
-        anims = {
-            "data/anims/Plastek_hall/plastek_hall_object_2x1bookshelf2.adef",
-            "data/anims/bcl/mf_tallcoverpieces_1x2.adef",
-        },
+        build = {"data/anims/Plastek_hall/plastek_hall_object_2x1bookshelf2.abld", abld(TALL_1_2)},
+        anims = {"data/anims/Plastek_hall/plastek_hall_object_2x1bookshelf2.adef", adef(TALL_1_2)},
         anim = "idle",
         scale = 0.25,
         boundType = BoundType.bound_2x1_tall_med,
@@ -453,11 +353,11 @@ local animdefsTactical = {
     decor_cybernetics_object_2x1liquidpool1 = {
         build = {
             "data/anims/Unique_cybernetics/cybernetics_2x1_liquidpool1.abld",
-            "data/anims/hek/mf_noncoverpieces_1x2.abld",
+            abld(NONCOVER_1_2),
         },
         anims = {
             "data/anims/Unique_cybernetics/cybernetics_2x1_liquidpool1.adef",
-            "data/anims/hek/mf_noncoverpieces_1x2.adef",
+            adef(NONCOVER_1_2),
         },
         anim = "idle",
         scale = 0.25,
@@ -468,14 +368,8 @@ local animdefsTactical = {
 
     -- Actually tall-cover, missing its tactical anim.
     ftm_hall_bookshelf = {
-        build = {
-            "data/anims/uitr/props/ftm_hall_object_2x1bookshelf.abld",
-            "data/anims/bcl/mf_tallcoverpieces_1x2.abld",
-        },
-        anims = {
-            "data/anims/uitr/props/ftm_hall_object_2x1bookshelf.adef",
-            "data/anims/bcl/mf_tallcoverpieces_1x2.adef",
-        },
+        build = {"data/anims/uitr/props/ftm_hall_object_2x1bookshelf.abld", abld(TALL_1_2)},
+        anims = {"data/anims/uitr/props/ftm_hall_object_2x1bookshelf.adef", adef(TALL_1_2)},
         symbol = "character",
         scale = 0.25,
         layer = Layer.Object,
@@ -487,4 +381,102 @@ local animdefsTactical = {
     },
 }
 
-return {animdefsFixup = animdefsFixup, animdefsTactical = animdefsTactical}
+local OLD_TALL_1_1 = "data/anims/bcl/mf_tallcoverpieces_1x1"
+local OLD_TALL_1_2 = "data/anims/bcl/mf_tallcoverpieces_1x2"
+local OLD_TALL_NONCOVER_1_1 = "data/anims/bcl/mf_tallnoncoverpieces_1x1"
+local animdefsCoverTest = {
+    uitr_test_non_1_1 = {
+        build = {"data/anims/KO_office/ko_office_decor_lamp1.abld", abld(NONCOVER_1_1)},
+        anims = {"data/anims/KO_office/ko_office_decor_lamp1.adef", adef(NONCOVER_1_1)},
+        anim = "idle",
+        scale = 0.25,
+        boundType = BoundType.bound_1x1_tall_med,
+    },
+    uitr_test_non_1_2 = {
+        build = {
+            "data/anims/Unique_cybernetics/cybernetics_2x1_liquidpool1.abld",
+            abld(NONCOVER_1_2),
+        },
+        anims = {
+            "data/anims/Unique_cybernetics/cybernetics_2x1_liquidpool1.adef",
+            adef(NONCOVER_1_2),
+        },
+        anim = "idle",
+        scale = 0.25,
+        boundType = BoundType.bound_2x1_med_med,
+    },
+    uitr_test_non_2_3 = {
+        build = {"data/anims/KO_lab/ko_lab_object_2x3pit1.abld", abld(NONCOVER_2_3)},
+        anims = {"data/anims/KO_lab/ko_lab_object_2x3pit1.adef", adef(NONCOVER_2_3)},
+        anim = "idle",
+        scale = 0.25,
+        boundType = BoundType.Floor_2x3,
+    },
+
+    uitr_test_tall_1_1 = {
+        build = {"data/anims/FTM_hall/ftm_hall_object_1x1plant1.abld", abld(TALL_1_1)},
+        anims = {"data/anims/FTM_hall/ftm_hall_object_1x1plant1.adef", adef(TALL_1_1)},
+        symbol = "character",
+        scale = 0.25,
+        layer = Layer.Object,
+        boundType = BoundType.bound_1x1_med_med,
+        filterSymbols = {{symbol = "icon", filter = "default"}},
+    },
+    uitr_test_tall_1_1_old = {
+        build = {"data/anims/FTM_hall/ftm_hall_object_1x1plant1.abld", abld(OLD_TALL_1_1)},
+        anims = {"data/anims/FTM_hall/ftm_hall_object_1x1plant1.adef", adef(OLD_TALL_1_1)},
+        symbol = "character",
+        scale = 0.25,
+        layer = Layer.Object,
+        boundType = BoundType.bound_1x1_med_med,
+        filterSymbols = {{symbol = "icon", filter = "default"}},
+    },
+
+    uitr_test_tall_1_2 = {
+        build = {"data/anims/KO_office/ko_office_object_2x1bookshelf1.abld", abld(TALL_1_2)},
+        anims = {"data/anims/KO_office/ko_office_object_2x1bookshelf1.adef", adef(TALL_1_2)},
+        anim = "idle",
+        scale = 0.25,
+        boundType = BoundType.bound_2x1_tall_med,
+    },
+    uitr_test_tall_1_2_old = {
+        build = {"data/anims/KO_office/ko_office_object_2x1bookshelf1.abld", abld(OLD_TALL_1_2)},
+        anims = {"data/anims/KO_office/ko_office_object_2x1bookshelf1.adef", adef(OLD_TALL_1_2)},
+        anim = "idle",
+        scale = 0.25,
+        boundType = BoundType.bound_2x1_tall_med,
+    },
+
+    uitr_test_tall_non_1_1 = {
+        build = {
+            "data/anims/Seikaku_office/seikaku_office_object_1x1walldivider.abld",
+            abld(TALL_NONCOVER_1_1),
+        },
+        anims = {
+            "data/anims/Seikaku_office/seikaku_office_object_1x1walldivider.adef",
+            adef(TALL_NONCOVER_1_1),
+        },
+        anim = "idle",
+        scale = 0.25,
+        boundType = BoundType.bound_1x1_med_med,
+    },
+    uitr_test_tall_non_1_1_old = {
+        build = {
+            "data/anims/Seikaku_office/seikaku_office_object_1x1walldivider.abld",
+            abld(OLD_TALL_NONCOVER_1_1),
+        },
+        anims = {
+            "data/anims/Seikaku_office/seikaku_office_object_1x1walldivider.adef",
+            adef(OLD_TALL_NONCOVER_1_1),
+        },
+        anim = "idle",
+        scale = 0.25,
+        boundType = BoundType.bound_1x1_med_med,
+    },
+}
+
+return {
+    animdefsFixup = animdefsFixup,
+    animdefsTactical = animdefsTactical,
+    animdefsCoverTest = animdefsCoverTest,
+}
