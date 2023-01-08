@@ -2,6 +2,18 @@
   <Symbol name="sphere">
     <Frame framenum="0" duration="1" image="sphere" w="200" h="200" x="0" y="0" />
   </Symbol>
+  <Symbol name="sightblock_E">
+    <Frame framenum="0" duration="1" image="sblock_e" w="100" h="100" x="0.4004982" y="-16.5734987" />
+  </Symbol>
+  <Symbol name="sightblock_N">
+    <Frame framenum="0" duration="1" image="sblock_n" w="100" h="100" x="0.4004982" y="-16.5734987" />
+  </Symbol>
+  <Symbol name="sightblock_W">
+    <Frame framenum="0" duration="1" image="sblock_w" w="100" h="100" x="0.4004982" y="-16.5734987" />
+  </Symbol>
+  <Symbol name="sightblock_S">
+    <Frame framenum="0" duration="1" image="sblock_s" w="100" h="100" x="0.4004982" y="-16.5734987" />
+  </Symbol>
   <Symbol name="smoke_particles_lt0">
     <Frame framenum="0" duration="1" image="smoke_particles_lt0-0-1" w="208" h="192" x="-3.749496" y="5.900497" />
   </Symbol>

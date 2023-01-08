@@ -22,6 +22,8 @@ PARAMS = type('RenderParams', (object,), {
     'projX': 1,
     'projY': 1/1.8})
 
+Dirs = collections.namedtuple('Directions', 'a b c d', defaults=[False, False, False, False])
+
 
 def addAnim(root, name, *, symbol = 'effect', frameCount = 1, frameRate = 30):
   anim = ET.SubElement(root, 'anim')
@@ -88,7 +90,7 @@ def addElement(frame, imgName, *, imgFrame = 0, depth = 0, tfm = None, colors = 
   el = ET.SubElement(frame, 'element')
   el.set('name', imgName)
   el.set('layername', '2571176411')
-  el.set('parentname', '2571176411')
+  el.set('parentname', '')
   el.set('frame', str(imgFrame))
   el.set('depth', str(depth))
   # Two sequential affine transformations.
@@ -126,6 +128,25 @@ def buildTestFrame(frame, t, tMax, *, size=0.375):
   addElement(frame, 'sphere', tfm=_tfmXY( 1,  0, size=size))
   addElement(frame, 'sphere', tfm=_tfmXY(-1,  0, size=size))
 
+def buildSightblockFrame(frame, t, tMax, *, fadeOut=False,
+                         dirs=Dirs(True, True, True, True)):
+  """Sightblock panels at the edges fo the tile bounds."""
+  if fadeOut and t < fadeOut:
+    alpha = 1 - (t/fadeOut)**(2/3)
+    colors = {3: {3: alpha}}
+  else:
+    colors = None
+  tfm = [{'a': 2.5, 'd': 2.5}]
+
+  if dirs.d:
+    addElement(frame, 'sightblock_E', tfm=tfm, colors=colors)
+  if dirs.a:
+    addElement(frame, 'sightblock_N', tfm=tfm, colors=colors)
+  if dirs.b:
+    addElement(frame, 'sightblock_W', tfm=tfm, colors=colors)
+  if dirs.c:
+    addElement(frame, 'sightblock_S', tfm=tfm, colors=colors)
+
 def buildOrbitFrame(frame, t, tMax, *,
                     size, fadeOutSize, radius=1/math.sqrt(2), orbCount, period, fadeOut=False):
   """Spheres orbit around a circle that fits in the tile bounds."""
@@ -148,8 +169,6 @@ def buildOrbitFrame(frame, t, tMax, *,
         }
   for i in range(orbCount):
     addElement(frame, 'sphere', **tfmOrbit(i))
-
-Dirs = collections.namedtuple('Directions', 'a b c d', defaults=[False, False, False, False])
 
 def buildEdgeFrame(frame, t, tMax, *,
                    size, fadeOutSize, radius, orbCount, period, fadeOut=False,
@@ -264,7 +283,9 @@ def buildPulseFrame(frame, t, tMax, *,
   addPulseOrb(i0)
 
   # Pulsing sphere(s)
-  if period:
+  if fadeOut and t >= period: # Only the first pulse after beginning fadeout.
+      return
+  elif period:
     i = i0 + (1 - i0) * math.modf(t / period)[0]
     addPulseOrb(i)
 
@@ -274,58 +295,25 @@ def buildDocumentTree():
 
   # buildAnim(root, 'loop', frameFns=buildTestFrame, drawTest=True)
 
-  # === Smoke cloud tiles
-  # orbitKwargs = {
-  #   'size': 0.6,
-  #   'fadeOutSize': 1.2, # 2x expansion.
-  #   'orbCount': 3,
-  #   'period': 300,
-  # }
+  # === Opaque cloud and edge tiles
+  # Edges hide the central, pulsing sphere and some of the sightblock panels.
+  sbFrontKwargs = {'dirs': Dirs(a=True, d=True)}
+  sbRearKwargs = {'dirs': Dirs(b=True, c=True)}
   pulseKwargs = {
     'sizeMin': 0.6,
-    'sizeMax': 1.0,
+    'sizeMax': 0.9,
     'alphaMax': 1.0,
-    'period': False,
+    'period': 50,
   }
-  buildAnim(root, 'loop', symbol='tactical_sightblock', frameFns=[buildPulseFrame],
-            frameCount=100, fnKwargs=[pulseKwargs])
+  buildAnim(root, 'loop', symbol='tactical_sightblock', frameCount=100,
+            frameFns=[buildSightblockFrame, buildPulseFrame, buildSightblockFrame],
+            fnKwargs=[sbFrontKwargs, pulseKwargs, sbRearKwargs])
+  sbFrontKwargs['fadeOut'] = 75
+  sbRearKwargs['fadeOut'] = 75
   pulseKwargs['fadeOut'] = 75
-  buildAnim(root, 'pst', symbol='tactical_sightblock', frameFns=[buildPulseFrame],
-            frameCount=100, frameIdx0=100, fnKwargs=[pulseKwargs])
-
-  # === Smoke edge tiles
-  edgeDirs = [
-    ['_E_',  '', Dirs(d=True)],
-    ['_SE_', '', Dirs(d=True, c=True)],
-    ['_S_',  '', Dirs(c=True)],
-    ['_SW_', '', Dirs(c=True, b=True)],
-    ['_W_',  '', Dirs(b=True)],
-    ['_NW_', '', Dirs(b=True, a=True)],
-    ['_N_',  '', Dirs(a=True)],
-    ['_NE_', '', Dirs(a=True, d=True)],
-    ['_E_W_',  '_1_1', Dirs(b=True, d=True)],
-    ['_N_S_',  '_1_1', Dirs(a=True, c=True)],
-    ['_E_',  '_3', Dirs(a=True, d=True, c=True)],
-    ['_S_',  '_3', Dirs(d=True, c=True, b=True)],
-    ['_W_',  '_3', Dirs(c=True, b=True, a=True)],
-    ['_N_',  '_3', Dirs(b=True, a=True, d=True)],
-    ['', '_full', Dirs(a=True, b=True, c=True, d=True)]
-  ]
-  for animSuffix, symSuffix, dirs in edgeDirs:
-    edgeKwargs = {
-      'size': 0.3,
-      'fadeOutSize': 0.9, # 3x expansion.
-      'radius': 1.5,
-      'orbCount': 5,
-      'period': 250,
-      'dirs': dirs
-    }
-    buildAnim(root, 'loop' + animSuffix, symbol='tactical_edge' + symSuffix,
-              frameFns=buildEdgeFrame,
-              frameCount=100, fnKwargs=edgeKwargs)
-    edgeKwargs['fadeOut'] = 75
-    buildAnim(root, 'pst' + animSuffix, symbol='tactical_edge' + symSuffix, frameFns=buildEdgeFrame,
-              frameCount=100, frameIdx0=100, fnKwargs=edgeKwargs)
+  buildAnim(root, 'pst', symbol='tactical_sightblock', frameCount=100, frameIdx0=100,
+            frameFns=[buildSightblockFrame, buildPulseFrame, buildSightblockFrame],
+            fnKwargs=[sbFrontKwargs, pulseKwargs, sbRearKwargs])
 
   # === Transparent cloud tiles
   pulseKwargs = {

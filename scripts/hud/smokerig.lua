@@ -1,6 +1,7 @@
 local cdefs = include("client_defs")
 local resources = include("resources")
 local array = include("modules/array")
+local binops = include("modules/binary_ops")
 local simdefs = include("sim/simdefs")
 local simquery = include("sim/simquery")
 local smokerig = include("gameplay/smokerig").rig
@@ -30,24 +31,7 @@ end
 
 -- ===
 
-local _fullDirMask = simdefs.DIRMASK_N + simdefs.DIRMASK_E + simdefs.DIRMASK_S + simdefs.DIRMASK_W
-local FACING_MAP = {
-    [simdefs.DIRMASK_N] = {symbol = "tactical_edge", facing = simdefs.DIR_N},
-    [simdefs.DIRMASK_E] = {symbol = "tactical_edge", facing = simdefs.DIR_E},
-    [simdefs.DIRMASK_S] = {symbol = "tactical_edge", facing = simdefs.DIR_S},
-    [simdefs.DIRMASK_W] = {symbol = "tactical_edge", facing = simdefs.DIR_W},
-    [simdefs.DIRMASK_N + simdefs.DIRMASK_E] = {symbol = "tactical_edge", facing = simdefs.DIR_NE},
-    [simdefs.DIRMASK_N + simdefs.DIRMASK_W] = {symbol = "tactical_edge", facing = simdefs.DIR_NW},
-    [simdefs.DIRMASK_S + simdefs.DIRMASK_E] = {symbol = "tactical_edge", facing = simdefs.DIR_SE},
-    [simdefs.DIRMASK_S + simdefs.DIRMASK_W] = {symbol = "tactical_edge", facing = simdefs.DIR_SW},
-    [simdefs.DIRMASK_N + simdefs.DIRMASK_S] = {symbol = "tactical_edge_1_1", facing = simdefs.DIR_N},
-    [simdefs.DIRMASK_E + simdefs.DIRMASK_W] = {symbol = "tactical_edge_1_1", facing = simdefs.DIR_E},
-    [_fullDirMask - simdefs.DIRMASK_S] = {symbol = "tactical_edge_3", facing = simdefs.DIR_N},
-    [_fullDirMask - simdefs.DIRMASK_W] = {symbol = "tactical_edge_3", facing = simdefs.DIR_E},
-    [_fullDirMask - simdefs.DIRMASK_N] = {symbol = "tactical_edge_3", facing = simdefs.DIR_S},
-    [_fullDirMask - simdefs.DIRMASK_E] = {symbol = "tactical_edge_3", facing = simdefs.DIR_W},
-}
-FALLBACK_FACING = {symbol = "tactical_edge_full", facing = simdefs.DIR_E}
+local FULL_DIR_MASK = simdefs.DIRMASK_N + simdefs.DIRMASK_E + simdefs.DIRMASK_S + simdefs.DIRMASK_W
 
 -- UITR: Extract color selection, because we only want to create 1 render filter per rig.
 -- Returns true if there's been a change.
@@ -122,13 +106,19 @@ function cloudFxAppend:update(rig)
     -- UITR: Switch between tactical and in-world effect animations.
     local tacticalCloudsOpt = uitr_util.checkOption("tacticalClouds")
     if tacticalCloudsOpt ~= false and (gfxOptions.bTacticalView or tacticalCloudsOpt == 2) then
-        self._prop:setCurrentSymbol(rig._tacticalSymbol or "tactical")
+        self._prop:setCurrentSymbol(rig._tacticalSymbol or "tactical_sightblock")
         self._prop:setRenderFilter(rig._tacticalRenderFilter)
     else
         self._prop:setCurrentSymbol("effect")
         self._prop:setRenderFilter(cdefs.RENDER_FILTERS["default"])
     end
 end
+DIR_SYMBOLS = {
+    [simdefs.DIR_E] = "sightblock_E",
+    [simdefs.DIR_N] = "sightblock_N",
+    [simdefs.DIR_W] = "sightblock_W",
+    [simdefs.DIR_S] = "sightblock_S",
+}
 function edgeFxAppend:update(rig)
     local gfxOptions = rig._boardRig._game:getGfxOptions()
     local orientation = rig._boardRig._game:getCamera():getOrientation()
@@ -137,11 +127,14 @@ function edgeFxAppend:update(rig)
     -- UITR: Switch between tactical and in-world effect animations.
     local tacticalCloudsOpt = uitr_util.checkOption("tacticalClouds")
     if tacticalCloudsOpt ~= false and (gfxOptions.bTacticalView or tacticalCloudsOpt == 2) then
-        local facingMask = 2 ^ ((self._uitrData.facing - orientation * 2) % simdefs.DIR_MAX)
+        local dirMask = self._uitrData.dirMask
+        for dir, symbol in pairs(DIR_SYMBOLS) do
+            local dirBit = simdefs:maskFromDir((dir + orientation * 2) % simdefs.DIR_MAX)
+            self._prop:setSymbolVisibility(symbol, binops.test(dirMask, dirBit))
+        end
 
-        self._prop:setCurrentSymbol(self._uitrData.tacticalSymbol)
+        self._prop:setCurrentSymbol(rig._tacticalSymbol or "tactical_sightblock")
         self._prop:setRenderFilter(rig._tacticalRenderFilter)
-        self._prop:setCurrentFacingMask(facingMask)
     else
         self._prop:setCurrentSymbol("effect_edge")
         self._prop:setRenderFilter(cdefs.RENDER_FILTERS["default"])
@@ -194,13 +187,15 @@ function smokerig:refresh()
                 (not edgeUnit.isActiveForSmokeCloud or edgeUnit:isActiveForSmokeCloud(cloudID)) then
             activeEdgeUnits[unitID] = true
             local fx
-            local dirMask = edgeUnit.dirMaskForSmokeCloud and edgeUnit:dirMaskForSmokeCloud(cloudID)
-            local facingData = FACING_MAP[dirMask] or FALLBACK_FACING
+            local dirMask =
+                    edgeUnit.dirMaskForSmokeCloud and edgeUnit:dirMaskForSmokeCloud(cloudID) or
+                            FULL_DIR_MASK
             if self.smokeFx[unitID] == nil then
                 -- UITR: Define both main and edge in a single anim, with different root characters.
                 fx = createSmokeFx(
                         self, "uitr/fx/smoke_grenade", "effect_edge", edgeUnit:getLocation())
                 appendFx(fx, self, edgeFxAppend)
+                fx._prop:setSymbolVisibility("sphere", false) -- No central sphere for edges.
                 fx._prop:setFrame(math.random(1, fx._prop:getFrameCount()))
                 fx._uitrData = {}
                 self.smokeFx[unitID] = fx
@@ -208,18 +203,13 @@ function smokerig:refresh()
                     applyColor(fx, self._color)
                 end
                 local x, y = edgeUnit:getLocation()
-                -- simlog(
-                --         "UITR %s,%s dm=%s s=%s f=%s", x, y,
-                --         tostring(edgeUnit:dirMaskForSmokeCloud(cloudID)), facingData.symbol,
-                --         simdefs:stringForDir(facingData.facing))
             else
                 fx = self.smokeFx[unitID]
                 if colorUpdated and self._color then
                     applyColor(fx, self._color)
                 end
             end
-            fx._uitrData.tacticalSymbol = facingData.symbol
-            fx._uitrData.facing = facingData.facing
+            fx._uitrData.dirMask = dirMask
         end
     end
 
