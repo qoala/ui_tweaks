@@ -10,11 +10,11 @@ include makeconfig.mk
 .PHONY: build install clean distclean cleanOut cleanGenAnims
 .SECONDEXPANSION:
 
+ensuredir = @mkdir -p $(@D)
+
 files := modinfo.txt scripts.zip anims.kwad gui.kwad images.kwad rrni_gui.kwad tlv_anims.kwad
 outfiles := $(addprefix out/, $(files))
 installfiles := $(addprefix $(INSTALL_PATH)/, $(files))
-
-ensuredir = @mkdir -p $(@D)
 
 ifneq ($(INSTALL_PATH2),)
 	installfiles += $(addprefix $(INSTALL_PATH2)/, $(files))
@@ -62,7 +62,7 @@ $(anims): %.anim: $$*.anim.d/animation.xml $$*.anim.d/build.xml $$(wildcard $$*.
 	cd $*.anim.d && zip ../$(notdir $@) animation.xml build.xml *.png
 
 
-out/anims.kwad out/gui.kwad out/images.kwad: $(anims) $(gui_files) $(images_files)
+out/anims.kwad out/gui.kwad out/images.kwad: $(anims) $(gui_files) $(images_files) build.lua
 	$(ensuredir)
 	$(KWAD_BUILDER) -i build.lua -o out
 
@@ -86,6 +86,6 @@ out/tlv_anims.kwad: tactical-lamp-mod/build/anims.kwad
 	cp tactical-lamp-mod/build/anims.kwad out/tlv_anims.kwad
 
 tlv_anims := $(wildcard tactical-lamp-mod/src/kwads/anims/**/*.anim)
-tactical-lamp-mod/build/anims.kwad: $(tlv_anims)
+tactical-lamp-mod/build/anims.kwad: $(tlv_anims) tactical-lamp-mod/src/kwads/build.lua
 	$(ensuredir)
 	cd tactical-lamp-mod/src/kwads && $(KWAD_BUILDER) -i build.lua -o ../../build

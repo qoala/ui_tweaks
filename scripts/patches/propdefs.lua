@@ -14,7 +14,7 @@ propdefsCoverTest = {
         type = "simunit",
         name = "UITR DEBUG cover 1x1",
         onWorldTooltip = function() end,
-        kanim = "kanim_office_2x1_coffee_table",
+        kanim = "kanim_office_2x1_Bookshelf",
         traits = {cover = true, impass = {0, 0}},
         sounds = {appeared = "SpySociety/HUD/gameplay/peek_negative"},
         rig = "uitrdebug_decorig",
