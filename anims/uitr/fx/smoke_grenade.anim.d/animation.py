@@ -20,7 +20,9 @@ PARAMS = type('RenderParams', (object,), {
     'sclD': 115,
     # Isometric projection compresses Y axis.
     'projX': 1,
-    'projY': 1/1.8})
+    'projY': 1/1.8,
+    # u,v,w coordinates: (u,v) use sclD/sqrt(2) to XY before projection. w uses sclW.
+    'sclW': 115})
 
 Dirs = collections.namedtuple('Directions', 'a b c d', defaults=[False, False, False, False])
 
@@ -136,16 +138,23 @@ def buildSightblockFrame(frame, t, tMax, *, fadeOut=False,
     colors = {3: {3: alpha}}
   else:
     colors = None
-  tfm = [{'a': 2.5, 'd': 2.5}]
+
+  d = 1/math.sqrt(2)
+  tfm1 = {'a': 2.5, 'd': 2.5} # Scale adjustment between prop scale (0.25) and FX scale (0.1)
+  def tfm(u=0,v=0,w=0):
+    tfm0 = {'tx': PARAMS.projX * PARAMS.sclD * (u + v) / math.sqrt(2),
+            'ty': PARAMS.projY * PARAMS.sclD * (u - v) / math.sqrt(2) - PARAMS.sclW * w}
+    return [tfm0, tfm1]
+
 
   if dirs.d:
-    addElement(frame, 'sightblock_E', tfm=tfm, colors=colors)
+    addElement(frame, 'sightblock_E', tfm=tfm(), colors=colors)
   if dirs.a:
-    addElement(frame, 'sightblock_N', tfm=tfm, colors=colors)
+    addElement(frame, 'sightblock_N', tfm=tfm(), colors=colors)
   if dirs.b:
-    addElement(frame, 'sightblock_W', tfm=tfm, colors=colors)
+    addElement(frame, 'sightblock_W', tfm=tfm(), colors=colors)
   if dirs.c:
-    addElement(frame, 'sightblock_S', tfm=tfm, colors=colors)
+    addElement(frame, 'sightblock_S', tfm=tfm(), colors=colors)
 
 def buildOrbitFrame(frame, t, tMax, *,
                     size, fadeOutSize, radius=1/math.sqrt(2), orbCount, period, fadeOut=False):
