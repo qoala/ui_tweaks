@@ -1,0 +1,8 @@
+<Build name="MF_CoverPieces_1x1.fla">
+  <Symbol name="MF_cover_1x1_intern">
+    <Frame framenum="0" duration="1" image="bright_incog_1x1" w="112" h="158" x="55.975" y="79.975" />
+  </Symbol>
+  <Symbol name="MF_cover_1x1_tac">
+    <Frame framenum="0" duration="1" image="noncover_1x1" w="108" h="104" x="0.1004982" y="-0.2244987" />
+  </Symbol>
+</Build>

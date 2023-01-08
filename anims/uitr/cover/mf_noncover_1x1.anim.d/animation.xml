@@ -1,0 +1,23 @@
+<Anims>
+  <anim name="idle_icon_E_N_W_S_" root="character" numframes="1" framerate="30">
+    <frame idx="0" w="0" h="0" x="0" y="0">
+      <element name="MF_cover_1x1_intern" layername="1863952804" parentname="" frame="0" depth="0" 
+	  m1_a="1" m1_b="0" m1_c="0" m1_d="1" 
+	  m1_tx="-48.549" 
+	  m1_ty="-113.549" 
+	  m0_a="1" m0_b="0" m0_c="0" m0_d="1" 
+	  m0_tx="0" m0_ty="0" 
+	  c_00="1" c_01="0" c_02="0" c_03="0" c_04="0" 
+	  c_10="0" c_11="1" c_12="0" c_13="0" c_14="0" 
+	  c_20="0" c_21="0" c_22="1" c_23="0" c_24="0" 
+	  c_30="0" c_31="0" c_32="0" c_33="1" c_34="0" 
+	  c_40="0" c_41="0" c_42="0" c_43="0" c_44="1" 
+	  />
+    </frame>
+  </anim>
+  <anim name="idle_tac_E_N_W_S_" root="character" numframes="1" framerate="30">
+    <frame idx="1" w="0" h="0" x="0" y="0">
+      <element name="MF_cover_1x1_tac" layername="1863952804" parentname="" frame="0" depth="0" m1_a="1" m1_b="0" m1_c="0" m1_d="1" m1_tx="0.3" m1_ty="-16.349" m0_a="1" m0_b="0" m0_c="0" m0_d="1" m0_tx="0" m0_ty="0" c_01="0" c_02="0" c_03="0" c_10="0" c_12="0" c_13="0" c_20="0" c_21="0" c_23="0" c_30="0" c_31="0" c_32="0" c_40="0" c_41="0" c_42="0" c_43="0" c_44="1" c_00="1" c_11="1" c_22="1" c_33="1" c_04="0" c_14="0" c_24="0" c_34="0" />
+    </frame>
+  </anim>
+</Anims>

@@ -96,9 +96,9 @@ local animdefsFixup = {
 }
 
 -- Non-cover and Sightblock tactical DECOR --
-local NONCOVER_1_1 = "data/anims/hek/mf_noncoverpieces_1x1"
-local NONCOVER_1_2 = "data/anims/hek/mf_noncoverpieces_1x2"
-local NONCOVER_2_3 = "data/anims/hek/mf_noncoverpieces_2x3"
+local NONCOVER_1_1 = "data/anims/uitr/cover/mf_noncover_1x1"
+local NONCOVER_1_2 = "data/anims/uitr/cover/mf_noncover_1x2"
+local NONCOVER_2_3 = "data/anims/uitr/cover/mf_noncover_2x3"
 local TALL_1_1 = "data/anims/uitr/cover/mf_tallcoverpieces_1x1"
 local TALL_1_2 = "data/anims/uitr/cover/mf_tallcoverpieces_1x2"
 local TALL_NONCOVER_1_1 = "data/anims/uitr/cover/mf_tallnoncover_1x1"
@@ -381,6 +381,9 @@ local animdefsTactical = {
     },
 }
 
+local OLD_NONCOVER_1_1 = "data/anims/bcl/mf_noncoverpieces_1x1"
+local OLD_NONCOVER_1_2 = "data/anims/hek/mf_noncoverpieces_1x2"
+local OLD_NONCOVER_2_3 = "data/anims/hek/mf_noncoverpieces_2x3"
 local OLD_TALL_1_1 = "data/anims/bcl/mf_tallcoverpieces_1x1"
 local OLD_TALL_1_2 = "data/anims/bcl/mf_tallcoverpieces_1x2"
 local OLD_TALL_NONCOVER_1_1 = "data/anims/bcl/mf_tallnoncoverpieces_1x1"
@@ -388,6 +391,13 @@ local animdefsCoverTest = {
     uitr_test_non_1_1 = {
         build = {"data/anims/KO_office/ko_office_decor_lamp1.abld", abld(NONCOVER_1_1)},
         anims = {"data/anims/KO_office/ko_office_decor_lamp1.adef", adef(NONCOVER_1_1)},
+        anim = "idle",
+        scale = 0.25,
+        boundType = BoundType.bound_1x1_tall_med,
+    },
+    uitr_test_non_1_1_old = {
+        build = {"data/anims/KO_office/ko_office_decor_lamp1.abld", abld(OLD_NONCOVER_1_1)},
+        anims = {"data/anims/KO_office/ko_office_decor_lamp1.adef", adef(OLD_NONCOVER_1_1)},
         anim = "idle",
         scale = 0.25,
         boundType = BoundType.bound_1x1_tall_med,
