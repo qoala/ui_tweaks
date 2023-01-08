@@ -281,28 +281,17 @@ def buildDocumentTree():
   #   'orbCount': 3,
   #   'period': 300,
   # }
-  edgeKwargs = {
-    'size': 0.3,
-    'fadeOutSize': 0.9, # 3x expansion.
-    'radius': 1.5,
-    'orbCount': 13,
-    'period': 100 * 13/6,
-    'lifetime': 75,
-    'lifecycleOverlap': 3,
-    'lifecycleStep': 5,
-  }
   pulseKwargs = {
     'sizeMin': 0.6,
     'sizeMax': 1.0,
     'alphaMax': 1.0,
     'period': False,
   }
-  buildAnim(root, 'loop', symbol='tactical', frameFns=[buildEdgeFrame, buildPulseFrame],
-            frameCount=100, fnKwargs=[edgeKwargs, pulseKwargs])
-  edgeKwargs['lifecycleFadeOut'] = True
+  buildAnim(root, 'loop', symbol='tactical_sightblock', frameFns=[buildPulseFrame],
+            frameCount=100, fnKwargs=[pulseKwargs])
   pulseKwargs['fadeOut'] = 75
-  buildAnim(root, 'pst', symbol='tactical', frameFns=[buildEdgeFrame, buildPulseFrame],
-            frameCount=100, frameIdx0=100, fnKwargs=[edgeKwargs, pulseKwargs])
+  buildAnim(root, 'pst', symbol='tactical_sightblock', frameFns=[buildPulseFrame],
+            frameCount=100, frameIdx0=100, fnKwargs=[pulseKwargs])
 
   # === Smoke edge tiles
   edgeDirs = [
