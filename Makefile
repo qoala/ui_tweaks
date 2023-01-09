@@ -29,13 +29,13 @@ $(installfiles): %: out/$$(@F)
 
 clean: cleanOut cleanGenAnims
 cleanOut:
-	rm tactical-lamp-mod/build/*
-	rm out/*
+	-rm tactical-lamp-mod/build/*
+	-rm out/*
 
 distclean:
-	rm -f $(INSTALL_PATH)/*.kwad $(INSTALL_PATH)/*.zip
+	-rm -f $(INSTALL_PATH)/*.kwad $(INSTALL_PATH)/*.zip
 ifneq ($(INSTALL_PATH2),)
-	rm -f $(INSTALL_PATH2)/*.kwad $(INSTALL_PATH2)/*.zip
+	-rm -f $(INSTALL_PATH2)/*.kwad $(INSTALL_PATH2)/*.zip
 endif
 
 out/modinfo.txt: modinfo.txt
@@ -50,12 +50,12 @@ out/rrni_gui.kwad: rrni_gui.kwad
 ## kwads and contained files
 #
 
-rawanims := $(patsubst %.py,%.xml,$(shell find anims -type f -name "animation.py"))
+genanims := $(patsubst %.py,%.xml,$(shell find anims -type f -name "animation.py"))
 anims := $(patsubst %.anim.d,%.anim,$(shell find anims -type d -name "*.anim.d"))
 gui_files := $(wildcard gui/**/*.png gui/*.lua gui/**/*.lua)
 images_files := $(wildcard images/**/*.png)
 
-$(rawanims): %.xml: %.py $$(wildcard $$*.vanilla.xml)
+$(genanims): %.xml: %.py $$(wildcard $$*.vanilla.xml)
 	python3 $*.py
 
 $(anims): %.anim: $$*.anim.d/animation.xml $$*.anim.d/build.xml $$(wildcard $$*.anim.d/*.png)
@@ -67,7 +67,7 @@ out/anims.kwad out/gui.kwad out/images.kwad: $(anims) $(gui_files) $(images_file
 	$(KWAD_BUILDER) -i build.lua -o out
 
 cleanGenAnims:
-	rm $(rawanims)
+	-rm $(genanims) anims/**/*.anim
 
 #
 ## scripts
