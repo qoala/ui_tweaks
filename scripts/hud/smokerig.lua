@@ -101,16 +101,35 @@ local cloudFxAppend = {}
 local edgeFxAppend = {}
 function cloudFxAppend:update(rig)
     local gfxOptions = rig._boardRig._game:getGfxOptions()
-    self._prop:setVisible(not gfxOptions.bMainframeMode)
+    local prop = self._prop
+    prop:setVisible(not gfxOptions.bMainframeMode)
 
     -- UITR: Switch between tactical and in-world effect animations.
     local tacticalCloudsOpt = uitr_util.checkOption("tacticalClouds")
     if tacticalCloudsOpt ~= false and (gfxOptions.bTacticalView or tacticalCloudsOpt == 2) then
-        self._prop:setCurrentSymbol(rig._tacticalSymbol or "tactical_sightblock")
-        self._prop:setRenderFilter(rig._tacticalRenderFilter)
+        if not self._uitrData.inTactical then
+            self._uitrData.inTactical = true
+            if self._uitrData.inPostLoop then
+                if prop:getCurrentAnim() == "loop" then -- Force an almost-sync.
+                    prop:setFrame(prop:getFrameCount() - 1)
+                end
+            else
+                prop:setFrame(
+                        (prop:getFrame() - self._uitrData.inworldOffset) % prop:getFrameCount())
+            end
+        end
+        prop:setCurrentSymbol(rig._tacticalSymbol or "tactical_sightblock")
+        prop:setRenderFilter(rig._tacticalRenderFilter)
     else
-        self._prop:setCurrentSymbol("effect")
-        self._prop:setRenderFilter(cdefs.RENDER_FILTERS["default"])
+        if self._uitrData.inTactical then
+            self._uitrData.inTactical = false
+            if not self._uitrData.inPostLoop then
+                prop:setFrame(
+                        (prop:getFrame() + self._uitrData.inworldOffset) % prop:getFrameCount())
+            end
+        end
+        prop:setCurrentSymbol("effect")
+        prop:setRenderFilter(cdefs.RENDER_FILTERS["default"])
     end
 end
 DIR_SYMBOLS = {
@@ -122,7 +141,8 @@ DIR_SYMBOLS = {
 function edgeFxAppend:update(rig)
     local gfxOptions = rig._boardRig._game:getGfxOptions()
     local orientation = rig._boardRig._game:getCamera():getOrientation()
-    self._prop:setVisible(not gfxOptions.bMainframeMode)
+    local prop = self._prop
+    prop:setVisible(not gfxOptions.bMainframeMode)
 
     -- UITR: Switch between tactical and in-world effect animations.
     local tacticalCloudsOpt = uitr_util.checkOption("tacticalClouds")
@@ -130,14 +150,32 @@ function edgeFxAppend:update(rig)
         local dirMask = self._uitrData.dirMask
         for dir, symbol in pairs(DIR_SYMBOLS) do
             local dirBit = simdefs:maskFromDir((dir + orientation * 2) % simdefs.DIR_MAX)
-            self._prop:setSymbolVisibility(symbol, binops.test(dirMask, dirBit))
+            prop:setSymbolVisibility(symbol, binops.test(dirMask, dirBit))
         end
 
-        self._prop:setCurrentSymbol(rig._tacticalSymbol or "tactical_sightblock")
-        self._prop:setRenderFilter(rig._tacticalRenderFilter)
+        if not self._uitrData.inTactical then
+            self._uitrData.inTactical = true
+            if self._uitrData.inPostLoop then
+                if prop:getCurrentAnim() == "loop" then -- Force an almost-sync.
+                    prop:setFrame(prop:getFrameCount() - 1)
+                end
+            else
+                prop:setFrame(
+                        (prop:getFrame() - self._uitrData.inworldOffset) % prop:getFrameCount())
+            end
+        end
+        prop:setCurrentSymbol(rig._tacticalSymbol or "tactical_sightblock")
+        prop:setRenderFilter(rig._tacticalRenderFilter)
     else
-        self._prop:setCurrentSymbol("effect_edge")
-        self._prop:setRenderFilter(cdefs.RENDER_FILTERS["default"])
+        if self._uitrData.inTactical then
+            self._uitrData.inTactical = false
+            if not self._uitrData.inPostLoop then
+                prop:setFrame(
+                        (prop:getFrame() + self._uitrData.inworldOffset) % prop:getFrameCount())
+            end
+        end
+        prop:setCurrentSymbol("effect_edge")
+        prop:setRenderFilter(cdefs.RENDER_FILTERS["default"])
     end
 end
 local function appendFx(fx, rig, append)
@@ -149,6 +187,17 @@ local function appendFx(fx, rig, append)
 end
 
 -- ===
+
+local oldDestroy = smokerig.destroy
+function smokerig:destroy()
+    for _, fx in pairs(self.smokeFx) do
+        if fx._uitrData then
+            fx._uitrData.inPostLoop = true
+        end
+    end
+
+    oldDestroy(self)
+end
 
 -- Overwrite :refresh()
 -- Changes at CBF, UITR
@@ -169,7 +218,13 @@ function smokerig:refresh()
             -- UITR: Use custom FX that also contains tactical sprites.
             local fx = createSmokeFx(self, "uitr/fx/smoke_grenade", "effect", cell.x, cell.y)
             appendFx(fx, self, cloudFxAppend)
-            fx._prop:setFrame(math.random(1, fx._prop:getFrameCount()))
+            fx._uitrData = {x = cell.x, y = cell.y}
+            -- Whole-cloud offset. Tactical anims within a cloud pulse together, but overlapping
+            -- clouds should pulse independently.
+            local frameCount = fx._prop:getFrameCount()
+            self._frameOffset = self._frameOffset or math.random(1, frameCount)
+            fx._uitrData.inworldOffset = math.random(1, frameCount)
+            fx._prop:setFrame((self._frameOffset + fx._uitrData.inworldOffset) % frameCount)
             self.smokeFx[cell] = fx
             if self._color then
                 applyColor(fx, self._color)
@@ -181,7 +236,7 @@ function smokerig:refresh()
     local edgeUnits = unit:getSmokeEdge() or {}
     local activeEdgeUnits = {}
     for i, unitID in ipairs(edgeUnits) do
-        -- CBF: Only draw active smoke edges if we're using CBF dynamic smoke edges.
+        -- CBF: Only draw active smoke edges when using CBF dynamic smoke edges.
         local edgeUnit = self._boardRig:getSim():getUnit(unitID)
         if edgeUnit and
                 (not edgeUnit.isActiveForSmokeCloud or edgeUnit:isActiveForSmokeCloud(cloudID)) then
@@ -197,14 +252,16 @@ function smokerig:refresh()
                 local x, y = edgeUnit:getLocation()
                 fx = createSmokeFx(self, "uitr/fx/smoke_grenade", "effect_edge", x, y)
                 appendFx(fx, self, edgeFxAppend)
-                fx._prop:setSymbolVisibility("sphere", false) -- No central sphere for edges.
-                fx._prop:setFrame(math.random(1, fx._prop:getFrameCount()))
                 fx._uitrData = {x = x, y = y}
+                fx._prop:setSymbolVisibility("sphere", false) -- No central sphere for edges.
+                local frameCount = fx._prop:getFrameCount()
+                fx._uitrData.inworldOffset = math.random(1, frameCount)
+                fx._prop:setFrame((self._frameOffset + fx._uitrData.inworldOffset) % frameCount)
                 self.smokeFx[unitID] = fx
                 if self._color then
                     applyColor(fx, self._color)
                 end
-                simlog("LOG_UITR_TAC", "smokeEdgeRig:add %s,%s dirs=%s", x, y, dirMask)
+                simlog("LOG_UITR_TAC", "smokeEdgeRig:add %s,%s dirs=%s", x, y, tostring(dirMask))
             else
                 fx = self.smokeFx[unitID]
                 if colorUpdated and self._color then
@@ -219,12 +276,15 @@ function smokerig:refresh()
     for k, fx in pairs(self.smokeFx) do
         if activeCells[k] == nil and activeEdgeUnits[k] == nil then
             simlog(
-                    "LOG_UITR_TAC", "smokeEdgeRig:remove %s,%s dirs=%s", fx._uitrData.x,
-                    fx._uitrData.y, fx._uitrData.dirMask) -- TODO:disable
+                    "LOG_UITR_TAC", "smokeEdgeRig:remove %s,%s dirs=%s", tostring(fx._uitrData.x),
+                    tostring(fx._uitrData.y), tostring(fx._uitrData.dirMask))
             fx:postLoop("pst")
+            if fx._uitrData then
+                fx._uitrData.inPostLoop = true
+            end
 
             -- UITR: Drop reference to the old FX (which is asynchronously removing itself),
-            -- so that if a temporary edge comes back later, we can create a new FX in that spot.
+            -- so that when a temporary edge comes back later, we can create a new FX in that spot.
             self.smokeFx[k] = nil
         end
     end
