@@ -191,18 +191,20 @@ function smokerig:refresh()
                     edgeUnit.dirMaskForSmokeCloud and edgeUnit:dirMaskForSmokeCloud(cloudID) or
                             FULL_DIR_MASK
             if self.smokeFx[unitID] == nil then
-                -- UITR: Define both main and edge in a single anim, with different root characters.
-                fx = createSmokeFx(
-                        self, "uitr/fx/smoke_grenade", "effect_edge", edgeUnit:getLocation())
+                -- UITR: Define both main and edge in a single anim, with different root symbols.
+                -- There are separate in-world anims for cloud and edge, but opaque clouds use
+                -- the same tactical anim, with symbol-visibility.
+                local x, y = edgeUnit:getLocation()
+                fx = createSmokeFx(self, "uitr/fx/smoke_grenade", "effect_edge", x, y)
                 appendFx(fx, self, edgeFxAppend)
                 fx._prop:setSymbolVisibility("sphere", false) -- No central sphere for edges.
                 fx._prop:setFrame(math.random(1, fx._prop:getFrameCount()))
-                fx._uitrData = {}
+                fx._uitrData = {x = x, y = y}
                 self.smokeFx[unitID] = fx
                 if self._color then
                     applyColor(fx, self._color)
                 end
-                local x, y = edgeUnit:getLocation()
+                simlog("LOG_UITR_TAC", "smokeEdgeRig:add %s,%s dirs=%s", x, y, dirMask)
             else
                 fx = self.smokeFx[unitID]
                 if colorUpdated and self._color then
@@ -216,7 +218,14 @@ function smokerig:refresh()
     -- Remove any smoke that no longer exists.
     for k, fx in pairs(self.smokeFx) do
         if activeCells[k] == nil and activeEdgeUnits[k] == nil then
+            simlog(
+                    "LOG_UITR_TAC", "smokeEdgeRig:remove %s,%s dirs=%s", fx._uitrData.x,
+                    fx._uitrData.y, fx._uitrData.dirMask) -- TODO:disable
             fx:postLoop("pst")
+
+            -- UITR: Drop reference to the old FX (which is asynchronously removing itself),
+            -- so that if a temporary edge comes back later, we can create a new FX in that spot.
+            self.smokeFx[k] = nil
         end
     end
 

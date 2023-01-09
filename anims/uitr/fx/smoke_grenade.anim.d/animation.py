@@ -136,6 +136,8 @@ def buildSightblockFrame(frame, t, tMax, *, fadeOut=False,
   if fadeOut and t < fadeOut:
     alpha = 1 - (t/fadeOut)**(2/3)
     colors = {3: {3: alpha}}
+  elif fadeOut:
+    return # Past completion of the fadeOut. Add empty frames to match in-world anim.
   else:
     colors = None
 
@@ -309,16 +311,16 @@ def buildDocumentTree():
   sbFrontKwargs = {'dirs': Dirs(a=True, d=True)}
   sbRearKwargs = {'dirs': Dirs(b=True, c=True)}
   pulseKwargs = {
-    'sizeMin': 0.6,
-    'sizeMax': 0.9,
-    'alphaMax': 1.0,
+    'sizeMin': 0.5,
+    'sizeMax': 1.0,
+    'alphaMax': 0.25,
     'period': 50,
   }
   buildAnim(root, 'loop', symbol='tactical_sightblock', frameCount=100,
             frameFns=[buildSightblockFrame, buildPulseFrame, buildSightblockFrame],
             fnKwargs=[sbFrontKwargs, pulseKwargs, sbRearKwargs])
-  sbFrontKwargs['fadeOut'] = 75
-  sbRearKwargs['fadeOut'] = 75
+  sbFrontKwargs['fadeOut'] = 25
+  sbRearKwargs['fadeOut'] = 25
   pulseKwargs['fadeOut'] = 75
   buildAnim(root, 'pst', symbol='tactical_sightblock', frameCount=100, frameIdx0=100,
             frameFns=[buildSightblockFrame, buildPulseFrame, buildSightblockFrame],
