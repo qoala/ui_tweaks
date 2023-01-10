@@ -70,22 +70,47 @@ function hudAppend:_refreshUITRGridCoordinatesAgentRelative()
     if not unit then
         return
     end
-    local x, y = unit:getLocation()
-    if not x then
+    local x0, y0 = unit:getLocation()
+    if not x0 then
         return
     end
+    local localPlayer = self._game:getLocalPlayer()
+    local minX, minY, maxX, maxY
+    if localPlayer ~= nil then
+        minX, minY, maxX, maxY = localPlayer:getUITRKnownBounds()
+        if x0 < minX or x0 > maxX or y0 < minY or y0 > maxY then
+            simlog(
+                    "[UITR] Warning: current unit outside player's known bounds: %s,%s vs %s,%s-%s,%s",
+                    x0, y0, minX, minY, maxX, maxY)
+            return
+        end
+        -- else, if there is no local player, just reveal everything
+    end
+    simlog("[UITR:TODO] coords %s,%s vs %s,%s-%s,%s", x0, y0, minX, minY, maxX, maxY)
 
     for i, lbl in ipairs(GRID_N_LABELS) do
-        createGridCoordinate(self, x, y + i, lbl)
+        if y0 + i > maxY then
+            break
+        end
+        createGridCoordinate(self, x0, y0 + i, lbl)
     end
     for i, lbl in ipairs(GRID_S_LABELS) do
-        createGridCoordinate(self, x, y - i, lbl)
+        if y0 - i < minY then
+            break
+        end
+        createGridCoordinate(self, x0, y0 - i, lbl)
     end
     for i, lbl in ipairs(GRID_E_LABELS) do
-        createGridCoordinate(self, x + i, y, lbl)
+        if x0 + i > maxX then
+            break
+        end
+        createGridCoordinate(self, x0 + i, y0, lbl)
     end
     for i, lbl in ipairs(GRID_W_LABELS) do
-        createGridCoordinate(self, x - i, y, lbl)
+        if x0 - i < minX then
+            break
+        end
+        createGridCoordinate(self, x0 - i, y0, lbl)
     end
 end
 

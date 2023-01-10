@@ -60,6 +60,7 @@ local function init(modApi)
     include(modApi:getScriptPath() .. "/backend/abilityutil")
     include(modApi:getScriptPath() .. "/backend/engine")
     include(modApi:getScriptPath() .. "/backend/simability")
+    include(modApi:getScriptPath() .. "/backend/simplayer")
     include(modApi:getScriptPath() .. "/backend/simquery")
     -- inter-mission data layer
     include(modApi:getScriptPath() .. "/backend/mission_scoring")
