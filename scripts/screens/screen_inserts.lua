@@ -1,4 +1,8 @@
-local inserts = {
+local array = include("modules/array")
+
+local inserts = {}
+
+local visionModeInserts = {
     {
         "hud.lua",
         {"widgets", 16, "children"}, -- topPnl
@@ -455,5 +459,70 @@ local inserts = {
         },
     },
 }
+array.concat(inserts, visionModeInserts)
+
+local coordinateGridInserts = {
+    {
+        "hud-inworld.lua",
+        {"skins"},
+        {
+            name = [[uitrGridCoordinate]],
+            isVisible = true,
+            noInput = true,
+            anchor = 1,
+            rotation = 0,
+            x = 0,
+            y = 0,
+            w = 0,
+            h = 0,
+            sx = 1,
+            sy = 1,
+            ctor = [[group]],
+            children = {
+                {
+                    name = [[bg]],
+                    isVisible = true,
+                    noInput = true,
+                    anchor = 1,
+                    rotation = 0,
+                    x = 0,
+                    xpx = true,
+                    y = 0,
+                    ypx = true,
+                    w = 40,
+                    wpx = true,
+                    h = 40,
+                    hpx = true,
+                    sx = 1,
+                    sy = 1,
+                    ctor = [[image]],
+                    images = {{file = [[rgradient.png]], name = [[]], color = {0, 0, 0, 0.8}}},
+                },
+                {
+                    name = [[label]],
+                    isVisible = true,
+                    noInput = true,
+                    anchor = 1,
+                    rotation = 0,
+                    x = 0,
+                    xpx = true,
+                    y = 0,
+                    ypx = true,
+                    w = 40,
+                    wpx = true,
+                    h = 40,
+                    hpx = true,
+                    sx = 1,
+                    sy = 1,
+                    ctor = [[label]],
+                    halign = MOAITextBox.CENTER_JUSTIFY,
+                    valign = MOAITextBox.CENTER_JUSTIFY,
+                    text_style = [[font1_18_sb]],
+                },
+            },
+        },
+    },
+}
+array.concat(inserts, coordinateGridInserts)
 
 return inserts

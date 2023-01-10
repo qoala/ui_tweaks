@@ -38,6 +38,14 @@ local UITR_OPTIONS = {
     {
         sectionHeader = true,
 
+        id = "gridCoords",
+        name = STRINGS.UITWEAKSR.OPTIONS.GRID_COORDS,
+        tip = STRINGS.UITWEAKSR.OPTIONS.GRID_COORDS_TIP,
+        values = {false, 1},
+        value = false,
+        strings = STRINGS.UITWEAKSR.OPTIONS.GRID_COORDS_OPTIONS,
+    },
+    {
         id = "preciseAp",
         name = STRINGS.UITWEAKSR.OPTIONS.PRECISE_AP,
         tip = STRINGS.UITWEAKSR.OPTIONS.PRECISE_AP_TIP,

@@ -1,9 +1,14 @@
-local hud = include("hud/hud")
 local mui_defs = include("mui/mui_defs")
 local mui_tooltip = include("mui/mui_tooltip")
 local util = include("client_util")
 local simdefs = include("sim/simdefs")
 local simquery = include("sim/simquery")
+
+local uitr_util = include(SCRIPT_PATHS.qed_uitr .. "/uitr_util")
+
+-- ===
+
+local hudAppend = {}
 
 -- ===
 
@@ -18,7 +23,7 @@ local function visionModeTooltip(currentEnable)
                     STRINGS.UITWEAKSR.UI.BTN_VISIONMODE_ENABLE_TXT, "UITR_VISIONMODE")
 end
 
-local function hud_uitr_setVisionMode(self, doEnable)
+function hudAppend:uitr_setVisionMode(doEnable)
     self._uitr_isVisionMode = doEnable
 
     local btnToggleVisionMode = self._screen.binder.topPnl.binder.btnToggleVisionMode
@@ -42,15 +47,69 @@ end
 
 -- ===
 
+local GRID_N_LABELS = {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"}
+local GRID_S_LABELS = {"O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"}
+local GRID_E_LABELS = {"-1", "-2", "-3", "-4", "-5", "-6", "-7", "-8", "-9", "-10", "-11", "-12"}
+local GRID_W_LABELS = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"}
+local HUD_GRID_COORDS = "hudUitrGrid"
+
+local function createGridCoordinate(self, x, y, labelText)
+    local wx, wy = self._game:cellToWorld(x, y)
+    local wz = -6
+    local widget = self._world_hud:createWidget(
+            HUD_GRID_COORDS, "uitrGridCoordinate", {worldx = wx, worldy = wy, worldz = wz})
+    widget.binder.label:setText(labelText)
+    return widget
+end
+
+function hudAppend:_refreshUITRGridCoordinatesAgentRelative()
+    if self._game:isReplaying() then
+        return
+    end
+    local unit = self:getSelectedUnit()
+    if not unit then
+        return
+    end
+    local x, y = unit:getLocation()
+    if not x then
+        return
+    end
+
+    for i, lbl in ipairs(GRID_N_LABELS) do
+        createGridCoordinate(self, x, y + i, lbl)
+    end
+    for i, lbl in ipairs(GRID_S_LABELS) do
+        createGridCoordinate(self, x, y - i, lbl)
+    end
+    for i, lbl in ipairs(GRID_E_LABELS) do
+        createGridCoordinate(self, x + i, y, lbl)
+    end
+    for i, lbl in ipairs(GRID_W_LABELS) do
+        createGridCoordinate(self, x - i, y, lbl)
+    end
+end
+
+function hudAppend:_refreshUITRGridCoordinates()
+    self._world_hud:destroyWidgets(HUD_GRID_COORDS)
+
+    local gridOption = uitr_util.checkOption("gridCoords")
+    if gridOption == 1 then
+        self:_refreshUITRGridCoordinatesAgentRelative()
+    end
+end
+
+-- ===
+
+local hud = include("hud/hud")
 local oldCreateHud = hud.createHud
 
 hud.createHud = function(...)
     local hudObject = oldCreateHud(...)
 
     local btnToggleVisionMode = hudObject._screen.binder.topPnl.binder.btnToggleVisionMode
-    if btnToggleVisionMode and not btnToggleVisionMode.isnull then
+    if btnToggleVisionMode and not btnToggleVisionMode.isnull then -- Vision Mode
         hudObject._uitr_isVisionMode = false
-        hudObject.uitr_setVisionMode = hud_uitr_setVisionMode
+        hudObject.uitr_setVisionMode = hudAppend.uitr_setVisionMode
 
         local oldOnSimEvent = hudObject.onSimEvent
         function hudObject:onSimEvent(ev, ...)
@@ -66,6 +125,19 @@ hud.createHud = function(...)
         btnToggleVisionMode:setTooltip(visionModeTooltip(false))
         btnToggleVisionMode:setHotkey("UITR_VISIONMODE")
         btnToggleVisionMode.onClick = util.makeDelegate(nil, onClickVisionToggle, hudObject)
+    end
+
+    do -- Grid Coordinates
+        hudObject._refreshUITRGridCoordinates = hudAppend._refreshUITRGridCoordinates
+        hudObject._refreshUITRGridCoordinatesAgentRelative =
+                hudAppend._refreshUITRGridCoordinatesAgentRelative
+
+        local oldRefreshHud = hudObject.refreshHud
+        function hudObject:refreshHud(...)
+            oldRefreshHud(self, ...)
+
+            self:_refreshUITRGridCoordinates()
+        end
     end
 
     return hudObject

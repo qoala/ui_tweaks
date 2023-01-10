@@ -3,6 +3,12 @@ local UI_TWEAKS_STRINGS = {
         MOD_ENABLED = "Enabled",
         VANILLA = "OFF/VANILLA",
 
+        GRID_COORDS = "Grid Coordinates",
+        GRID_COORDS_TIP = "Show an overlay of grid coordinates.",
+        GRID_COORDS_OPTIONS = { --
+            "OFF/VANILLA",
+            "AGENT-RELATIVE",
+        },
         PRECISE_AP = "Precise AP",
         PRECISE_AP_TIP = "Round AP to .5 instead of whole number",
         PRECISE_AP_HALF = "0.5",
@@ -12,8 +18,8 @@ local UI_TWEAKS_STRINGS = {
         TACTICAL_LAMP_VIEW_TIP = "Distinct graphics for tall cover (book cases, etc) and non-cover (some lamps, etc) items.\nCREDIT: Benjamin C. Lewis, Hekateras",
         TACTICAL_CLOUDS = "Tactical Cloud Effects",
         TACTICAL_CLOUDS_TIP = "Less-obscuring graphics for clouds in tactical view. Can also be enabled for in-world view if so desired.",
-        TACTICAL_CLOUD_OPTIONS = {
-            "OFF (VANILLA)",
+        TACTICAL_CLOUD_OPTIONS = { --
+            "OFF/VANILLA",
             "ON",
             "ALWAYS",
         },
@@ -41,7 +47,7 @@ local UI_TWEAKS_STRINGS = {
 
         SELECTION_FILTER_AGENT = "Highlight Selected Agent",
         SELECTION_FILTER_AGENT_TIP = "Selected agent is highlighted in a bright color of your choice.",
-        SELECTION_FILTER_AGENT_COLORS = {
+        SELECTION_FILTER_AGENT_COLORS = { --
             "OFF/VANILLA",
             "CYAN",
             "BLUE",
@@ -58,7 +64,12 @@ local UI_TWEAKS_STRINGS = {
         SELECTION_FILTER_TACTICAL_TIP = "Selected agent highlighting is applied in tactical view.",
         SELECTION_FILTER_TILE = "Highlight Selected Agent Tile",
         SELECTION_FILTER_TILE_TIP = "Selected agent's tile is highlighted in a bright color of your choice.",
-        SELECTION_FILTER_TILE_COLORS = {"OFF/VANILLA", "WHITE", "CYAN", "BLUE"},
+        SELECTION_FILTER_TILE_COLORS = { --
+            "OFF/VANILLA",
+            "WHITE",
+            "CYAN",
+            "BLUE",
+        },
     },
 
     UI = {
