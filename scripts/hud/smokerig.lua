@@ -32,8 +32,6 @@ end
 
 -- ===
 
-local FULL_DIR_MASK = simdefs.DIRMASK_N + simdefs.DIRMASK_E + simdefs.DIRMASK_S + simdefs.DIRMASK_W
-
 -- UITR: Extract color selection, because we only want to create 1 render filter per rig.
 -- Returns true if there's been a change.
 function smokerig:_refreshColorDef()
@@ -232,15 +230,19 @@ function smokerig:refresh(ev)
     if ev and ev.smokeEdgeID then
         -- CBF dynamic edges: Single edge update.
         local edgeID = ev.smokeEdgeID
-        local locals = {cloudID = cloudID, cloudOffset = cloudOffset, colorUpdated = false}
+        local locals = {
+            cloudID = cloudID,
+            cloudOffset = cloudOffset,
+            colorUpdated = false,
+            unit = unit,
+        }
         local isActive = self:_refreshEdge(edgeID, locals)
         if not isActive and self.smokeFx[edgeID] then
             -- Clean up the now-inactive fx.
             local fx = self.smokeFx[edgeID]
             simlog(
-                    "LOG_UITR_TAC", "smokeEdgeRig:remove %s,%s dirs=%s",
-                    tostring(fx._uitrData.x), tostring(fx._uitrData.y),
-                    tostring(fx._uitrData.dirMask))
+                    "LOG_UITR_TAC", "smokeEdgeRig:remove %s,%s dirs=%s", tostring(fx._uitrData.x),
+                    tostring(fx._uitrData.y), tostring(fx._uitrData.dirMask))
             fx:postLoop("pst")
             if fx._uitrData then
                 fx._uitrData.inPostLoop = true
@@ -250,7 +252,12 @@ function smokerig:refresh(ev)
     else
         -- Full refresh.
         local colorUpdated = self:_refreshColorDef()
-        local locals = {cloudID = cloudID, cloudOffset = cloudOffset, colorUpdated = colorUpdated}
+        local locals = {
+            cloudID = cloudID,
+            cloudOffset = cloudOffset,
+            colorUpdated = colorUpdated,
+            unit = unit,
+        }
 
         -- CBF/UITR: track which cells/edge units were active.
         local activeCells = {}
@@ -306,6 +313,25 @@ function smokerig:_refreshCell(cell, locals)
     return true -- Cells are always active.
 end
 
+local function getFallbackDirMask(edgeUnit, cloudUnit)
+    local x, y = edgeUnit:getLocation()
+    local cell = edgeUnit:getSim():getCell(x, y)
+    if not cell then
+        return
+    end
+    local dirMask = 0
+    for _, cc in ipairs(cloudUnit:getSmokeCells()) do
+        if (cc.x == x and math.abs(cc.y - y) == 1) or
+                (cc.y == y and math.abs(cc.x - x) == 1) then
+            local dir = simquery.getDirectionFromDelta(cc.x - x, cc.y - y)
+            if simquery.isOpenExit(cell.exits[dir]) then
+                dirMask = binops.b_or(dirMask, simdefs:maskFromDir(dir))
+            end
+        end
+    end
+    return dirMask
+end
+
 function smokerig:_refreshEdge(unitID, locals)
     -- CBF: Only draw active smoke edges when using CBF dynamic smoke edges.
     local edgeUnit = self._boardRig:getSim():getUnit(unitID)
@@ -313,7 +339,7 @@ function smokerig:_refreshEdge(unitID, locals)
             (not edgeUnit.isActiveForSmokeCloud or edgeUnit:isActiveForSmokeCloud(locals.cloudID)) then
         local fx
         local dirMask = edgeUnit.dirMaskForSmokeCloud and
-                                edgeUnit:dirMaskForSmokeCloud(locals.cloudID) or FULL_DIR_MASK
+                                edgeUnit:dirMaskForSmokeCloud(locals.cloudID)
         if self.smokeFx[unitID] == nil then
             -- UITR: Define both main and edge in a single anim, with different root symbols.
             -- There are separate in-world anims for cloud and edge, but opaque clouds use
@@ -330,6 +356,10 @@ function smokerig:_refreshEdge(unitID, locals)
             if self._color then
                 applyColor(fx, self._color)
             end
+            -- UITR: Calculate dirmask once if CBF dynamic smoke edges aren't available.
+            if not edgeUnit.dirMaskForSmokeCloud then
+                dirMask = getFallbackDirMask(edgeUnit, locals.unit)
+            end
             simlog("LOG_UITR_TAC", "smokeEdgeRig:add %s,%s dirs=%s", x, y, tostring(dirMask))
         else
             fx = self.smokeFx[unitID]
@@ -337,7 +367,9 @@ function smokerig:_refreshEdge(unitID, locals)
                 applyColor(fx, self._color)
             end
         end
-        fx._uitrData.dirMask = dirMask
+        if dirMask or edgeUnit.dirMaskForSmokeCloud then
+            fx._uitrData.dirMask = dirMask
+        end
 
         return true -- Edge is currently active.
     end
