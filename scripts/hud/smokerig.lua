@@ -209,14 +209,10 @@ end
 function smokerig:refresh()
     self:_base().refresh(self)
 
-    local colorUpdated = self:_refreshColorDef()
-
     -- Smoke aint got no ghosting behaviour.
     local unit = self:getUnit()
     local cloudID = unit:getID()
-    local cells = unit:getSmokeCells() or {}
-    -- UITR: track which FX are for cells
-    local activeCells = {}
+
     -- Whole-cloud offset. Tactical anims within a cloud pulse together, but overlapping
     -- clouds should pulse independently.
     local cloudOffset
@@ -232,81 +228,98 @@ function smokerig:refresh()
     if not cloudOffset then
         cloudOffset = math.random(1, 100) -- Hardcoded range, because we don't have an anim yet.
     end
-    for i, cell in ipairs(cells) do
-        activeCells[cell] = true
-        if self.smokeFx[cell] == nil then
-            -- UITR: Use custom FX that also contains tactical sprites.
-            local fx = createSmokeFx(self, "uitr/fx/smoke_grenade", "effect", cell.x, cell.y)
-            appendFx(fx, self, cloudFxAppend)
-            fx._uitrData = {x = cell.x, y = cell.y}
-            -- Whole-cloud offset. Tactical anims within a cloud pulse together, but overlapping
-            -- clouds should pulse independently.
+
+    if true then
+        local colorUpdated = self:_refreshColorDef()
+        local locals = {cloudID = cloudID, cloudOffset = cloudOffset, colorUpdated = colorUpdated}
+
+        -- CBF/UITR: track which cells/edge units were active.
+        local activeCells = {}
+        for i, cell in ipairs(unit:getSmokeCells() or {}) do
+            activeCells[cell] = self:_refreshCell(cell, locals)
+        end
+        local activeEdgeUnits = {}
+        for i, unitID in ipairs(unit:getSmokeEdge() or {}) do
+            activeEdgeUnits[unitID] = self:_refreshEdge(unitID, locals)
+        end
+
+        -- Remove any smoke that no longer exists.
+        for k, fx in pairs(self.smokeFx) do
+            if activeCells[k] == nil and activeEdgeUnits[k] == nil then
+                simlog(
+                        "LOG_UITR_TAC", "smokeEdgeRig:remove %s,%s dirs=%s",
+                        tostring(fx._uitrData.x), tostring(fx._uitrData.y),
+                        tostring(fx._uitrData.dirMask))
+                fx:postLoop("pst")
+                if fx._uitrData then
+                    fx._uitrData.inPostLoop = true
+                end
+
+                -- UITR: Drop reference to the old FX (which is asynchronously removing itself),
+                -- so that when a temporary edge comes back later, we can create a new FX in that spot.
+                self.smokeFx[k] = nil
+            end
+        end
+
+        -- UITR: Moved the visibility update (hides in mainframe mode) to the individual FX updates.
+    end
+end
+
+function smokerig:_refreshCell(cell, locals)
+    if self.smokeFx[cell] == nil then
+        -- UITR: Use custom FX that also contains tactical sprites.
+        local fx = createSmokeFx(self, "uitr/fx/smoke_grenade", "effect", cell.x, cell.y)
+        appendFx(fx, self, cloudFxAppend)
+        fx._uitrData = {x = cell.x, y = cell.y}
+        -- Whole-cloud offset. Tactical anims within a cloud pulse together, but overlapping
+        -- clouds should pulse independently.
+        local frameCount = fx._prop:getFrameCount()
+        fx._uitrData.inworldOffset = math.random(1, frameCount)
+        fx._prop:setFrame((locals.cloudOffset + fx._uitrData.inworldOffset) % frameCount)
+        self.smokeFx[cell] = fx
+        if self._color then
+            applyColor(fx, self._color)
+        end
+    elseif locals.colorUpdated and self._color then
+        applyColor(self.smokeFx[cell], self._color)
+    end
+
+    return true -- Cells are always active.
+end
+
+function smokerig:_refreshEdge(unitID, locals)
+    -- CBF: Only draw active smoke edges when using CBF dynamic smoke edges.
+    local edgeUnit = self._boardRig:getSim():getUnit(unitID)
+    if edgeUnit and
+            (not edgeUnit.isActiveForSmokeCloud or edgeUnit:isActiveForSmokeCloud(locals.cloudID)) then
+        local fx
+        local dirMask = edgeUnit.dirMaskForSmokeCloud and
+                                edgeUnit:dirMaskForSmokeCloud(locals.cloudID) or FULL_DIR_MASK
+        if self.smokeFx[unitID] == nil then
+            -- UITR: Define both main and edge in a single anim, with different root symbols.
+            -- There are separate in-world anims for cloud and edge, but opaque clouds use
+            -- the same tactical anim, with symbol-visibility.
+            local x, y = edgeUnit:getLocation()
+            fx = createSmokeFx(self, "uitr/fx/smoke_grenade", "effect_edge", x, y)
+            appendFx(fx, self, edgeFxAppend)
+            fx._uitrData = {x = x, y = y}
+            fx._prop:setSymbolVisibility("sphere", false) -- No central sphere for edges.
             local frameCount = fx._prop:getFrameCount()
             fx._uitrData.inworldOffset = math.random(1, frameCount)
-            fx._prop:setFrame((cloudOffset + fx._uitrData.inworldOffset) % frameCount)
-            self.smokeFx[cell] = fx
+            fx._prop:setFrame((locals.cloudOffset + fx._uitrData.inworldOffset) % frameCount)
+            self.smokeFx[unitID] = fx
             if self._color then
                 applyColor(fx, self._color)
             end
-        elseif colorUpdated and self._color then
-            applyColor(self.smokeFx[cell], self._color)
-        end
-    end
-    local edgeUnits = unit:getSmokeEdge() or {}
-    local activeEdgeUnits = {}
-    for i, unitID in ipairs(edgeUnits) do
-        -- CBF: Only draw active smoke edges when using CBF dynamic smoke edges.
-        local edgeUnit = self._boardRig:getSim():getUnit(unitID)
-        if edgeUnit and
-                (not edgeUnit.isActiveForSmokeCloud or edgeUnit:isActiveForSmokeCloud(cloudID)) then
-            activeEdgeUnits[unitID] = true
-            local fx
-            local dirMask =
-                    edgeUnit.dirMaskForSmokeCloud and edgeUnit:dirMaskForSmokeCloud(cloudID) or
-                            FULL_DIR_MASK
-            if self.smokeFx[unitID] == nil then
-                -- UITR: Define both main and edge in a single anim, with different root symbols.
-                -- There are separate in-world anims for cloud and edge, but opaque clouds use
-                -- the same tactical anim, with symbol-visibility.
-                local x, y = edgeUnit:getLocation()
-                fx = createSmokeFx(self, "uitr/fx/smoke_grenade", "effect_edge", x, y)
-                appendFx(fx, self, edgeFxAppend)
-                fx._uitrData = {x = x, y = y}
-                fx._prop:setSymbolVisibility("sphere", false) -- No central sphere for edges.
-                local frameCount = fx._prop:getFrameCount()
-                fx._uitrData.inworldOffset = math.random(1, frameCount)
-                fx._prop:setFrame((cloudOffset + fx._uitrData.inworldOffset) % frameCount)
-                self.smokeFx[unitID] = fx
-                if self._color then
-                    applyColor(fx, self._color)
-                end
-                simlog("LOG_UITR_TAC", "smokeEdgeRig:add %s,%s dirs=%s", x, y, tostring(dirMask))
-            else
-                fx = self.smokeFx[unitID]
-                if colorUpdated and self._color then
-                    applyColor(fx, self._color)
-                end
+            simlog("LOG_UITR_TAC", "smokeEdgeRig:add %s,%s dirs=%s", x, y, tostring(dirMask))
+        else
+            fx = self.smokeFx[unitID]
+            if locals.colorUpdated and self._color then
+                applyColor(fx, self._color)
             end
-            fx._uitrData.dirMask = dirMask
         end
+        fx._uitrData.dirMask = dirMask
+
+        return true -- Edge is currently active.
     end
-
-    -- Remove any smoke that no longer exists.
-    for k, fx in pairs(self.smokeFx) do
-        if activeCells[k] == nil and activeEdgeUnits[k] == nil then
-            simlog(
-                    "LOG_UITR_TAC", "smokeEdgeRig:remove %s,%s dirs=%s", tostring(fx._uitrData.x),
-                    tostring(fx._uitrData.y), tostring(fx._uitrData.dirMask))
-            fx:postLoop("pst")
-            if fx._uitrData then
-                fx._uitrData.inPostLoop = true
-            end
-
-            -- UITR: Drop reference to the old FX (which is asynchronously removing itself),
-            -- so that when a temporary edge comes back later, we can create a new FX in that spot.
-            self.smokeFx[k] = nil
-        end
-    end
-
-    -- UITR: Moved the visibility update (hides in mainframe mode) to the individual FX updates.
 end
