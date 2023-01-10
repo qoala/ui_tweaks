@@ -2,6 +2,7 @@ local cdefs = include("client_defs")
 local resources = include("resources")
 local array = include("modules/array")
 local binops = include("modules/binary_ops")
+local util = include("modules/util")
 local simdefs = include("sim/simdefs")
 local simquery = include("sim/simquery")
 local smokerig = include("gameplay/smokerig").rig
@@ -216,6 +217,21 @@ function smokerig:refresh()
     local cells = unit:getSmokeCells() or {}
     -- UITR: track which FX are for cells
     local activeCells = {}
+    -- Whole-cloud offset. Tactical anims within a cloud pulse together, but overlapping
+    -- clouds should pulse independently.
+    local cloudOffset
+    for _, fx in pairs(self.smokeFx) do
+        if fx._uitrData then
+            local frame = fx._prop:getFrame()
+            if not fx._uitrData.inTactical then
+                cloudOffset = (frame - fx._uitrData.inworldOffset) % fx._prop:getFrameCount()
+                break
+            end
+        end
+    end
+    if not cloudOffset then
+        cloudOffset = math.random(1, 100) -- Hardcoded range, because we don't have an anim yet.
+    end
     for i, cell in ipairs(cells) do
         activeCells[cell] = true
         if self.smokeFx[cell] == nil then
@@ -226,9 +242,8 @@ function smokerig:refresh()
             -- Whole-cloud offset. Tactical anims within a cloud pulse together, but overlapping
             -- clouds should pulse independently.
             local frameCount = fx._prop:getFrameCount()
-            self._frameOffset = self._frameOffset or math.random(1, frameCount)
             fx._uitrData.inworldOffset = math.random(1, frameCount)
-            fx._prop:setFrame((self._frameOffset + fx._uitrData.inworldOffset) % frameCount)
+            fx._prop:setFrame((cloudOffset + fx._uitrData.inworldOffset) % frameCount)
             self.smokeFx[cell] = fx
             if self._color then
                 applyColor(fx, self._color)
@@ -260,7 +275,7 @@ function smokerig:refresh()
                 fx._prop:setSymbolVisibility("sphere", false) -- No central sphere for edges.
                 local frameCount = fx._prop:getFrameCount()
                 fx._uitrData.inworldOffset = math.random(1, frameCount)
-                fx._prop:setFrame((self._frameOffset + fx._uitrData.inworldOffset) % frameCount)
+                fx._prop:setFrame((cloudOffset + fx._uitrData.inworldOffset) % frameCount)
                 self.smokeFx[unitID] = fx
                 if self._color then
                     applyColor(fx, self._color)
