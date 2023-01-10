@@ -206,7 +206,7 @@ end
 
 -- Overwrite :refresh()
 -- Changes at CBF, UITR
-function smokerig:refresh()
+function smokerig:refresh(ev)
     self:_base().refresh(self)
 
     -- Smoke aint got no ghosting behaviour.
@@ -229,7 +229,26 @@ function smokerig:refresh()
         cloudOffset = math.random(1, 100) -- Hardcoded range, because we don't have an anim yet.
     end
 
-    if true then
+    if ev and ev.smokeEdgeID then
+        -- CBF dynamic edges: Single edge update.
+        local edgeID = ev.smokeEdgeID
+        local locals = {cloudID = cloudID, cloudOffset = cloudOffset, colorUpdated = false}
+        local isActive = self:_refreshEdge(edgeID, locals)
+        if not isActive and self.smokeFx[edgeID] then
+            -- Clean up the now-inactive fx.
+            local fx = self.smokeFx[edgeID]
+            simlog(
+                    "LOG_UITR_TAC", "smokeEdgeRig:remove %s,%s dirs=%s",
+                    tostring(fx._uitrData.x), tostring(fx._uitrData.y),
+                    tostring(fx._uitrData.dirMask))
+            fx:postLoop("pst")
+            if fx._uitrData then
+                fx._uitrData.inPostLoop = true
+            end
+            self.smokeFx[edgeID] = nil
+        end
+    else
+        -- Full refresh.
         local colorUpdated = self:_refreshColorDef()
         local locals = {cloudID = cloudID, cloudOffset = cloudOffset, colorUpdated = colorUpdated}
 
