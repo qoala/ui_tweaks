@@ -101,8 +101,10 @@ local cloudFxAppend = {}
 local edgeFxAppend = {}
 function cloudFxAppend:update(rig)
     local gfxOptions = rig._boardRig._game:getGfxOptions()
+    local knownCell = rig._boardRig:getLastKnownCell(self._uitrData.x, self._uitrData.y)
     local prop = self._prop
-    prop:setVisible(not gfxOptions.bMainframeMode)
+    -- UITR: Only draw on known tiles.
+    prop:setVisible(not gfxOptions.bMainframeMode and not not knownCell)
 
     -- UITR: Switch between tactical and in-world effect animations.
     local tacticalCloudsOpt = uitr_util.checkOption("tacticalClouds")
@@ -141,8 +143,10 @@ DIR_SYMBOLS = {
 function edgeFxAppend:update(rig)
     local gfxOptions = rig._boardRig._game:getGfxOptions()
     local orientation = rig._boardRig._game:getCamera():getOrientation()
+    local knownCell = rig._boardRig:getLastKnownCell(self._uitrData.x, self._uitrData.y)
     local prop = self._prop
-    prop:setVisible(not gfxOptions.bMainframeMode)
+    -- UITR: Only draw on known tiles.
+    prop:setVisible(not gfxOptions.bMainframeMode and not not knownCell)
 
     -- UITR: Switch between tactical and in-world effect animations.
     local tacticalCloudsOpt = uitr_util.checkOption("tacticalClouds")
