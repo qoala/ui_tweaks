@@ -135,7 +135,7 @@ function hidevision_tooltip:activate(screen)
     sim:getLOS():getVizCells(self._unit:getID(), losCoords)
     for i = 1, #losCoords, 2 do
         local x, y = losCoords[i], losCoords[i + 1]
-        if not sim:canPlayerSee(localPlayer, x, y) then
+        if localPlayer and not sim:canPlayerSee(localPlayer, x, y) then
             table.insert(cells, sim:getCell(x, y))
         end
     end
@@ -269,8 +269,8 @@ local function addVisionActionsForUnit(hud, actions, targetUnit, isSeen, staleGh
                     priority = -8,
                 })
     end
-    if not staleGhost and unitCanSee and canNormallySeeLOS and targetUnit:getPlayerOwner() ~=
-            localPlayer then
+    if not staleGhost and unitCanSee and canNormallySeeLOS and
+            (targetUnit:getPlayerOwner() ~= localPlayer) then
         local doEnable = not targetUnit:getTraits().uitr_hideVision
         table.insert(
                 actions, {
@@ -389,6 +389,9 @@ local function generateDoorAction(hud, unit)
     local sim = hud._game.simCore
     local localPlayer = hud._game:getLocalPlayer()
     local x0, y0 = unit:getLocation()
+    if not localPlayer or not x0 then
+        return
+    end
 
     for i = 1, #POTENTIAL_ACTIONS, 2 do
         local dx, dy = POTENTIAL_ACTIONS[i], POTENTIAL_ACTIONS[i + 1]
@@ -426,6 +429,9 @@ end
 function agent_actions.generateVisionActions(hud, actions)
     local sim = hud._game.simCore
     local localPlayer = hud._game:getLocalPlayer()
+    if not localPlayer then
+        return
+    end
 
     -- Vision actions for seen units
     for i, targetUnit in ipairs(localPlayer:getSeenUnits()) do
