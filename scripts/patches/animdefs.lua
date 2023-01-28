@@ -381,23 +381,10 @@ local animdefsTactical = {
     },
 }
 
-local OLD_NONCOVER_1_1 = "data/anims/bcl/mf_noncoverpieces_1x1"
-local OLD_NONCOVER_1_2 = "data/anims/hek/mf_noncoverpieces_1x2"
-local OLD_NONCOVER_2_3 = "data/anims/hek/mf_noncoverpieces_2x3"
-local OLD_TALL_1_1 = "data/anims/bcl/mf_tallcoverpieces_1x1"
-local OLD_TALL_1_2 = "data/anims/bcl/mf_tallcoverpieces_1x2"
-local OLD_TALL_NONCOVER_1_1 = "data/anims/bcl/mf_tallnoncoverpieces_1x1"
 local animdefsCoverTest = {
     uitr_test_non_1_1 = {
         build = {"data/anims/KO_office/ko_office_decor_lamp1.abld", abld(NONCOVER_1_1)},
         anims = {"data/anims/KO_office/ko_office_decor_lamp1.adef", adef(NONCOVER_1_1)},
-        anim = "idle",
-        scale = 0.25,
-        boundType = BoundType.bound_1x1_tall_med,
-    },
-    uitr_test_non_1_1_old = {
-        build = {"data/anims/KO_office/ko_office_decor_lamp1.abld", abld(OLD_NONCOVER_1_1)},
-        anims = {"data/anims/KO_office/ko_office_decor_lamp1.adef", adef(OLD_NONCOVER_1_1)},
         anim = "idle",
         scale = 0.25,
         boundType = BoundType.bound_1x1_tall_med,
@@ -432,16 +419,6 @@ local animdefsCoverTest = {
         boundType = BoundType.bound_1x1_med_med,
         filterSymbols = {{symbol = "icon", filter = "default"}},
     },
-    uitr_test_tall_1_1_old = {
-        build = {"data/anims/FTM_hall/ftm_hall_object_1x1plant1.abld", abld(OLD_TALL_1_1)},
-        anims = {"data/anims/FTM_hall/ftm_hall_object_1x1plant1.adef", adef(OLD_TALL_1_1)},
-        symbol = "character",
-        scale = 0.25,
-        layer = Layer.Object,
-        boundType = BoundType.bound_1x1_med_med,
-        filterSymbols = {{symbol = "icon", filter = "default"}},
-    },
-
     uitr_test_tall_1_2 = {
         build = {"data/anims/KO_office/ko_office_object_2x1bookshelf1.abld", abld(TALL_1_2)},
         anims = {"data/anims/KO_office/ko_office_object_2x1bookshelf1.adef", adef(TALL_1_2)},
@@ -449,14 +426,6 @@ local animdefsCoverTest = {
         scale = 0.25,
         boundType = BoundType.bound_2x1_tall_med,
     },
-    uitr_test_tall_1_2_old = {
-        build = {"data/anims/KO_office/ko_office_object_2x1bookshelf1.abld", abld(OLD_TALL_1_2)},
-        anims = {"data/anims/KO_office/ko_office_object_2x1bookshelf1.adef", adef(OLD_TALL_1_2)},
-        anim = "idle",
-        scale = 0.25,
-        boundType = BoundType.bound_2x1_tall_med,
-    },
-
     uitr_test_tall_non_1_1 = {
         build = {
             "data/anims/Seikaku_office/seikaku_office_object_1x1walldivider.abld",
@@ -465,19 +434,6 @@ local animdefsCoverTest = {
         anims = {
             "data/anims/Seikaku_office/seikaku_office_object_1x1walldivider.adef",
             adef(TALL_NONCOVER_1_1),
-        },
-        anim = "idle",
-        scale = 0.25,
-        boundType = BoundType.bound_1x1_med_med,
-    },
-    uitr_test_tall_non_1_1_old = {
-        build = {
-            "data/anims/Seikaku_office/seikaku_office_object_1x1walldivider.abld",
-            abld(OLD_TALL_NONCOVER_1_1),
-        },
-        anims = {
-            "data/anims/Seikaku_office/seikaku_office_object_1x1walldivider.adef",
-            adef(OLD_TALL_NONCOVER_1_1),
         },
         anim = "idle",
         scale = 0.25,

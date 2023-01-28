@@ -12,7 +12,7 @@ include makeconfig.mk
 
 ensuredir = @mkdir -p $(@D)
 
-files := modinfo.txt scripts.zip anims.kwad gui.kwad images.kwad rrni_gui.kwad tlv_anims.kwad
+files := modinfo.txt scripts.zip anims.kwad gui.kwad images.kwad rrni_gui.kwad
 outfiles := $(addprefix out/, $(files))
 installfiles := $(addprefix $(INSTALL_PATH)/, $(files))
 
@@ -77,15 +77,3 @@ out/scripts.zip: $(shell find scripts -type f -name "*.lua")
 	$(ensuredir)
 	cd scripts && zip -r ../$@ . -i '*.lua'
 
-#
-## Tactical Lamp View kwads
-#
-
-out/tlv_anims.kwad: tactical-lamp-mod/build/anims.kwad
-	$(ensuredir)
-	cp tactical-lamp-mod/build/anims.kwad out/tlv_anims.kwad
-
-tlv_anims := $(wildcard tactical-lamp-mod/src/kwads/anims/**/*.anim)
-tactical-lamp-mod/build/anims.kwad: $(tlv_anims) tactical-lamp-mod/src/kwads/build.lua
-	$(ensuredir)
-	cd tactical-lamp-mod/src/kwads && $(KWAD_BUILDER) -i build.lua -o ../../build
