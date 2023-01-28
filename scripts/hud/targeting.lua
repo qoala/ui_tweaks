@@ -1,4 +1,5 @@
 local array = include("modules/array")
+local cdefs = include("client_defs")
 local simdefs = include("sim/simdefs")
 local simquery = include("sim/simquery")
 local targeting = include("hud/targeting")
