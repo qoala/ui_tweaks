@@ -4,6 +4,8 @@ local resources = include("resources")
 local array = include("modules/array")
 local simdefs = include("sim/simdefs")
 local simquery = include("sim/simquery")
+local util = include("modules/util")
+local mathutil = include("modules/mathutil")
 
 local cbf_util = SCRIPT_PATHS and SCRIPT_PATHS.qoala_commbugfix and
                          include(SCRIPT_PATHS.qoala_commbugfix .. "/cbf_util")
@@ -328,13 +330,130 @@ end
 
 -- ===
 
+local SPRINT_HILITE_CLR = { 142/255, 247/255, 142/255, 1 } -- 247, 247, 142 = sprint colour
+
+local function UITRpreviewSprintNoise(boardrig, unit, path)
+    local pathCells = util.tcopy(path)
+    local sim = boardrig:getSim()
+    local sprintNoise = unit:getTraits().dashSoundRange
+    -- only show for sprinting units, and only if we know the path
+    if not unit or unit:getTraits().sneaking or not pathCells then
+        return
+    end
+    -- only show if distance is sprintable
+    if not boardrig._game.hud._bValidMovement then
+        return
+    end
+    -- only show if in tactical view; that'd need to be coupled with tac view toggle amendments
+    --[[if not boardrig._game:getGfxOptions().bTacticalView then
+        return
+    end]]
+
+    -- remove cell we're at; we won't make noise from it
+    local coords = table.remove(pathCells, 1)
+    local originCell = sim:getCell(coords.x, coords.y)
+
+    -- for each tile in path, add known tiles in a radius (r = sprintNoise) to a list 
+    local cells, units = {}, {}
+
+    for i, cellCoords in pairs(pathCells) do
+    --local cellCoords = table.remove(pathCells)
+        -- not using simquery.fillCircle directly, to avoid over-iteration
+        local xOrigin, yOrigin = cellCoords.x, cellCoords.y
+        local x0, y0 = math.min((xOrigin - sprintNoise), 0), math.min((yOrigin - sprintNoise), 0)  
+        local x1, y1 = xOrigin + sprintNoise, yOrigin + sprintNoise
+        for x = x0, x1 do 
+            for y = y0, y1 do
+                local distance = math.floor( mathutil.dist2d( xOrigin, yOrigin, x, y ) )
+                local cell = sim:getCell( x, y )
+                -- criteria:
+                -- radius of SPRINTNOISE
+                -- cell exists, is currently seen OR has been glimpsed before
+                -- cell wasn't already added to our list
+                if distance <= sprintNoise and cell
+                    and (boardrig:canPlayerSee( x, y )
+                    or unit:getPlayerOwner()._ghost_cells[ simquery.toCellID( x, y ) ])
+                    and not array.find(cells, cell) then
+                    table.insert( cells, cell )
+                end
+            end
+        end
+    end
+
+    -- get only the tiles with hearing-enabled, known enemy units on them; this can include ghosts
+    for i, cell in pairs(cells) do
+        if sim:canPlayerSee(sim:getPC(), cell.x, cell.y) then
+            -- check real units
+            for i, unit in pairs(cell.units) do
+                if unit:getTraits().hasHearing and sim:canPlayerSeeUnit(sim:getPC(), unit)
+                and unit:getPlayerOwner() ~= sim:getPC() then
+                    table.insert(units, unit)
+                end
+            end
+        else
+            -- check ghost units
+            local ghost_cell = sim:getPC()._ghost_cells[ simquery.toCellID( cell.x, cell.y ) ]
+            for i, unit in pairs(ghost_cell.units) do
+                if unit:getTraits().hasHearing and unit:getPlayerOwner() ~= sim:getPC() then
+                    table.insert(units, unit)
+                end
+            end
+        end
+    end
+
+    unit.UITR_props = {}
+
+    for i, target in pairs(units) do
+        local targetrig = boardrig:getUnitRig(target:getID())
+        local x, y = target:getLocation() 
+        wx, wy = boardrig:cellToWorld(x, y) 
+        -- tested: highlighting the unit itself (would have to be undone via rig:refresh())
+        --[[targetrig._prop:setRenderFilter({
+            shader = KLEIAnim.SHADER_FOW,
+            r = 142/255,
+            g = 247/255, 
+            b = 142/255,
+            a = 1,
+            lum = 1.3
+        })]]
+        local prop = targetrig:createHUDProp("kanim_soundbug_overlay_alarm", "character", "alarm_loop", boardrig:getLayer("ceiling"), nil, wx, wy )
+
+        prop:setSymbolModulate("cicrcle_wave", 247/255, 247/255, 142/255, 1 )
+        prop:setSymbolModulate("line_1", 247/255, 247/255, 142/255, 1 )
+        prop:setSymbolModulate("ring", 247/255, 247/255, 142/255, 1 )
+        prop:setSymbolModulate("attention_ring", 247/255, 247/255, 142/255, 1 )
+    
+        table.insert(unit.UITR_props, prop)   
+    end
+
+    -- highlight each tile in the list
+    --local hiliteID = boardrig:hiliteCells( preCells, SPRINT_HILITE_CLR )
+
+    --boardrig._UITRSprintHilite = hiliteID
+end
+
+-- ===
+
 local oldChainCells = boardrig.chainCells
 local oldUnchainCells = boardrig.unchainCells
 
 function boardrig:chainCells(cells, color, ...)
-    local id = oldChainCells(self, cells, color, ...)
     local selectedUnit = self._game.hud:getSelectedUnit()
     local sim = self:getSim()
+
+    -- sprint noise preview logic here; there's an unhilite in unchainCells as well -Sizzle
+    if selectedUnit.UITR_props then
+        --self:unhiliteCells(self._UITRSprintHilite)
+        while #selectedUnit.UITR_props > 0 do
+            prop = table.remove(selectedUnit.UITR_props)
+            self:getLayer("ceiling"):removeProp( prop )
+        end
+    end
+    if selectedUnit and uitr_util.checkOption("sprintNoisePreview") then
+        UITRpreviewSprintNoise(self, selectedUnit, cells)
+    end
+
+    local id = oldChainCells(self, cells, color, ...)
 
     if not selectedUnit or not uitr_util.checkOption("overwatchMovement") then
         return id
