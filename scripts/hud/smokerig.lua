@@ -321,8 +321,7 @@ local function getFallbackDirMask(edgeUnit, cloudUnit)
     end
     local dirMask = 0
     for _, cc in ipairs(cloudUnit:getSmokeCells()) do
-        if (cc.x == x and math.abs(cc.y - y) == 1) or
-                (cc.y == y and math.abs(cc.x - x) == 1) then
+        if (cc.x == x and math.abs(cc.y - y) == 1) or (cc.y == y and math.abs(cc.x - x) == 1) then
             local dir = simquery.getDirectionFromDelta(cc.x - x, cc.y - y)
             if simquery.isOpenExit(cell.exits[dir]) then
                 dirMask = binops.b_or(dirMask, simdefs:maskFromDir(dir))

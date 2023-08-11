@@ -342,7 +342,7 @@ end
 
 -- ===
 
-local SPRINT_HILITE_CLR = { 142/255, 247/255, 142/255, 1 } -- 247, 247, 142 = sprint colour
+local SPRINT_HILITE_CLR = {142 / 255, 247 / 255, 142 / 255, 1} -- 247, 247, 142 = sprint colour
 
 local function UITRpreviewSprintNoise(boardrig, unit, path, id)
     local pathCells = util.tcopy(path)
@@ -371,21 +371,21 @@ local function UITRpreviewSprintNoise(boardrig, unit, path, id)
     for i, cellCoords in ipairs(pathCells) do
         -- Matches range-check in Senses and simsoundbug, not simquery.fillCircle().
         local xOrigin, yOrigin = cellCoords.x, cellCoords.y
-        local x0, y0 = math.min((xOrigin - sprintNoise), 0), math.min((yOrigin - sprintNoise), 0)  
+        local x0, y0 = math.min((xOrigin - sprintNoise), 0), math.min((yOrigin - sprintNoise), 0)
         local x1, y1 = xOrigin + sprintNoise, yOrigin + sprintNoise
-        for x = x0, x1 do 
+        for x = x0, x1 do
             for y = y0, y1 do
-                local distance = mathutil.dist2d( xOrigin, yOrigin, x, y )
-                local cell = sim:getCell( x, y )
+                local distance = mathutil.dist2d(xOrigin, yOrigin, x, y)
+                local cell = sim:getCell(x, y)
                 -- criteria:
                 -- radius of SPRINTNOISE
                 -- cell exists, is currently seen OR has been glimpsed before
                 -- cell wasn't already added to our list
-                if distance <= sprintNoise and cell
-                    and (boardrig:canPlayerSee( x, y )
-                    or unit:getPlayerOwner()._ghost_cells[ simquery.toCellID( x, y ) ])
-                    and not array.find(cells, cell) then
-                    table.insert( cells, cell )
+                if distance <= sprintNoise and cell and
+                        (boardrig:canPlayerSee(x, y) or
+                                unit:getPlayerOwner()._ghost_cells[simquery.toCellID(x, y)]) and
+                        not array.find(cells, cell) then
+                    table.insert(cells, cell)
                 end
             end
         end
@@ -396,17 +396,18 @@ local function UITRpreviewSprintNoise(boardrig, unit, path, id)
         if sim:canPlayerSee(sim:getPC(), cell.x, cell.y) then
             -- check real units
             for i, unit in ipairs(cell.units) do
-                if unit:getTraits().hasHearing and sim:canPlayerSeeUnit(sim:getPC(), unit)
-                and unit:getPlayerOwner() ~= sim:getPC() then
+                if unit:getTraits().hasHearing and sim:canPlayerSeeUnit(sim:getPC(), unit) and
+                        unit:getPlayerOwner() ~= sim:getPC() then
                     table.insert(units, unit)
                 end
             end
         else
             -- check ghost units
-            local ghostCell = sim:getPC()._ghost_cells[ simquery.toCellID( cell.x, cell.y ) ]
+            local ghostCell = sim:getPC()._ghost_cells[simquery.toCellID(cell.x, cell.y)]
             for i, ghostUnit in ipairs(ghostCell.units) do
                 local unit = getKnownUnitFromGhost(sim, ghostUnit)
-                if unit and ghostUnit:getTraits().hasHearing and ghostUnit:getPlayerOwner() ~= sim:getPC() then
+                if unit and ghostUnit:getTraits().hasHearing and ghostUnit:getPlayerOwner() ~=
+                        sim:getPC() then
                     table.insert(units, unit)
                 end
             end
@@ -417,8 +418,8 @@ local function UITRpreviewSprintNoise(boardrig, unit, path, id)
 
     for i, target in pairs(units) do
         local targetrig = boardrig:getUnitRig(target:getID())
-        local x, y = target:getLocation() 
-        wx, wy = boardrig:cellToWorld(x, y) 
+        local x, y = target:getLocation()
+        wx, wy = boardrig:cellToWorld(x, y)
         -- tested: highlighting the unit itself (would have to be undone via rig:refresh())
         --[[targetrig._prop:setRenderFilter({
             shader = KLEIAnim.SHADER_FOW,
@@ -428,19 +429,21 @@ local function UITRpreviewSprintNoise(boardrig, unit, path, id)
             a = 1,
             lum = 1.3
         })]]
-        local prop = targetrig:createHUDProp("kanim_soundbug_overlay_alarm", "character", "alarm_loop", boardrig:getLayer("ceiling"), nil, wx, wy )
+        local prop = targetrig:createHUDProp(
+                "kanim_soundbug_overlay_alarm", "character", "alarm_loop",
+                boardrig:getLayer("ceiling"), nil, wx, wy)
 
-        prop:setSymbolModulate("cicrcle_wave", 247/255, 247/255, 142/255, 1 )
-        prop:setSymbolModulate("line_1", 247/255, 247/255, 142/255, 1 )
-        prop:setSymbolModulate("ring", 247/255, 247/255, 142/255, 1 )
-        prop:setSymbolModulate("attention_ring", 247/255, 247/255, 142/255, 1 )
+        prop:setSymbolModulate("cicrcle_wave", 247 / 255, 247 / 255, 142 / 255, 1)
+        prop:setSymbolModulate("line_1", 247 / 255, 247 / 255, 142 / 255, 1)
+        prop:setSymbolModulate("ring", 247 / 255, 247 / 255, 142 / 255, 1)
+        prop:setSymbolModulate("attention_ring", 247 / 255, 247 / 255, 142 / 255, 1)
 
         table.insert(sprintProps, prop)
     end
 
     -- highlight each tile in the list
-    --local hiliteID = boardrig:hiliteCells( preCells, SPRINT_HILITE_CLR )
-    --boardrig._UITRSprintHilite = hiliteID
+    -- local hiliteID = boardrig:hiliteCells( preCells, SPRINT_HILITE_CLR )
+    -- boardrig._UITRSprintHilite = hiliteID
 
     boardrig._chainCells[id].sprintProps = sprintProps
 end

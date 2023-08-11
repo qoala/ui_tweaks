@@ -96,7 +96,7 @@ local UITR_OPTIONS = {
         name = STRINGS.UITWEAKSR.OPTIONS.SPRINT_NOISE_PREVIEW,
         tip = STRINGS.UITWEAKSR.OPTIONS.SPRINT_NOISE_PREVIEW_TIP,
         check = true,
-    }, 
+    },
     {
         id = "mainframeLayout",
         name = STRINGS.UITWEAKSR.OPTIONS.MAINFRAME_LAYOUT,
