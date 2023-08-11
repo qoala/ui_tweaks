@@ -28,6 +28,7 @@ local function getKnownUnitFromGhost(sim, ghostUnit)
 end
 
 -- ===
+-- Overwatch Preview
 
 local function predictLOS(sim, unit, facing)
     local startCell = sim:getCell(unit:getLocation())
@@ -340,7 +341,69 @@ local function newShootProp(self, cell, color)
     return prop
 end
 
+local function UITRpreviewOverwatch(self, selectedUnit, cells, color, id)
+    local sim = self:getSim()
+
+    -- Identify threats that could shoot us.
+    local guardThreats, turretThreats = findThreats(sim, selectedUnit)
+    if not next(guardThreats) and not next(turretThreats) then
+        return
+    end
+
+    simlog("LOG_UITR_OW", "overwatchTracking ===========")
+
+    -- Mark movement cells that get us shot.
+    local fgProps = {}
+    local tempDoors = {}
+    local prevCell = nil
+    local prevCellThreat = nil
+    for i, coord in ipairs(cells) do
+        local cell = sim:getCell(coord.x, coord.y)
+        if prevCell and predictDoorOpening(sim, tempDoors, prevCell, cell) then
+            simlog("LOG_UITR_OW", "   door %s,%s %s,%s", prevCell.x, prevCell.y, cell.x, cell.y)
+            clearLosCache(guardThreats, turretThreats)
+
+            local doorIsWatched =
+                    (isWatchedByGuard(sim, guardThreats, selectedUnit, prevCell, nil) or
+                            isWatchedByTurret(sim, turretThreats, selectedUnit, prevCell))
+            if not prevCellThreat and doorIsWatched then
+                simlog("LOG_UITR_OW", "   shot %s,%s", prevCell.x, prevCell.y)
+                table.insert(fgProps, newShootProp(self, prevCell, color))
+            end
+        end
+
+        if not prevCell then
+            -- Don't mark the origin cell of the path, even if it's obviously watched.
+            prevCellThreat = false
+            -- We still want to update possible peripheral rotations though.
+            -- isWatchedByGuard(sim, guardThreats, selectedUnit, cell, nil)
+        else
+            local cellIsWatched =
+                    (isWatchedByGuard(sim, guardThreats, selectedUnit, cell, prevCell) or
+                            isWatchedByTurret(sim, turretThreats, selectedUnit, cell))
+            if cellIsWatched then
+                simlog("LOG_UITR_OW", "   shot %s,%s", cell.x, cell.y)
+                table.insert(fgProps, newShootProp(self, cell, color))
+                prevCellThreat = true
+            else
+                prevCellThreat = false
+            end
+        end
+        prevCell = cell
+    end
+    restoreDoors(sim, tempDoors)
+
+    local layer = self:getLayer("ceiling")
+    for _, prop in ipairs(fgProps) do
+        layer:insertProp(prop)
+    end
+    self._chainCells[id].fgProps = fgProps
+
+    simlog("LOG_UITR_OW", "overwatchTracking END ===========")
+end
+
 -- ===
+-- Sprint preview
 
 local SPRINT_HILITE_CLR = {142 / 255, 247 / 255, 142 / 255, 1} -- 247, 247, 142 = sprint colour
 
@@ -455,73 +518,15 @@ local oldUnchainCells = boardrig.unchainCells
 
 function boardrig:chainCells(cells, color, ...)
     local selectedUnit = self._game.hud:getSelectedUnit()
-    local sim = self:getSim()
     local id = oldChainCells(self, cells, color, ...)
 
     if selectedUnit and uitr_util.checkOption("sprintNoisePreview") then
         UITRpreviewSprintNoise(self, selectedUnit, cells, id)
     end
-
-    if not selectedUnit or not uitr_util.checkOption("overwatchMovement") then
-        return id
+    if selectedUnit and uitr_util.checkOption("overwatchMovement") then
+        UITRpreviewOverwatch(self, selectedUnit, cells, color, id)
     end
 
-    -- Identify threats that could shoot us.
-    local guardThreats, turretThreats = findThreats(sim, selectedUnit)
-    if not next(guardThreats) and not next(turretThreats) then
-        return id
-    end
-
-    simlog("LOG_UITR_OW", "overwatchTracking ===========")
-
-    -- Mark movement cells that get us shot.
-    local fgProps = {}
-    local tempDoors = {}
-    local prevCell = nil
-    local prevCellThreat = nil
-    for i, coord in ipairs(cells) do
-        local cell = sim:getCell(coord.x, coord.y)
-        if prevCell and predictDoorOpening(sim, tempDoors, prevCell, cell) then
-            simlog("LOG_UITR_OW", "   door %s,%s %s,%s", prevCell.x, prevCell.y, cell.x, cell.y)
-            clearLosCache(guardThreats, turretThreats)
-
-            local doorIsWatched =
-                    (isWatchedByGuard(sim, guardThreats, selectedUnit, prevCell, nil) or
-                            isWatchedByTurret(sim, turretThreats, selectedUnit, prevCell))
-            if not prevCellThreat and doorIsWatched then
-                simlog("LOG_UITR_OW", "   shot %s,%s", prevCell.x, prevCell.y)
-                table.insert(fgProps, newShootProp(self, prevCell, color))
-            end
-        end
-
-        if not prevCell then
-            -- Don't mark the origin cell of the path, even if it's obviously watched.
-            prevCellThreat = false
-            -- We still want to update possible peripheral rotations though.
-            -- isWatchedByGuard(sim, guardThreats, selectedUnit, cell, nil)
-        else
-            local cellIsWatched =
-                    (isWatchedByGuard(sim, guardThreats, selectedUnit, cell, prevCell) or
-                            isWatchedByTurret(sim, turretThreats, selectedUnit, cell))
-            if cellIsWatched then
-                simlog("LOG_UITR_OW", "   shot %s,%s", cell.x, cell.y)
-                table.insert(fgProps, newShootProp(self, cell, color))
-                prevCellThreat = true
-            else
-                prevCellThreat = false
-            end
-        end
-        prevCell = cell
-    end
-    restoreDoors(sim, tempDoors)
-
-    local layer = self:getLayer("ceiling")
-    for _, prop in ipairs(fgProps) do
-        layer:insertProp(prop)
-    end
-    self._chainCells[id].fgProps = fgProps
-
-    simlog("LOG_UITR_OW", "overwatchTracking END ===========")
     return id
 end
 
