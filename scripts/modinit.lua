@@ -58,7 +58,9 @@ local function init(modApi)
 
     -- sim-layer
     include(modApi:getScriptPath() .. "/backend/abilityutil")
+    include(modApi:getScriptPath() .. "/backend/commondefs")
     include(modApi:getScriptPath() .. "/backend/engine")
+    include(modApi:getScriptPath() .. "/backend/mission_util")
     include(modApi:getScriptPath() .. "/backend/simability")
     include(modApi:getScriptPath() .. "/backend/simplayer")
     include(modApi:getScriptPath() .. "/backend/simquery")

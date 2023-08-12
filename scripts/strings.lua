@@ -33,8 +33,10 @@ local UI_TWEAKS_STRINGS = {
         MAINFRAME_LAYOUT = "Mainframe Firewall Layout",
         MAINFRAME_LAYOUT_TIP = "If active, mainframe firewall indicators will shift to avoid overlap.",
 
-        EMPTY_POCKETS = "Empty Pockets Stealing",
+        EMPTY_POCKETS = "Steal/Search: Enable Empty Pockets",
         EMPTY_POCKETS_TIP = "Agents can attempt to steal if it would newly reveal that the target isn't carrying anything.\nAllows marking targets as Searched and Expertly Searched.",
+        CORPSE_POCKETS = "Steal/Search: Track Searched Corpses",
+        CORPSE_POCKETS_TIP = "Guard & drone corpses also show 'searched' tooltips.",
         INV_DRAGDROP = "Inventory Drag/Drop Reordering",
         INV_DRAGDROP_TIP = "Allow drag & drop to reorder an agent's inventory (between missions)",
         DOORS_WHILE_DRAGGING = "Doors While Dragging",

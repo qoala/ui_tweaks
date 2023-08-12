@@ -184,6 +184,12 @@ local UITR_OPTIONS = {
         check = true,
     },
     {
+        id = "corpsePockets",
+        name = STRINGS.UITWEAKSR.OPTIONS.CORPSE_POCKETS,
+        tip = STRINGS.UITWEAKSR.OPTIONS.CORPSE_POCKETS_TIP,
+        check = true,
+    },
+    {
         id = "invDragDrop",
         name = STRINGS.UITWEAKSR.OPTIONS.INV_DRAGDROP,
         tip = STRINGS.UITWEAKSR.OPTIONS.INV_DRAGDROP_TIP,
