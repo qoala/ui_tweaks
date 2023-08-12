@@ -407,16 +407,24 @@ end
 
 local SPRINT_HILITE_CLR = {142 / 255, 247 / 255, 142 / 255, 1} -- 247, 247, 142 = sprint colour
 
-local function UITRpreviewSprintNoise(boardrig, unit, path, id)
-    local pathCells = util.tcopy(path)
-    local sim = boardrig:getSim()
-    local sprintNoise = unit:getTraits().dashSoundRange
-    -- only show for sprinting units, and only if we know the path
-    if not unit or unit:getTraits().sneaking or not pathCells then
-        return
+local function pathMakesNoise(sim, unit, path)
+    for i, coord in ipairs(path) do
+        local c = sim:getCell(coord.x, coord.y)
+        if simquery.getMoveSoundRange(unit, c) > 0 then
+            return true
+        end
     end
+end
+
+local function UITRpreviewSprintNoise(boardrig, unit, path, id)
+    local sim = boardrig:getSim()
+
     -- only show if distance is sprintable
     if not boardrig._game.hud._bValidMovement then
+        return
+    end
+    -- only show if the unit has a path that can make noise
+    if not unit or not path or not pathMakesNoise(sim, unit, path) then
         return
     end
     -- only show if in tactical view; that'd need to be coupled with tac view toggle amendments
@@ -425,6 +433,7 @@ local function UITRpreviewSprintNoise(boardrig, unit, path, id)
     end]]
 
     -- remove cell we're at; we won't make noise from it
+    local pathCells = util.tcopy(path)
     local coords = table.remove(pathCells, 1)
     local originCell = sim:getCell(coords.x, coords.y)
 
@@ -434,28 +443,28 @@ local function UITRpreviewSprintNoise(boardrig, unit, path, id)
     for i, cellCoords in ipairs(pathCells) do
         -- Matches range-check in Senses and simsoundbug, not simquery.fillCircle().
         local xOrigin, yOrigin = cellCoords.x, cellCoords.y
-        local x0, y0 = math.min((xOrigin - sprintNoise), 0), math.min((yOrigin - sprintNoise), 0)
-        local x1, y1 = xOrigin + sprintNoise, yOrigin + sprintNoise
+        local radius = simquery.getMoveSoundRange(unit, sim:getCell(xOrigin, yOrigin))
+        local x0, y0 = math.min((xOrigin - radius), 0), math.min((yOrigin - radius), 0)
+        local x1, y1 = xOrigin + radius, yOrigin + radius
         for x = x0, x1 do
             for y = y0, y1 do
-                local distance = mathutil.dist2d(xOrigin, yOrigin, x, y)
                 local cell = sim:getCell(x, y)
                 -- criteria:
-                -- radius of SPRINTNOISE
-                -- cell exists, is currently seen OR has been glimpsed before
                 -- cell wasn't already added to our list
-                if distance <= sprintNoise and cell and
+                -- within noise radius
+                -- cell is currently seen OR has been glimpsed before
+                if cell and not cells[cell.id] and
+                        (mathutil.dist2d(xOrigin, yOrigin, x, y) <= radius) and
                         (boardrig:canPlayerSee(x, y) or
-                                unit:getPlayerOwner()._ghost_cells[simquery.toCellID(x, y)]) and
-                        not array.find(cells, cell) then
-                    table.insert(cells, cell)
+                                unit:getPlayerOwner()._ghost_cells[simquery.toCellID(x, y)]) then
+                    cells[cell.id] = cell
                 end
             end
         end
     end
 
     -- get only the tiles with hearing-enabled, known enemy units on them; this can include ghosts
-    for i, cell in ipairs(cells) do
+    for i, cell in pairs(cells) do
         if sim:canPlayerSee(sim:getPC(), cell.x, cell.y) then
             -- check real units
             for i, unit in ipairs(cell.units) do
@@ -487,7 +496,7 @@ local function UITRpreviewSprintNoise(boardrig, unit, path, id)
         --[[targetrig._prop:setRenderFilter({
             shader = KLEIAnim.SHADER_FOW,
             r = 142/255,
-            g = 247/255, 
+            g = 247/255,
             b = 142/255,
             a = 1,
             lum = 1.3
