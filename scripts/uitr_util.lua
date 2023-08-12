@@ -92,12 +92,6 @@ local UITR_OPTIONS = {
         check = true,
     },
     {
-        id = "sprintNoisePreview",
-        name = STRINGS.UITWEAKSR.OPTIONS.SPRINT_NOISE_PREVIEW,
-        tip = STRINGS.UITWEAKSR.OPTIONS.SPRINT_NOISE_PREVIEW_TIP,
-        check = true,
-    },
-    {
         id = "mainframeLayout",
         name = STRINGS.UITWEAKSR.OPTIONS.MAINFRAME_LAYOUT,
         tip = STRINGS.UITWEAKSR.OPTIONS.MAINFRAME_LAYOUT_TIP,
@@ -174,6 +168,26 @@ local UITR_OPTIONS = {
         values = {false, 9, 11, 13, 15, 17, 19, 21, 23, 25},
         value = 21,
         debugKey = DEBUG.MF_LAYOUT,
+    }, -- Action/Movement warnings.
+    {
+        sectionHeader = true,
+
+        id = "overwatchMovement",
+        name = STRINGS.UITWEAKSR.OPTIONS.OVERWATCH_MOVEMENT_WARNINGS,
+        tip = STRINGS.UITWEAKSR.OPTIONS.OVERWATCH_MOVEMENT_WARNINGS_TIP,
+        check = true,
+    },
+    {
+        id = "overwatchAbilities",
+        name = STRINGS.UITWEAKSR.OPTIONS.OVERWATCH_ABILITY_WARNINGS,
+        tip = STRINGS.UITWEAKSR.OPTIONS.OVERWATCH_ABILITY_WARNINGS_TIP,
+        check = true,
+    },
+    {
+        id = "sprintNoisePreview",
+        name = STRINGS.UITWEAKSR.OPTIONS.SPRINT_NOISE_PREVIEW,
+        tip = STRINGS.UITWEAKSR.OPTIONS.SPRINT_NOISE_PREVIEW_TIP,
+        check = true,
     }, -- QoL interface.
     {
         sectionHeader = true,
@@ -206,20 +220,6 @@ local UITR_OPTIONS = {
         id = "stepCarefully",
         name = STRINGS.UITWEAKSR.OPTIONS.STEP_CAREFULLY,
         tip = STRINGS.UITWEAKSR.OPTIONS.STEP_CAREFULLY_TIP,
-        check = true,
-    }, -- Overwatch warnings.
-    {
-        sectionHeader = true,
-
-        id = "overwatchMovement",
-        name = STRINGS.UITWEAKSR.OPTIONS.OVERWATCH_MOVEMENT_WARNINGS,
-        tip = STRINGS.UITWEAKSR.OPTIONS.OVERWATCH_MOVEMENT_WARNINGS_TIP,
-        check = true,
-    },
-    {
-        id = "overwatchAbilities",
-        name = STRINGS.UITWEAKSR.OPTIONS.OVERWATCH_ABILITY_WARNINGS,
-        tip = STRINGS.UITWEAKSR.OPTIONS.OVERWATCH_ABILITY_WARNINGS_TIP,
         check = true,
     }, -- Selection highlight.
     {
