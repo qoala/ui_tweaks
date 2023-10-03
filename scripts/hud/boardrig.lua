@@ -479,7 +479,7 @@ local function UITRpreviewSprintNoise(boardrig, unit, path, id)
             for i, ghostUnit in ipairs(ghostCell.units) do
                 local unit = getKnownUnitFromGhost(sim, ghostUnit)
                 if unit and ghostUnit:getTraits().hasHearing and ghostUnit:getPlayerOwner() ~=
-                        sim:getPC() then
+                        sim:getPC() and not unit:isDown() then
                     table.insert(units, unit)
                 end
             end
