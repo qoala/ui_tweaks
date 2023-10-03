@@ -29,7 +29,13 @@ local UI_TWEAKS_STRINGS = {
         CLEAN_SHIFT = "SHIFT Hides Context Actions.",
         CLEAN_SHIFT_TIP = "Holding SHIFT hides targeted action icons, making it easier to select or move agents in crowded areas.\nThis is in addition to the vanilla keybinding where holding SHIFT highlights tiles watched by units under the cursor.",
         SPRINT_NOISE_PREVIEW = "Sprint Noise Preview",
-        SPRINT_NOISE_PREVIEW_TIP = "While previewing sprint movement, highlights units that would hear the agent.",
+        SPRINT_NOISE_PREVIEW_TIP = "While previewing sprint movement, highlights units that would hear the agent and/or the floor radius.",
+        SPRINT_NOISE_PREVIEW_OPTIONS = { --
+            "OFF",
+            "UNITS",
+            "RADIUS",
+            "UNITS+RADIUS",
+        },
         MAINFRAME_LAYOUT = "Mainframe Firewall Layout",
         MAINFRAME_LAYOUT_TIP = "If active, mainframe firewall indicators will shift to avoid overlap.",
 

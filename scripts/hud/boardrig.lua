@@ -56,7 +56,7 @@ local function predictLOS(sim, unit, facing)
 
     elseif unit:getTraits().LOSarc and unit:getTraits().LOSarc >= 2 * math.pi and
             (not cbfFixMagic or unit:isPC()) then
-        for i, dir in ipairs(simdefs.DIR_SIDES) do
+        for _, dir in ipairs(simdefs.DIR_SIDES) do
             local exit1 = startCell.exits[dir]
             if simquery.isOpenExit(exit1) then
                 cells[simquery.toCellID(exit1.cell.x, exit1.cell.y)] = exit1.cell
@@ -357,7 +357,7 @@ local function UITRpreviewOverwatch(self, selectedUnit, cells, color, id)
     local tempDoors = {}
     local prevCell = nil
     local prevCellThreat = nil
-    for i, coord in ipairs(cells) do
+    for _, coord in ipairs(cells) do
         local cell = sim:getCell(coord.x, coord.y)
         if prevCell and predictDoorOpening(sim, tempDoors, prevCell, cell) then
             simlog("LOG_UITR_OW", "   door %s,%s %s,%s", prevCell.x, prevCell.y, cell.x, cell.y)
@@ -405,10 +405,8 @@ end
 -- ===
 -- Sprint preview
 
-local SPRINT_HILITE_CLR = {142 / 255, 247 / 255, 142 / 255, 1} -- 247, 247, 142 = sprint colour
-
 local function pathMakesNoise(sim, unit, path)
-    for i, coord in ipairs(path) do
+    for _, coord in ipairs(path) do
         local c = sim:getCell(coord.x, coord.y)
         if simquery.getMoveSoundRange(unit, c) > 0 then
             return true
@@ -418,6 +416,16 @@ end
 
 local function UITRpreviewSprintNoise(boardrig, unit, path, id)
     local sim = boardrig:getSim()
+    local displayOption = uitr_util.checkOption("sprintNoisePreview")
+    local markUnits, markRadius = false
+    if displayOption == 1 then
+        markUnits = true
+    elseif displayOption == 2 then
+        markRadius = true
+    elseif displayOption == 3 then
+        markUnits = true
+        markRadius = true
+    end
 
     -- only show if distance is sprintable
     if not boardrig._game.hud._bValidMovement then
@@ -437,15 +445,19 @@ local function UITRpreviewSprintNoise(boardrig, unit, path, id)
     local coords = table.remove(pathCells, 1)
     local originCell = sim:getCell(coords.x, coords.y)
 
-    -- for each tile in path, add known tiles in a radius (r = sprintNoise) to a list 
-    local cells, units = {}, {}
+    -- For each tile in path, add known tiles in a radius (r = sprintNoise) to a list.
+    -- Also track the units in radius of the last cell (current cursor position).
+    local cells, units, hasAnyUnits = {}, {}, false
+    local focusCells, hasFocusUnits = {}, false
 
-    for i, cellCoords in ipairs(pathCells) do
+    local lastPathIdx = #pathCells
+    for pathIdx, cellCoords in ipairs(pathCells) do
         -- Matches range-check in Senses and simsoundbug, not simquery.fillCircle().
         local xOrigin, yOrigin = cellCoords.x, cellCoords.y
         local radius = simquery.getMoveSoundRange(unit, sim:getCell(xOrigin, yOrigin))
         local x0, y0 = math.min((xOrigin - radius), 0), math.min((yOrigin - radius), 0)
         local x1, y1 = xOrigin + radius, yOrigin + radius
+        local isFocus = pathIdx == lastPathIdx
         for x = x0, x1 do
             for y = y0, y1 do
                 local cell = sim:getCell(x, y)
@@ -453,71 +465,103 @@ local function UITRpreviewSprintNoise(boardrig, unit, path, id)
                 -- cell wasn't already added to our list
                 -- within noise radius
                 -- cell is currently seen OR has been glimpsed before
-                if cell and not cells[cell.id] and
+                if cell and (not cells[cell.id] or isFocus) and
                         (mathutil.dist2d(xOrigin, yOrigin, x, y) <= radius) and
                         (boardrig:canPlayerSee(x, y) or
                                 unit:getPlayerOwner()._ghost_cells[simquery.toCellID(x, y)]) then
                     cells[cell.id] = cell
+                    if isFocus then
+                        focusCells[cell.id] = cell
+                    end
                 end
             end
         end
     end
 
     -- get only the tiles with hearing-enabled, known enemy units on them; this can include ghosts
-    for i, cell in pairs(cells) do
+    for _, cell in pairs(cells) do
+        local isFocus = nil
+        if focusCells[cell.id] then
+            isFocus = true
+        end
+
         if sim:canPlayerSee(sim:getPC(), cell.x, cell.y) then
             -- check real units
-            for i, unit in ipairs(cell.units) do
+            for _, unit in ipairs(cell.units) do
                 if unit:getTraits().hasHearing and sim:canPlayerSeeUnit(sim:getPC(), unit) and
                         unit:getPlayerOwner() ~= sim:getPC() and not unit:isDown() then
                     table.insert(units, unit)
+                    hasAnyUnits = true
+                    hasFocusUnits = hasFocusUnits or isFocus
                 end
             end
         else
             -- check ghost units
             local ghostCell = sim:getPC()._ghost_cells[simquery.toCellID(cell.x, cell.y)]
-            for i, ghostUnit in ipairs(ghostCell.units) do
+            for _, ghostUnit in ipairs(ghostCell.units) do
                 local unit = getKnownUnitFromGhost(sim, ghostUnit)
                 if unit and ghostUnit:getTraits().hasHearing and ghostUnit:getPlayerOwner() ~=
                         sim:getPC() and not unit:isDown() then
                     table.insert(units, unit)
+                    hasAnyUnits = true
+                    hasFocusUnits = hasFocusUnits or isFocus
                 end
             end
         end
     end
 
-    local sprintProps = {}
+    if markUnits then
+        local sprintProps = {}
+        for _, target in ipairs(units) do
+            local targetrig = boardrig:getUnitRig(target:getID())
+            local x, y = target:getLocation()
+            wx, wy = boardrig:cellToWorld(x, y)
 
-    for i, target in pairs(units) do
-        local targetrig = boardrig:getUnitRig(target:getID())
-        local x, y = target:getLocation()
-        wx, wy = boardrig:cellToWorld(x, y)
-        -- tested: highlighting the unit itself (would have to be undone via rig:refresh())
-        --[[targetrig._prop:setRenderFilter({
-            shader = KLEIAnim.SHADER_FOW,
-            r = 142/255,
-            g = 247/255,
-            b = 142/255,
-            a = 1,
-            lum = 1.3
-        })]]
-        local prop = targetrig:createHUDProp(
-                "kanim_soundbug_overlay_alarm", "character", "alarm_loop",
-                boardrig:getLayer("ceiling"), nil, wx, wy)
+            -- Add overhead indicator to all units that will hear the movement.
+            local prop = targetrig:createHUDProp(
+                    "kanim_soundbug_overlay_alarm", "character", "alarm_loop",
+                    boardrig:getLayer("ceiling"), nil, wx, wy)
 
-        prop:setSymbolModulate("cicrcle_wave", 247 / 255, 247 / 255, 142 / 255, 1)
-        prop:setSymbolModulate("line_1", 247 / 255, 247 / 255, 142 / 255, 1)
-        prop:setSymbolModulate("ring", 247 / 255, 247 / 255, 142 / 255, 1)
-        prop:setSymbolModulate("attention_ring", 247 / 255, 247 / 255, 142 / 255, 1)
+            local r, g, b, a = 247 / 255, 247 / 255, 142 / 255, 1
+            prop:setSymbolModulate("cicrcle_wave", r, g, b, a)
+            prop:setSymbolModulate("line_1", r, g, b, a)
+            prop:setSymbolModulate("ring", r, g, b, a)
+            prop:setSymbolModulate("attention_ring", r, g, b, a)
 
-        table.insert(sprintProps, prop)
+            table.insert(sprintProps, prop)
+
+            -- Highlight any units in the immediate radius. Not as noticeable under the overhead mark.
+            --[[if focusUnits[target:getID()] then
+                targetrig._prop:setRenderFilter(cdefs.RENDER_FILTERS["uitr_focus_penalty"])
+            end]]
+        end
+        boardrig._chainCells[id].sprintProps = sprintProps
     end
 
-    -- highlight each tile in the list
-    -- local hiliteID = boardrig:hiliteCells( preCells, SPRINT_HILITE_CLR )
-    -- boardrig._UITRSprintHilite = hiliteID
+    if markRadius then
+        -- Highlight tiles in sound range of the cursor.
+        -- Hilite code expects a flat stream of x and y values.
+        local hCells = {}
+        for _, cell in pairs(focusCells) do
+            table.insert(hCells, cell.x)
+            table.insert(hCells, cell.y)
+        end
 
-    boardrig._chainCells[id].sprintProps = sprintProps
+        local hClr
+        if hasFocusUnits then
+            -- Radius is important.
+            hClr = {0.3, 0.3, 0.3, 0.3}
+        elseif hasAnyUnits then
+            -- Radius is somewhat important.
+            hClr = {0.15, 0.15, 0.15, 0.15}
+        else
+            -- Radius is probably irrelevant.
+            hClr = {0.08, 0.08, 0.08, 0.08}
+        end
+
+        local hiliteID = boardrig:hiliteCells(hCells, hClr)
+        boardrig._chainCells[id].sprintHilite = hiliteID
+    end
 end
 
 -- ===
@@ -553,6 +597,9 @@ function boardrig:unchainCells(id, ...)
             layer:removeProp(prop)
         end
     end
+    if chain and chain.sprintHilite then
+        self:unhiliteCells(chain.sprintHilite)
+    end
 
     oldUnchainCells(self, id, ...)
 end
@@ -576,4 +623,15 @@ function boardrig:selectUnit(unit)
         end
     end
     self.selectedUnit = unit
+end
+
+function boardrig:uitr_onDraw()
+    if self._uitr_sprintHiliteCells then
+        MOAIGfxDevice.setPenColor(unpack(self._uitr_sprintHiliteClr))
+        for _, cell in pairs(self._uitr_sprintHiliteCells) do
+            local x0, y0 = self._game:cellToWorld(cell.x + 0.4, cell.y + 0.4)
+            local x1, y1 = self._game:cellToWorld(cell.x - 0.4, cell.y - 0.4)
+            MOAIDraw.fillRect(x0, y0, x1, y1)
+        end
+    end
 end

@@ -187,7 +187,9 @@ local UITR_OPTIONS = {
         id = "sprintNoisePreview",
         name = STRINGS.UITWEAKSR.OPTIONS.SPRINT_NOISE_PREVIEW,
         tip = STRINGS.UITWEAKSR.OPTIONS.SPRINT_NOISE_PREVIEW_TIP,
-        check = true,
+        values = {false, 1, 2, 1 + 2},
+        value = 1 + 2,
+        strings = STRINGS.UITWEAKSR.OPTIONS.SPRINT_NOISE_PREVIEW_OPTIONS,
     }, -- QoL interface.
     {
         sectionHeader = true,
@@ -377,6 +379,9 @@ local function initOptions()
             uitr["selectionFilterAgentInWorld"] = not uitr["selectionFilterAgentTacticalOnly"]
         end
         uitr["selectionFilterAgentTacticalOnly"] = nil
+    end
+    if uitr["sprintNoisePreview"] == true then
+        uitr["sprintNoisePreview"] = 1 + 2
     end
     -- Otherwise, init defaults.
     for _, optionDef in ipairs(UITR_OPTIONS) do
