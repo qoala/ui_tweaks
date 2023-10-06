@@ -62,6 +62,13 @@ local function predictLOS(sim, unit, facing)
                 cells[simquery.toCellID(exit1.cell.x, exit1.cell.y)] = exit1.cell
             end
         end
+    elseif unit:getTraits().LOSrads == nil and facing % 2 == 0 and cbfFixMagic and not unit:isPC() then
+        -- MAGICAL SIGHT.  CBF adds the directly faced tile orthogonally, even if the unit's vision
+        -- arc is too narrow to see that normally.
+        local exit = startCell.exits[facing]
+        if simquery.isOpenExit(exit) and simquery.couldUnitSeeCell(sim, unit, exit.cell) then
+            cells[simquery.toCellID(exit.cell.x, exit.cell.y)] = exit.cell
+        end
     end
 
     return cells
