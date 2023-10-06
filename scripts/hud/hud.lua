@@ -1,5 +1,6 @@
 local mui_defs = include("mui/mui_defs")
 local mui_tooltip = include("mui/mui_tooltip")
+local cdefs = include("client_defs")
 local util = include("client_util")
 local simdefs = include("sim/simdefs")
 local simquery = include("sim/simquery")
@@ -123,6 +124,35 @@ function hudAppend:_refreshUITRGridCoordinates()
     end
 end
 
+function hudAppend:_showMovementRange_fixCloakDistance(unit)
+    if self._cloakCells and unit:getTraits().cloakDistance and unit:getTraits().cloakDistance > 0 then
+        local sim = self._game.simCore
+        local simquery = sim:getQuery()
+
+        local cell = sim:getCell(unit:getLocation())
+        -- CBF: Cloak Distance causes cloaks to break when <= 0, but that's not how MP and ranges
+        --      are calculated. The correct offset is an infinitesimal, instead of vanilla '-1'.
+        local distance = math.min(unit:getTraits().cloakDistance - 0.00001, unit:getMP())
+        local costFn = simquery.getMoveCost
+        if simquery.getTrueMoveCost then
+            -- CBF: Adjust for Neptune if present. This append is outside of Neptune's wrapper.
+            costFn = function(cell1, cell2)
+                return simquery.getTrueMoveCost(unit, cell1, cell2)
+            end
+        end
+
+        self._cloakCells = nil
+        self._cloakCells = simquery.floodFill(sim, unit, cell, distance, costFn)
+
+        if self._cloakCells then
+            self._game.boardRig:setCloakTiles(
+                    self._cloakCells, 0.8 * cdefs.MOVECLR_INVIS, cdefs.MOVECLR_INVIS)
+        else
+            self._game.boardRig:clearCloakTiles()
+        end
+    end
+end
+
 -- ===
 
 local hud = include("hud/hud")
@@ -162,6 +192,18 @@ hud.createHud = function(...)
             oldRefreshHud(self, ...)
 
             self:_refreshUITRGridCoordinates()
+        end
+    end
+
+    do -- Cloak Distance
+        hudObject._showMovementRange_fixCloakDistance =
+                hudAppend._showMovementRange_fixCloakDistance
+
+        local oldShowMovementRange = hudObject.showMovementRange
+        function hudObject:showMovementRange(unit, ...)
+            oldShowMovementRange(self, unit, ...)
+
+            self:_showMovementRange_fixCloakDistance(unit)
         end
     end
 
