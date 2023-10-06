@@ -86,12 +86,11 @@ local function init(modApi)
     end
 end
 
+--[[
 local function lateInit(modApi)
     local scriptPath = modApi:getScriptPath()
-
-    -- More Archived Agents has a copy of the same "Rescued agent status" fix, but doesn't guard against being applied a second time.
-    include(scriptPath .. "/backend/mission_scoring_lateinit")
 end
+--]]
 
 -- Apply changes on both unload and load. We're controlled by the settings file, not campaign options.
 local function unload(modApi)
@@ -186,7 +185,7 @@ return {
     earlyInit = earlyInit,
     init = init,
     load = load,
-    lateInit = lateInit,
+    -- lateInit = lateInit,
     unload = unload,
     lateLoad = lateLoad,
     lateUnload = lateUnload,
