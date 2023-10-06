@@ -190,12 +190,24 @@ local function findThreats(sim, selectedUnit)
     return guardThreats, turretThreats
 end
 
+-- Predict couldUnitSee value, including modded movement-based modifiers.
+local function predictCouldUnitSee(sim, threat, unit, ignoreCover, cell)
+    if unit:getTraits().ITB_HenryImpass then
+        local x0, y0 = threat:getLocation()
+        -- Into the Breach's Henry isn't seen by units while moving through their cell.
+        if x0 == cell.x and y0 == cell.y then
+            return false
+        end
+    end
+    return simquery.couldUnitSee(sim, threat, unit, ignoreCover, cell)
+end
+
 local function isWatchedByTurret(sim, turretThreats, selectedUnit, cell)
     local foundThreat = nil
     for _, tracker in ipairs(turretThreats) do
         local threat = tracker.threat
         local watchedCells = tracker:predictLos(tracker.facing)
-        local couldSee = simquery.couldUnitSee(sim, threat, selectedUnit, false, cell)
+        local couldSee = predictCouldUnitSee(sim, threat, selectedUnit, false, cell)
 
         if couldSee and watchedCells[cell.id] then
             local tx, ty = threat:getLocation()
@@ -213,7 +225,7 @@ local function isWatchedByGuard(sim, guardThreats, selectedUnit, cell, prevCell)
         local threat = tracker.threat
         local tx, ty = threat:getLocation()
         local facing = simquery.getDirectionFromDelta(cell.x - tx, cell.y - ty)
-        local couldSee = simquery.couldUnitSee(sim, threat, selectedUnit, false, cell)
+        local couldSee = predictCouldUnitSee(sim, threat, selectedUnit, false, cell)
 
         -- Senses:processWarpTrigger
         -- Predict if the movement itself updates facing
@@ -221,11 +233,19 @@ local function isWatchedByGuard(sim, guardThreats, selectedUnit, cell, prevCell)
             -- Was already watched in the previous cell
             -- Threat will turn towards the destination.
             -- (senses:729 `if self:hasTarget // and prevCanSee`)
-            simlog(
-                    "LOG_UITR_OW", "  %s,%s-%s,%s %s[%s] TRACK f=%s->%s",
-                    prevCell and prevCell.x or "*", prevCell and prevCell.y or "*", cell.x, cell.y,
-                    threat:getName(), threat:getID(), tracker.facing, facing)
-            tracker.facing = facing
+            if facing < simdefs.DIR_MAX then
+                simlog(
+                        "LOG_UITR_OW", "  %s,%s-%s,%s %s[%s] TRACK f=%s->%s",
+                        prevCell and prevCell.x or "*", prevCell and prevCell.y or "*", cell.x,
+                        cell.y, threat:getName(), threat:getID(), tracker.facing, facing)
+                tracker.facing = facing
+            else
+                -- simUnit:turnToFace no-ops when given the unit's own location.
+                simlog(
+                        "LOG_UITR_OW", "  %s,%s-%s,%s %s[%s] INTERSECT f=%s",
+                        prevCell and prevCell.x or "*", prevCell and prevCell.y or "*", cell.x,
+                        cell.y, threat:getName(), threat:getID(), tracker.facing)
+            end
         elseif couldSee and tracker:predictLos(tracker.facing)[cell.id] then
             -- We just stepped into main vision.
             -- No facing changes in processWarpTrigger. (`not canSee` on below checks)
@@ -243,7 +263,7 @@ local function isWatchedByGuard(sim, guardThreats, selectedUnit, cell, prevCell)
                         prevCell.y, cell.x, cell.y, threat:getName(), threat:getID(),
                         tracker.facing, facing)
                 tracker.facing = facing
-            elseif simquery.couldUnitSee(sim, threat, selectedUnit, false, prevCell) and
+            elseif predictCouldUnitSee(sim, threat, selectedUnit, false, prevCell) and
                     not tracker:predictLos(tracker.facing)[prevCell.id] and
                     tracker:predictPeripheralLos(tracker.facing)[prevCell.id] then
                 -- We just stepped out of peripheral.
