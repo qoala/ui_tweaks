@@ -27,6 +27,24 @@ local function getKnownUnitFromGhost(sim, ghostUnit)
     end
 end
 
+-- True if unit is either seen or known from a ghost as above.
+local function playerKnowsUnit(player, unit)
+    if array.find(player:getSeenUnits(), unit) then
+        return true
+    end
+
+    local originalID = unit:getID()
+    if player._ghost_units then
+        for unitID, ghost in pairs(player._ghost_units) do
+            if unitID == originalID then
+                local gx, gy = ghost:getLocation()
+                local x, y = unit:getLocation()
+                return x == gx and y == gy
+            end
+        end
+    end
+end
+
 -- ===
 -- Overwatch Preview
 
@@ -108,9 +126,17 @@ local function trackerPredictPeripheralLos(self, facing)
     return cells
 end
 
+-- Guards can have lost targets despite no longer being in the aiming state.
+local function unitHasLostTarget(threatUnit, selectedUnit)
+    local brain = threatUnit:getBrain()
+    local senses = brain and brain:getSenses()
+    return senses and senses:hasLostTarget(selectedUnit)
+end
+
 local function checkPotentialThreat(unit, sim, selectedUnit, guardThreats, turretThreats)
     if simquery.isEnemyAgent(unit:getPlayerOwner(), selectedUnit) and
-            (unit:isAiming() or unit:getTraits().skipOverwatch) and not unit:getTraits().pacifist then
+            (unit:isAiming() or unit:getTraits().skipOverwatch or
+                    unitHasLostTarget(unit, selectedUnit)) and not unit:getTraits().pacifist then
         -- Note: Most logic is just for guards/drones. Turrets don't actually track around the edge of their vision!
         if unit:getBrain() then
             local senses = unit:getBrain():getSenses()
@@ -120,6 +146,7 @@ local function checkPotentialThreat(unit, sim, selectedUnit, guardThreats, turre
                     facing = unit:getFacing(),
                     tracking = true,
                     inSight = true,
+                    willShoot = unit:isAiming() or unit:getTraits().skipOverwatch,
                     _sim = sim,
                     _losByFacing = {},
                     _peripheralLosByFacing = {},
@@ -134,6 +161,7 @@ local function checkPotentialThreat(unit, sim, selectedUnit, guardThreats, turre
                     facing = unit:getFacing(),
                     tracking = true,
                     inSight = false,
+                    willShoot = unit:isAiming() or unit:getTraits().skipOverwatch,
                     _sim = sim,
                     _losByFacing = {},
                     _peripheralLosByFacing = {},
@@ -148,6 +176,7 @@ local function checkPotentialThreat(unit, sim, selectedUnit, guardThreats, turre
                     facing = unit:getFacing(),
                     tracking = false,
                     inSight = false,
+                    willShoot = unit:isAiming() or unit:getTraits().skipOverwatch,
                     _sim = sim,
                     _losByFacing = {},
                     _peripheralLosByFacing = {},
@@ -197,6 +226,39 @@ local function findThreats(sim, selectedUnit)
     return guardThreats, turretThreats
 end
 
+local function checkForNewGuardThreats(sim, selectedUnit, guardThreats, cell)
+    -- Pathing through a guard adds Henry to their lost targets list.
+    local player = selectedUnit:getPlayerOwner()
+
+    for _, cellUnit in ipairs(cell.units) do
+        if simquery.isEnemyAgent(player, cellUnit) and cellUnit:getBrain() and
+                not cellUnit:getTraits().pacifist and playerKnowsUnit(player, cellUnit) then
+            local tracker = array.findIf(
+                    guardThreats, function(t)
+                        return t.threat == cellUnit
+                    end)
+
+            if tracker then
+                tracker.tracking = true
+            else
+                tracker = {
+                    threat = cellUnit,
+                    facing = cellUnit:getFacing(),
+                    tracking = true,
+                    inSight = false,
+                    willShoot = cellUnit:isAiming() or cellUnit:getTraits().skipOverwatch,
+                    _sim = sim,
+                    _losByFacing = {},
+                    _peripheralLosByFacing = {},
+                    predictLos = trackerPredictLos,
+                    predictPeripheralLos = trackerPredictPeripheralLos,
+                }
+                table.insert(guardThreats, tracker)
+            end
+        end
+    end
+end
+
 -- Predict couldUnitSee value, including modded movement-based modifiers.
 local function predictCouldUnitSee(sim, threat, unit, ignoreCover, cell)
     if unit:getTraits().ITB_HenryImpass then
@@ -228,6 +290,7 @@ end
 -- Predict how each guard will react to this movement step.
 local function isWatchedByGuard(sim, guardThreats, selectedUnit, cell, prevCell)
     local foundThreat = nil
+    local foundShout = nil
     for _, tracker in ipairs(guardThreats) do
         local threat = tracker.threat
         local tx, ty = threat:getLocation()
@@ -302,7 +365,11 @@ local function isWatchedByGuard(sim, guardThreats, selectedUnit, cell, prevCell)
             tracker.tracking = true
             tracker.inSight = true
             tracker.facing = facing -- Technically, if multiple targets, threat only turns if we won priority in Senses:pickBestTarget.
-            foundThreat = foundThreat or threat
+            if tracker.willShoot then
+                foundThreat = foundThreat or threat
+            else
+                foundShout = foundShout or threat
+            end
         elseif tracker.inSight then
             simlog(
                     "LOG_UITR_OW", "  %s,%s-%s,%s %s[%s] LOST f=%s", prevCell and prevCell.x or "*",
@@ -312,7 +379,7 @@ local function isWatchedByGuard(sim, guardThreats, selectedUnit, cell, prevCell)
             tracker.inSight = false
         end
     end
-    return foundThreat
+    return foundThreat, foundShout
 end
 
 local function clearLosCache(guardThreats, turretThreats)
@@ -353,8 +420,8 @@ local function restoreDoors(sim, tempDoors)
     end
 end
 
-local function newShootProp(self, cell, color)
-    local shootTex = resources.find("uitrShoot")
+local function newShootProp(self, cell, color, icon)
+    local shootTex = resources.find(icon or "uitrShoot")
     local x, y = self:cellToWorld(cell.x, cell.y)
 
     local prop = MOAIProp2D.new()
@@ -373,7 +440,10 @@ local function UITRpreviewOverwatch(self, selectedUnit, cells, color, id)
 
     -- Identify threats that could shoot us.
     local guardThreats, turretThreats = findThreats(sim, selectedUnit)
-    if not next(guardThreats) and not next(turretThreats) then
+    -- If not ITB Henry scurrying mid-path, movement is always stopped before getting shot, so no
+    -- threats is safe.
+    local isITBHenry = selectedUnit:getTraits().ITB_HenryImpass
+    if not next(guardThreats) and not next(turretThreats) and not isITBHenry then
         return
     end
 
@@ -405,15 +475,29 @@ local function UITRpreviewOverwatch(self, selectedUnit, cells, color, id)
             -- We still want to update possible peripheral rotations though.
             -- isWatchedByGuard(sim, guardThreats, selectedUnit, cell, nil)
         else
-            local cellIsWatched =
-                    (isWatchedByGuard(sim, guardThreats, selectedUnit, cell, prevCell) or
-                            isWatchedByTurret(sim, turretThreats, selectedUnit, cell))
+            local guardWatch, guardShout = isWatchedByGuard(
+                    sim, guardThreats, selectedUnit, cell, prevCell)
+            local cellIsWatched = (guardWatch or
+                                          isWatchedByTurret(sim, turretThreats, selectedUnit, cell))
             if cellIsWatched then
                 simlog("LOG_UITR_OW", "   shot %s,%s", cell.x, cell.y)
                 table.insert(fgProps, newShootProp(self, cell, color))
                 prevCellThreat = true
+            elseif guardShout then
+                simlog("LOG_UITR_OW", "   shot %s,%s", cell.x, cell.y)
+                local prop = newShootProp(self, cell, color, "uitrShoutAlert")
+                local tx, ty = guardShout:getLocation()
+                local dx, dy = cell.x - tx, cell.y - ty
+                local theta = math.atan2(-dx, dy)
+                prop:setRot(math.deg(theta))
+                table.insert(fgProps, prop)
+                prevCellThreat = true
             else
                 prevCellThreat = false
+            end
+
+            if isITBHenry then
+                checkForNewGuardThreats(sim, selectedUnit, guardThreats, cell)
             end
         end
         prevCell = cell
