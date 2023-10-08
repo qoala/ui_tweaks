@@ -12,14 +12,17 @@ local function initUitrResources()
     resources.insertResource("uitrShoutAlert", quad)
 
     -- Guard Track History
-    local quad = MOAIGfxQuad2D.new()
-    quad:setTexture(resources.getPath("uitr/footprint-trail.png"))
-    quad:setRect(-12, -12, 12, 12)
-    resources.insertResource("uitrFootprintTrail", quad)
-    local quad = MOAIGfxQuad2D.new()
-    quad:setTexture(resources.getPath("uitr/footprint-trail-diag.png"))
-    quad:setRect(-12, -12*1.5, 12, 12*1.5)
-    resources.insertResource("uitrFootprintTrailDiag", quad)
+    do
+        local scale = 10.5
+        local quad = MOAIGfxQuad2D.new()
+        quad:setTexture(resources.getPath("uitr/footprint-trail.png"))
+        quad:setRect(-scale, -scale, scale, scale)
+        resources.insertResource("uitrFootprintTrail", quad)
+        local quad = MOAIGfxQuad2D.new()
+        quad:setTexture(resources.getPath("uitr/footprint-trail-diag.png"))
+        quad:setRect(-scale, -scale*1.5, scale, scale*1.5)
+        resources.insertResource("uitrFootprintTrailDiag", quad)
+    end
 end
 
 return {initUitrResources = initUitrResources}

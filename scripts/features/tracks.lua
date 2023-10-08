@@ -71,15 +71,21 @@ function pathrig.rig:refreshPlannedPath(unitID)
         local tex, texDiag = resources.find("uitrFootprintTrail"), resources.find("uitrFootprintTrailDiag")
         local pathPoints = self._plannedPaths[unitID]
 
+        local parity = 1
         for i, prop in ipairs(self._plannedPathProps[unitID]) do
             prop:setColor(pathCellColors[i]:unpack())
 
             -- DEMO: Limitation all path points must be visible
 			local prevPathPoint, pathPoint = pathPoints[i], pathPoints[i+1]
-            if pathPoint.x == prevPathPoint.x or pathPoint.y == prevPathPoint.y then
-                --prop:setDeck(tex)
-            else
-                --prop:setDeck(texDiag)
+            local xEq = pathPoint.x == prevPathPoint.x
+            local yEq = pathPoint.y == prevPathPoint.y
+            if not xEq and not yEq then
+                prop:setDeck(texDiag)
+                prop:setScl(math.sqrt(4), parity)
+                parity = parity * -1
+            elseif not xEq or not yEq then
+                prop:setDeck(tex)
+                prop:setScl(math.sqrt(2), parity)
             end
         end
     end
