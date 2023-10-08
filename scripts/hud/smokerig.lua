@@ -5,7 +5,7 @@ local binops = include("modules/binary_ops")
 local util = include("modules/util")
 local simdefs = include("sim/simdefs")
 local simquery = include("sim/simquery")
-local smokerig = include("gameplay/smokerig").rig
+local SmokeRig = include("gameplay/smokerig").rig
 
 local uitr_util = include(SCRIPT_PATHS.qed_uitr .. "/uitr_util")
 
@@ -34,7 +34,7 @@ end
 
 -- UITR: Extract color selection, because we only want to create 1 render filter per rig.
 -- Returns true if there's been a change.
-function smokerig:_refreshColorDef()
+function SmokeRig:_refreshColorDef()
     local color = self:getUnit():getTraits().gasColor
     local tacticalColor = self:getUnit():getTraits().gasColorTactical
 
@@ -84,7 +84,7 @@ function smokerig:_refreshColorDef()
             a = tacticalColor.a or 1,
             lum = 0.5,
         }
-        return false -- Nothing to do for this in smokerig:refresh().
+        return false -- Nothing to do for this in SmokeRig:refresh().
     end
 end
 
@@ -94,7 +94,7 @@ local function applyColor(fx, color)
     fx._prop:setSymbolModulate("edge_smoke_particles_lt0", color.r, color.g, color.b, color.a)
 end
 
--- UITR: Move visibility update from smokerig:refresh to the FX's own update methods.
+-- UITR: Move visibility update from SmokeRig:refresh to the FX's own update methods.
 -- The rig is deleted before the FX has finished and we need to keep updating from graphics options.
 local cloudFxAppend = {}
 local edgeFxAppend = {}
@@ -191,8 +191,8 @@ end
 
 -- ===
 
-local oldDestroy = smokerig.destroy
-function smokerig:destroy()
+local oldDestroy = SmokeRig.destroy
+function SmokeRig:destroy()
     for _, fx in pairs(self.smokeFx) do
         if fx._uitrData then
             fx._uitrData.inPostLoop = true
@@ -204,7 +204,7 @@ end
 
 -- Overwrite :refresh()
 -- Changes at CBF, UITR
-function smokerig:refresh(ev)
+function SmokeRig:refresh(ev)
     self:_base().refresh(self)
 
     -- Smoke aint got no ghosting behaviour.
@@ -291,7 +291,7 @@ function smokerig:refresh(ev)
     end
 end
 
-function smokerig:_refreshCell(cell, locals)
+function SmokeRig:_refreshCell(cell, locals)
     if self.smokeFx[cell] == nil then
         -- UITR: Use custom FX that also contains tactical sprites.
         local fx = createSmokeFx(self, "uitr/fx/smoke_grenade", "effect", cell.x, cell.y)
@@ -331,7 +331,7 @@ local function getFallbackDirMask(edgeUnit, cloudUnit)
     return dirMask
 end
 
-function smokerig:_refreshEdge(unitID, locals)
+function SmokeRig:_refreshEdge(unitID, locals)
     -- CBF: Only draw active smoke edges when using CBF dynamic smoke edges.
     local edgeUnit = self._boardRig:getSim():getUnit(unitID)
     if edgeUnit and
