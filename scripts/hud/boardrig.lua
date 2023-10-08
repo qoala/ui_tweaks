@@ -367,7 +367,10 @@ local function isWatchedByGuard(sim, guardThreats, selectedUnit, cell, prevCell)
             tracker.facing = facing -- Technically, if multiple targets, threat only turns if we won priority in Senses:pickBestTarget.
             if tracker.willShoot then
                 foundThreat = foundThreat or threat
-            else
+            elseif not array.find(sim:getLOS():getSeers(cell.x, cell.y), threat:getID()) then
+                -- Warn about guards tracking to shout on peripheral tiles.
+                -- Assume the player is smart enough to understand watched tiles.
+                -- (At least until UITR ends up providing pacifist-vs-armed warnings on all watched tiles)
                 foundShout = foundShout or threat
             end
         elseif tracker.inSight then
@@ -486,8 +489,7 @@ local function UITRpreviewOverwatch(self, selectedUnit, cells, color, id)
             elseif guardShout then
                 simlog("LOG_UITR_OW", "   shot %s,%s", cell.x, cell.y)
                 local prop = newShootProp(self, cell, color, "uitrShoutAlert")
-                local tx, ty = guardShout:getLocation()
-                local dx, dy = cell.x - tx, cell.y - ty
+                local dx, dy = cell.x - prevCell.x, cell.y - prevCell.y
                 local theta = math.atan2(-dx, dy)
                 prop:setRot(math.deg(theta))
                 table.insert(fgProps, prop)
