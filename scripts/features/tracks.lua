@@ -66,8 +66,21 @@ function pathrig.rig:refreshPlannedPath(unitID)
     if uitr_util.checkOption("coloredTracks") and self._plannedPaths[unitID] then
         local pathCellColors = calculatePathColors(self, unitID, self._plannedPaths[unitID])
 
+        -- DEMO: display footprints in place of observed paths.
+        local resources = include("resources")
+        local tex, texDiag = resources.find("uitrFootprintTrail"), resources.find("uitrFootprintTrailDiag")
+        local pathPoints = self._plannedPaths[unitID]
+
         for i, prop in ipairs(self._plannedPathProps[unitID]) do
             prop:setColor(pathCellColors[i]:unpack())
+
+            -- DEMO: Limitation all path points must be visible
+			local prevPathPoint, pathPoint = pathPoints[i], pathPoints[i+1]
+            if pathPoint.x == prevPathPoint.x or pathPoint.y == prevPathPoint.y then
+                --prop:setDeck(tex)
+            else
+                --prop:setDeck(texDiag)
+            end
         end
     end
 end
