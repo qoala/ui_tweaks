@@ -14,11 +14,11 @@ local function initUitrResources()
     -- Guard Track History
     local quad = MOAIGfxQuad2D.new()
     quad:setTexture(resources.getPath("uitr/footprint-trail.png"))
-    quad:setRect(-10.6, -10, 10.6, 10)
+    quad:setRect(-12, -12, 12, 12)
     resources.insertResource("uitrFootprintTrail", quad)
     local quad = MOAIGfxQuad2D.new()
     quad:setTexture(resources.getPath("uitr/footprint-trail-diag.png"))
-    quad:setRect(-10.6, -10*math.sqrt(2), 10.6, 10*math.sqrt(2))
+    quad:setRect(-12, -12*1.5, 12, 12*1.5)
     resources.insertResource("uitrFootprintTrailDiag", quad)
 end
 
