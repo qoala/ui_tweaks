@@ -1,39 +1,24 @@
 local color = include("modules/color")
-local pathrig = include("gameplay/pathrig")
-local agentrig = include("gameplay/agentrig")
 local util = include("modules/util")
+local resources = include("resources")
+local PathRig = include("gameplay/pathrig").rig
 
 local uitr_util = include(SCRIPT_PATHS.qed_uitr .. "/uitr_util")
+local track_colors = include(SCRIPT_PATHS.qed_uitr .. "/features/track_colors")
 
-PATH_COLORS = {
-    color(0, 1, 0.1, 1.0), -- Green
-    color(1, 1, 0.1, 1.0), -- Yellow
-    color(1, 0.7, 0.1, 1.0), -- Orange
-    color(1, 1, 0.6, 1.0), -- Pale Yellow
-    color(0.5, 1, 0.7, 1.0), -- Pale Green
-    color(0, 0.7, 0.7, 1.0), -- Teal
-}
-
-local path_color_idx = 0
-
-local function assignColor(unit)
-    local traits = unit:getTraits()
-    if not traits.pathColor then
-        traits.pathColor = PATH_COLORS[(path_color_idx % #PATH_COLORS) + 1]
-        path_color_idx = path_color_idx + 1
-    end
-    return traits.pathColor
-end
+-- ===
+-- Colored Tracks for observed paths.
 
 local function calculatePathColors(self, unitID, pathPoints)
+	local simquery = self._boardRig:getSim():getQuery()
     local collisions = self._pathCollisions
     local colors = {}
-    local unitColor = assignColor(self._boardRig:getSim():getUnit(unitID))
+    local unitColor = track_colors:assignColor(self._boardRig:getSim():getUnit(unitID))
 
     for i = 2, #pathPoints do
         local prevPathPoint, pathPoint = pathPoints[i - 1], pathPoints[i]
-        local prevPointKey = prevPathPoint.x .. "." .. prevPathPoint.y
-        local pointKey = pathPoint.x .. "." .. pathPoint.y
+        local prevPointKey = simquery.toCellID(prevPathPoint.x, prevPathPoint.y)
+        local pointKey = simquery.toCellID(pathPoint.x, pathPoint.y)
 
         local collided = false
 
@@ -59,15 +44,14 @@ local function calculatePathColors(self, unitID, pathPoints)
     return colors
 end
 
-local oldRefreshPlannedPath = pathrig.rig.refreshPlannedPath
-function pathrig.rig:refreshPlannedPath(unitID)
+local oldRefreshPlannedPath = PathRig.refreshPlannedPath
+function PathRig:refreshPlannedPath(unitID)
     oldRefreshPlannedPath(self, unitID)
 
     if uitr_util.checkOption("coloredTracks") and self._plannedPaths[unitID] then
         local pathCellColors = calculatePathColors(self, unitID, self._plannedPaths[unitID])
 
         -- DEMO: display footprints in place of observed paths.
-        local resources = include("resources")
         local tex, texDiag = resources.find("uitrFootprintTrail"), resources.find("uitrFootprintTrailDiag")
         local pathPoints = self._plannedPaths[unitID]
 
@@ -91,31 +75,11 @@ function pathrig.rig:refreshPlannedPath(unitID)
     end
 end
 
--- { package = pathrig.rig,  name = 'refreshAllTracks',   f = refreshAllTracks },
-local oldRefreshAllTracks = pathrig.rig.refreshAllTracks
-function pathrig.rig:refreshAllTracks()
+local oldRefreshAllTracks = PathRig.refreshAllTracks
+function PathRig:refreshAllTracks()
     if uitr_util.checkOption("coloredTracks") then
         self._pathCollisions = {}
-
-        if not self._pathColors then
-            self._pathColors = {}
-        end
     end
 
     return oldRefreshAllTracks(self)
 end
-
--- { package = agentrig.rig, name = 'drawInterest',       f = drawInterest }
-local oldDrawInterest = agentrig.rig.drawInterest
-function agentrig.rig:drawInterest(interest, alerted)
-    oldDrawInterest(self, interest, alerted)
-
-    if uitr_util.checkOption("coloredTracks") and self.interestProp then
-        local color = assignColor(self:getUnit())
-        self.interestProp:setSymbolModulate("interest_border", color:unpack())
-        self.interestProp:setSymbolModulate("down_line", color:unpack())
-        self.interestProp:setSymbolModulate("down_line_moving", color:unpack())
-        self.interestProp:setSymbolModulate("interest_line_moving", color:unpack())
-    end
-end
-

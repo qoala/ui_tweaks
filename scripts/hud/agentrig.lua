@@ -3,6 +3,7 @@ local cdefs = include("client_defs")
 local util = include("client_util")
 
 local uitr_util = include(SCRIPT_PATHS.qed_uitr .. "/uitr_util")
+local track_colors = include(SCRIPT_PATHS.qed_uitr .. "/features/track_colors")
 
 -- ===
 -- Highlighting for Selected Units
@@ -261,4 +262,20 @@ function AgentRig:refreshRenderFilter(...)
         end
     end
 
+end
+
+-- ===
+-- Colored Tracks for guard interest points.
+
+local oldDrawInterest = AgentRig.drawInterest
+function AgentRig:drawInterest(interest, alerted)
+    oldDrawInterest(self, interest, alerted)
+
+    if uitr_util.checkOption("coloredTracks") and self.interestProp then
+        local color = track_colors:assignColor(self:getUnit())
+        self.interestProp:setSymbolModulate("interest_border", color:unpack())
+        self.interestProp:setSymbolModulate("down_line", color:unpack())
+        self.interestProp:setSymbolModulate("down_line_moving", color:unpack())
+        self.interestProp:setSymbolModulate("interest_line_moving", color:unpack())
+    end
 end
