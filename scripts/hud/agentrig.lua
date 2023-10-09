@@ -272,7 +272,7 @@ function AgentRig:drawInterest(interest, alerted)
     oldDrawInterest(self, interest, alerted)
 
     if uitr_util.checkOption("coloredTracks") and self.interestProp then
-        local color = track_colors:assignColor(self:getUnit())
+        local color = track_colors.getColor(self:getUnit())
         self.interestProp:setSymbolModulate("interest_border", color:unpack())
         self.interestProp:setSymbolModulate("down_line", color:unpack())
         self.interestProp:setSymbolModulate("down_line_moving", color:unpack())

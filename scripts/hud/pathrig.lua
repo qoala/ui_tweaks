@@ -18,7 +18,7 @@ local function calculatePathColors(self, unitID, pathPoints)
     local simquery = self._boardRig:getSim():getQuery()
     local collisions = self._pathCollisions
     local colors = {}
-    local unitColor = track_colors:assignColor(self._boardRig:getSim():getUnit(unitID))
+    local unitColor = track_colors.getColor(self._boardRig:getSim():getUnit(unitID))
 
     for i = 2, #pathPoints do
         local prevPathPoint, pathPoint = pathPoints[i - 1], pathPoints[i]
@@ -137,7 +137,7 @@ function PathRig:refreshTrackProps(optFootprints, unit, pathPoints, props)
         if pathPoints.info.wasSeen or pathPoints.info.wasTracked or
                 (unit and uitr_util.playerKnowsUnit(player, unit)) then
             -- If we know/knew the unit, use its color.
-            unitColor = track_colors:assignColor(unit)
+            unitColor = track_colors.getColor(unit)
             colorAlpha = 0.5
         end
 

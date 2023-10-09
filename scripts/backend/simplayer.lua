@@ -3,6 +3,7 @@ local simplayer = include("sim/simplayer")
 local simquery = include("sim/simquery")
 
 local uitr_util = include(SCRIPT_PATHS.qed_uitr .. "/uitr_util")
+local track_colors = include(SCRIPT_PATHS.qed_uitr .. "/features/track_colors")
 
 -- ===
 
@@ -24,6 +25,10 @@ function simplayer:init(...)
 
     oldInit(self, ...)
 end
+
+-- ===
+-- Known Bounds
+-- Track the player-known bounds of the map, so that certain effects don't leak the true bounds.
 
 function simplayer:getUITRKnownBounds()
     return self._uitr_minKnownX, self._uitr_minKnownY, self._uitr_maxKnownX, self._uitr_maxKnownY
@@ -54,7 +59,11 @@ local oldGlimpseUnit = simplayer.glimpseUnit
 function simplayer:glimpseUnit(sim, unitID, ...)
     local unit = sim:getUnit(unitID)
     if unit and unit:getLocation() then
+        -- Map Bounds Tracking.
         self:_updateUITRKnownBounds(unit:getLocation())
+
+        -- Footprint Tracking.
+        track_colors.ensureUnitHasColor(unit)
     end
 
     return oldGlimpseUnit(self, sim, unitID, ...)
