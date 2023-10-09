@@ -6,6 +6,13 @@ local simquery = include("sim/simquery")
 
 local uitr_util = include(SCRIPT_PATHS.qed_uitr .. "/uitr_util")
 
+local ICON_EXPLODE = "gui/icons/uitr-icon-action_explode_small.png"
+local ICON_MAPPOINT_ALERT = "gui/icons/uitr-icon-action_mappoint_alert.png"
+local ICON_MAPPOINT_INVESTIGATE = "gui/icons/uitr-icon-action_mappoint_investigate.png"
+local ICON_MAPPOINT_VISION = "gui/icons/uitr-icon-action_peek.png"
+local ICON_MAPPOINT_VISION_OFF = "gui/icons/uitr-icon-action_unpeek.png"
+local ICON_SCAN = "gui/icons/action_icons/Action_icon_Small/icon-action_scanner_small.png"
+
 -- ====
 -- Tooltips for vision mode actions
 -- ====
@@ -226,7 +233,7 @@ local function addVisionActionsForUnit(hud, actions, targetUnit, isSeen, staleGh
         table.insert(
                 actions, {
                     txt = "",
-                    icon = "gui/items/icon-action_peek.png",
+                    icon = ICON_MAPPOINT_VISION,
                     x = x,
                     y = y,
                     z = z,
@@ -244,7 +251,7 @@ local function addVisionActionsForUnit(hud, actions, targetUnit, isSeen, staleGh
         table.insert(
                 actions, {
                     txt = "",
-                    icon = "gui/items/icon-emp.png",
+                    icon = ICON_EXPLODE,
                     x = x,
                     y = y,
                     z = z,
@@ -259,7 +266,7 @@ local function addVisionActionsForUnit(hud, actions, targetUnit, isSeen, staleGh
         table.insert(
                 actions, {
                     txt = "",
-                    icon = "gui/items/icon-emp.png",
+                    icon = ICON_SCAN,
                     x = x,
                     y = y,
                     z = z,
@@ -275,8 +282,7 @@ local function addVisionActionsForUnit(hud, actions, targetUnit, isSeen, staleGh
         table.insert(
                 actions, {
                     txt = "",
-                    icon = doEnable and "gui/items/icon-action_peek.png" or
-                            "gui/items/uitr-icon-action_unpeek.png",
+                    icon = doEnable and ICON_MAPPOINT_VISION or ICON_MAPPOINT_VISION_OFF,
                     x = x,
                     y = y,
                     z = z,
@@ -299,8 +305,8 @@ local function addVisionActionsForUnit(hud, actions, targetUnit, isSeen, staleGh
         table.insert(
                 actions, {
                     txt = "",
-                    icon = targetUnit:isAlerted() and "gui/icons/thought_icons/status_hunting.png" or
-                            "gui/icons/thought_icons/status_investigating.png",
+                    icon = targetUnit:isAlerted() and ICON_MAPPOINT_ALERT or
+                            ICON_MAPPOINT_INVESTIGATE,
                     x = x,
                     y = y,
                     z = z,
