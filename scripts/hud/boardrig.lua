@@ -12,40 +12,6 @@ local cbf_util = SCRIPT_PATHS and SCRIPT_PATHS.qoala_commbugfix and
 local uitr_util = include(SCRIPT_PATHS.qed_uitr .. "/uitr_util")
 
 -- ===
-
--- Returns the real unit if the player has the correct location for the provided ghost unit.
--- Otherwise, returns nil.
--- Same criteria as the vanilla SHIFT keybind to inspect watched cells.
-local function getKnownUnitFromGhost(sim, ghostUnit)
-    local unit = sim:getUnit(ghostUnit:getID())
-    if unit then
-        local gx, gy = ghostUnit:getLocation()
-        local x, y = unit:getLocation()
-        if x == gx and y == gy then
-            return unit
-        end
-    end
-end
-
--- True if unit is either seen or known from a ghost as above.
-local function playerKnowsUnit(player, unit)
-    if array.find(player:getSeenUnits(), unit) then
-        return true
-    end
-
-    local originalID = unit:getID()
-    if player._ghost_units then
-        for unitID, ghost in pairs(player._ghost_units) do
-            if unitID == originalID then
-                local gx, gy = ghost:getLocation()
-                local x, y = unit:getLocation()
-                return x == gx and y == gy
-            end
-        end
-    end
-end
-
--- ===
 -- Overwatch Preview
 
 local function predictLOS(sim, unit, facing)
@@ -216,7 +182,7 @@ local function findThreats(sim, selectedUnit)
     -- and ghost echoes that the player has the correct location for. (Same criteria as the vanilla SHIFT keybind)
     if player._ghost_units then
         for unitID, ghost in pairs(player._ghost_units) do
-            local unit = getKnownUnitFromGhost(sim, ghost)
+            local unit = uitr_util.getKnownUnitFromGhost(sim, ghost)
             if unit then
                 checkPotentialThreat(unit, sim, selectedUnit, guardThreats, turretThreats)
             end
@@ -232,7 +198,7 @@ local function checkForNewGuardThreats(sim, selectedUnit, guardThreats, cell)
 
     for _, cellUnit in ipairs(cell.units) do
         if simquery.isEnemyAgent(player, cellUnit) and cellUnit:getBrain() and
-                not cellUnit:getTraits().pacifist and playerKnowsUnit(player, cellUnit) then
+                not cellUnit:getTraits().pacifist and uitr_util.playerKnowsUnit(player, cellUnit) then
             local tracker = array.findIf(
                     guardThreats, function(t)
                         return t.threat == cellUnit
@@ -612,7 +578,7 @@ local function UITRpreviewSprintNoise(boardrig, unit, path, id)
             -- check ghost units
             local ghostCell = sim:getPC()._ghost_cells[simquery.toCellID(cell.x, cell.y)]
             for _, ghostUnit in ipairs(ghostCell.units) do
-                local unit = getKnownUnitFromGhost(sim, ghostUnit)
+                local unit = uitr_util.getKnownUnitFromGhost(sim, ghostUnit)
                 if unit and ghostUnit:getTraits().hasHearing and ghostUnit:getPlayerOwner() ~=
                         sim:getPC() and not unit:isDown() then
                     table.insert(units, unit)

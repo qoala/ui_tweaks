@@ -3,6 +3,13 @@ local UI_TWEAKS_STRINGS = {
         MOD_ENABLED = "Enabled",
         VANILLA = "OFF/VANILLA",
 
+        RECENT_FOOTPRINTS = "Guard Trails",
+        RECENT_FOOTPRINTS_TIP = "Trail footprints behind guards that you see or otherwise sense walking.",
+        RECENT_FOOTPRINTS_OPTIONS = { --
+            "OFF/VANILLA",
+            "SEEN ONLY",
+            "FULL",
+        },
         GRID_COORDS = "Grid Coordinates",
         GRID_COORDS_TIP = "Show an overlay of grid coordinates.",
         GRID_COORDS_OPTIONS = { --

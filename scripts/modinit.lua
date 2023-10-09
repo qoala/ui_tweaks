@@ -78,6 +78,7 @@ local function init(modApi)
     include(modApi:getScriptPath() .. "/hud/pathrig")
     include(modApi:getScriptPath() .. "/hud/smokerig")
     include(modApi:getScriptPath() .. "/hud/targeting")
+    include(modApi:getScriptPath() .. "/hud/viz_manager")
     include(modApi:getScriptPath() .. "/hud/world_hud")
 
     if config.DEV then
