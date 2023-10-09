@@ -10,7 +10,7 @@ local track_colors = include(SCRIPT_PATHS.qed_uitr .. "/features/track_colors")
 -- Colored Tracks for observed paths.
 
 local function calculatePathColors(self, unitID, pathPoints)
-	local simquery = self._boardRig:getSim():getQuery()
+    local simquery = self._boardRig:getSim():getQuery()
     local collisions = self._pathCollisions
     local colors = {}
     local unitColor = track_colors:assignColor(self._boardRig:getSim():getUnit(unitID))
@@ -52,7 +52,8 @@ function PathRig:refreshPlannedPath(unitID)
         local pathCellColors = calculatePathColors(self, unitID, self._plannedPaths[unitID])
 
         -- DEMO: display footprints in place of observed paths.
-        local tex, texDiag = resources.find("uitrFootprintTrail"), resources.find("uitrFootprintTrailDiag")
+        local tex, texDiag = resources.find("uitrFootprintTrail"),
+                             resources.find("uitrFootprintTrailDiag")
         local pathPoints = self._plannedPaths[unitID]
 
         local parity = 1
@@ -60,7 +61,7 @@ function PathRig:refreshPlannedPath(unitID)
             prop:setColor(pathCellColors[i]:unpack())
 
             -- DEMO: Limitation all path points must be visible
-			local prevPathPoint, pathPoint = pathPoints[i], pathPoints[i+1]
+            local prevPathPoint, pathPoint = pathPoints[i], pathPoints[i + 1]
             local xEq = pathPoint.x == prevPathPoint.x
             local yEq = pathPoint.y == prevPathPoint.y
             if not xEq and not yEq then

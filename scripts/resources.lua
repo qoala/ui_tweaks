@@ -20,7 +20,7 @@ local function initUitrResources()
         resources.insertResource("uitrFootprintTrail", quad)
         local quad = MOAIGfxQuad2D.new()
         quad:setTexture(resources.getPath("uitr/footprint-trail-diag.png"))
-        quad:setRect(-scale, -scale*1.5, scale, scale*1.5)
+        quad:setRect(-scale, -scale * 1.5, scale, scale * 1.5)
         resources.insertResource("uitrFootprintTrailDiag", quad)
     end
 end
