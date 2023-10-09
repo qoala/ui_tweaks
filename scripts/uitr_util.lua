@@ -47,6 +47,7 @@ local UITR_OPTIONS = {
         values = {false, "seen", "full"},
         value = "seen",
         strings = STRINGS.UITWEAKSR.OPTIONS.RECENT_FOOTPRINTS_OPTIONS,
+        refreshTypes = {[REFRESH.BOARDRIG] = true},
     },
     { -- Additional interface detail.
         sectionHeader = true,

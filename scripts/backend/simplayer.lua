@@ -86,23 +86,44 @@ function simplayer:clearTracks(unitID)
     -- units and tiles.
 end
 
+-- Mix of simengine:canPlayerSee() and simquery:couldUnitSee().
+-- The unit hasn't moved yet when tracking footsteps.
+local function couldPlayerSeeCellAndUnit(player, unit, x, y)
+    local sim = unit:getSim()
+    local canSeeCell = false
+    for i, playerUnit in ipairs(player:getUnits()) do
+        if sim:canUnitSee(playerUnit, x, y) then
+            if simquery.couldUnitSee(sim, playerUnit, unit, false, sim:getCell(x, y)) then
+                return true, true
+            end
+            canSeeCell = true
+        end
+    end
+    return canSeeCell, false
+end
+
 -- UITR: Override vanilla.
 function simplayer:trackFootstep(sim, unit, cellx, celly)
     -- UITR: Remove "only if player cannot see unit" check. Track all units.
 
     local unitTraits, unitID = unit:getTraits(), unit:getID()
+    -- Hearing
     local closestUnit, closestRange = simquery.findClosestUnit(
             self._units, cellx, celly, simquery.canHear)
+    -- Vision
+    local canSeeCell, canSeeUnit = couldPlayerSeeCellAndUnit(self, unit, cellx, celly)
     local footstep = {
         x = cellx,
         y = celly,
         -- UITR: replace isSeen with "is unit seen" and create a new isCellSeen for this.
-        isCellSeen = sim:canPlayerSee(self, cellx, celly),
+        isCellSeen = canSeeCell,
 
-        isSeen = sim:canPlayerSeeUnit(self, unit),
+        isSeen = canSeeUnit,
         isHeard = closestRange <= simquery.getMoveSoundRange(unit, sim:getCell(cellx, celly)),
         -- UITR: Instead of 'tagged' setting isHeard, set its own trait.
-        isTracked = (unitTraits.patrolObserved or unitTraits.tagged) and self:getCell(cellx, celly),
+        -- simunit:onEndTurn clears getTraits().patrolObserved, so that's already expired.
+        -- Fixing that would require figuring out if the path has deviated during the guard turn.
+        isTracked = (unitTraits.tagged) and self:getCell(cellx, celly),
     }
 
     local footpath = self._footsteps[unitID]
@@ -127,16 +148,21 @@ end
 local oldOnEndTurn = simplayer.onEndTurn
 function simplayer:onEndTurn(sim)
     -- Record any known ghosts for next turn's footpaths.
+    -- (Non-ghosts should already be handled by moving while seen.)
     local lastKnownGhosts = {}
-    for unitID, ghostUnit in pairs(self._ghost_units) do
-        if simquery.isAgent(ghostUnit) and uitr_util.getKnownUnitFromGhost(sim, ghostUnit) then
-            table.insert(lastKnownGhosts, unitID)
+    if sim:getCurrentPlayer() == self then
+        for unitID, ghostUnit in pairs(self._ghost_units) do
+            if simquery.isAgent(ghostUnit) and uitr_util.getKnownUnitFromGhost(sim, ghostUnit) then
+                table.insert(lastKnownGhosts, unitID)
+            end
         end
     end
 
     oldOnEndTurn(self, sim)
 
-    for _, unitID in ipairs(lastKnownGhosts) do
-        self._footsteps[unitID] = {info = {wasSeen = true}}
+    if sim:getCurrentPlayer() == self then
+        for _, unitID in ipairs(lastKnownGhosts) do
+            self._footsteps[unitID] = {info = {wasSeen = true}}
+        end
     end
 end

@@ -146,9 +146,12 @@ function PathRig:refreshTrackProps(optFootprints, unit, pathPoints, props)
 
         for i = 2, #pathPoints do
             local prevPathPoint, pathPoint = pathPoints[i - 1], pathPoints[i]
-            local isKnown = self:_isTrackPointKnown(optFootprints, prevPathPoint) or
-                                    self:_isTrackPointKnown(optFootprints, pathPoint)
-            if isKnown then
+            local isKnown0 = self:_isTrackPointKnown(optFootprints, prevPathPoint)
+            local isKnown1 = self:_isTrackPointKnown(optFootprints, pathPoint)
+            -- if unit:getID() == 1046 then
+            --     simlog("[UITR] track [%d] %d,%d-%d,%d known=%s,%s", unit:getID(), prevPathPoint.x, prevPathPoint.y, pathPoint.x, pathPoint.y, tostring(isKnown0), tostring(isKnown1))
+            -- end
+            if isKnown0 or isKnown1 then
                 local prop = props[j] or self:_getTrackProp()
                 props[j] = prop
 
