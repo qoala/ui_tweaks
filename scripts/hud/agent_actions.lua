@@ -298,11 +298,11 @@ local function addVisionActionsForUnit(hud, actions, targetUnit, isSeen, staleGh
     end
 
     -- Ordering:
-    -- * Unit visibility (priority near -10)
+    -- * Unit visibility (priority near 10)
     --   * Unit vision
     --   * Unit planned path
     --   * Unit historical tracks
-    -- * Unit Properties (prioritiy from -9 and greater)
+    -- * Unit Properties (prioritiy from 9 and lower)
     --   * Explosion radius
     --   * Scan radius
 
@@ -317,7 +317,7 @@ local function addVisionActionsForUnit(hud, actions, targetUnit, isSeen, staleGh
                     enabled = false,
                     layoutID = targetUnit:getID(),
                     tooltip = vision_tooltip(hud, targetUnit),
-                    priority = -10.1,
+                    priority = 10.1,
                 })
     end
     -- getExplodeCells = grenade or EMP pack.
@@ -335,7 +335,7 @@ local function addVisionActionsForUnit(hud, actions, targetUnit, isSeen, staleGh
                     enabled = false,
                     layoutID = targetUnit:getID(),
                     tooltip = explode_tooltip(hud, targetUnit),
-                    priority = -9,
+                    priority = 9,
                 })
     end
     if not staleGhost and targetUnit:getTraits().pulseScan and targetUnit:isNPC() and
@@ -350,7 +350,7 @@ local function addVisionActionsForUnit(hud, actions, targetUnit, isSeen, staleGh
                     enabled = false,
                     layoutID = targetUnit:getID(),
                     tooltip = pulse_scan_tooltip(hud, targetUnit),
-                    priority = -8,
+                    priority = 8,
                 })
     end
     if not staleGhost and unitCanSee and canNormallySeeLOS and
@@ -367,7 +367,7 @@ local function addVisionActionsForUnit(hud, actions, targetUnit, isSeen, staleGh
                     layoutID = targetUnit:getID(),
                     tooltip = doEnable and hidevision_tooltip(hud, targetUnit) or
                             showvision_tooltip(targetUnit),
-                    priority = -10,
+                    priority = 10,
                     onClick = function()
                         targetUnit:getTraits().uitr_hideVision = not targetUnit:getTraits().uitr_hideVision
                         hud._game.boardRig:refresh()
@@ -390,7 +390,7 @@ local function addVisionActionsForUnit(hud, actions, targetUnit, isSeen, staleGh
                     enabled = true,
                     layoutID = targetUnit:getID(),
                     tooltip = show_interest_tooltip(hud, targetUnit, xc, yc, x0, y0),
-                    priority = -9.9,
+                    priority = 9.7,
                     onClick = function()
                         hud._game:cameraPanToCell(xc, yc)
                         hud._game.fxmgr:addAnimFx(
@@ -420,7 +420,7 @@ local function addVisionActionsForUnit(hud, actions, targetUnit, isSeen, staleGh
                     layoutID = targetUnit:getID(),
                     tooltip = doHide and hide_path_tooltip(hud, targetUnit) or
                             show_path_tooltip(targetUnit),
-                    priority = -9.8,
+                    priority = 9.9,
                     onClick = function()
                         pathRig:setUnitPathVisibility(targetUnit:getID(), not doHide)
                         pathRig:refreshAllTracks()
@@ -442,7 +442,7 @@ local function addVisionActionsForUnit(hud, actions, targetUnit, isSeen, staleGh
                     layoutID = targetUnit:getID(),
                     tooltip = doHide and hide_tracks_tooltip(hud, targetUnit) or
                             show_tracks_tooltip(targetUnit),
-                    priority = -9.8,
+                    priority = 9.8,
                     onClick = function()
                         pathRig:setUnitTracksVisibility(targetUnit:getID(), not doHide)
                         pathRig:refreshAllTracks()
