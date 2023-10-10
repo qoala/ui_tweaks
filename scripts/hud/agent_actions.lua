@@ -9,8 +9,14 @@ local uitr_util = include(SCRIPT_PATHS.qed_uitr .. "/uitr_util")
 local ICON_EXPLODE = "gui/icons/uitr-icon-action_explode_small.png"
 local ICON_MAPPOINT_ALERT = "gui/icons/uitr-icon-action_mappoint_alert.png"
 local ICON_MAPPOINT_INVESTIGATE = "gui/icons/uitr-icon-action_mappoint_investigate.png"
-local ICON_MAPPOINT_VISION = "gui/icons/uitr-icon-action_peek.png"
-local ICON_MAPPOINT_VISION_OFF = "gui/icons/uitr-icon-action_unpeek.png"
+local ICON_VISION = "gui/icons/uitr-icon-action_peek.png"
+local ICON_VISION_OFF = "gui/icons/uitr-icon-action_unpeek.png"
+local ICON_VISION = "gui/icons/uitr-icon-action_peek.png"
+local ICON_VISION_OFF = "gui/icons/uitr-icon-action_unpeek.png"
+local ICON_PATH = "gui/icons/uitr-icon-action_paths.png"
+local ICON_PATH_OFF = "gui/icons/uitr-icon-action_paths.png"
+local ICON_TRACKS = "gui/icons/uitr-icon-action_footprints.png"
+local ICON_TRACKS_OFF = "gui/icons/uitr-icon-action_footprints.png"
 local ICON_SCAN = "gui/icons/action_icons/Action_icon_Small/icon-action_scanner_small.png"
 
 -- ====
@@ -207,6 +213,68 @@ function show_interest_tooltip:deactivate()
 end
 
 -- ====
+
+function show_path_tooltip(unit)
+    return string.format(
+            "<ttheader>%s\n<ttbody>%s</>",
+            util.sformat(STRINGS.UITWEAKSR.UI.BTN_UNIT_PATH_HEADER, util.toupper(unit:getName())),
+            STRINGS.UITWEAKSR.UI.BTN_UNIT_PATH_HIDE_TXT)
+end
+function show_tracks_tooltip(unit)
+    return string.format(
+            "<ttheader>%s\n<ttbody>%s</>", util.sformat(
+                    STRINGS.UITWEAKSR.UI.BTN_UNIT_TRACKS_HEADER, util.toupper(unit:getName())),
+            STRINGS.UITWEAKSR.UI.BTN_UNIT_TRACKS_HIDE_TXT)
+end
+
+local hide_path_tooltip = class(mui_tooltip)
+local hide_tracks_tooltip = class(mui_tooltip)
+
+function hide_path_tooltip:init(hud, unit)
+    mui_tooltip.init(
+            self,
+            util.sformat(STRINGS.UITWEAKSR.UI.BTN_UNIT_PATH_HEADER, util.toupper(unit:getName())),
+            STRINGS.UITWEAKSR.UI.BTN_UNIT_PATH_HIDE_TXT, nil)
+    self._boardRig = hud._game.boardRig
+    self._pathRig = self._boardRig:getPathRig()
+    self._unitID = unit:getID()
+end
+function hide_path_tooltip:activate(screen)
+    mui_tooltip.activate(self, screen)
+
+    -- Enable single-unit pathrig visibility.
+    self._pathRig:setSingleVisibility({unitID = self._unitID, showPath = true})
+    self._pathRig:refreshAllTracks()
+end
+function hide_path_tooltip:deactivate()
+    mui_tooltip.deactivate(self)
+    self._pathRig:setSingleVisibility(nil)
+    self._pathRig:refreshAllTracks()
+end
+
+function hide_tracks_tooltip:init(hud, unit)
+    mui_tooltip.init(
+            self, util.sformat(
+                    STRINGS.UITWEAKSR.UI.BTN_UNIT_TRACKS_HEADER, util.toupper(unit:getName())),
+            STRINGS.UITWEAKSR.UI.BTN_UNIT_TRACKS_HIDE_TXT, nil)
+    self._boardRig = hud._game.boardRig
+    self._pathRig = self._boardRig:getPathRig()
+    self._unitID = unit:getID()
+end
+function hide_tracks_tooltip:activate(screen)
+    mui_tooltip.activate(self, screen)
+
+    -- Enable single-unit pathrig visibility.
+    self._pathRig:setSingleVisibility({unitID = self._unitID, showTracks = true})
+    self._pathRig:refreshAllTracks()
+end
+function hide_tracks_tooltip:deactivate()
+    mui_tooltip.deactivate(self)
+    self._pathRig:setSingleVisibility(nil)
+    self._pathRig:refreshAllTracks()
+end
+
+-- ====
 -- Helper functions
 -- ====
 
@@ -229,11 +297,20 @@ local function addVisionActionsForUnit(hud, actions, targetUnit, isSeen, staleGh
         return
     end
 
+    -- Ordering:
+    -- * Unit visibility (priority near -10)
+    --   * Unit vision
+    --   * Unit planned path
+    --   * Unit historical tracks
+    -- * Unit Properties (prioritiy from -9 and greater)
+    --   * Explosion radius
+    --   * Scan radius
+
     if not staleGhost and unitCanSee and (not isSeen or targetUnit:getPlayerOwner() == localPlayer) then
         table.insert(
                 actions, {
                     txt = "",
-                    icon = ICON_MAPPOINT_VISION,
+                    icon = ICON_VISION,
                     x = x,
                     y = y,
                     z = z,
@@ -282,7 +359,7 @@ local function addVisionActionsForUnit(hud, actions, targetUnit, isSeen, staleGh
         table.insert(
                 actions, {
                     txt = "",
-                    icon = doEnable and ICON_MAPPOINT_VISION or ICON_MAPPOINT_VISION_OFF,
+                    icon = doEnable and ICON_VISION or ICON_VISION_OFF,
                     x = x,
                     y = y,
                     z = z,
@@ -324,6 +401,52 @@ local function addVisionActionsForUnit(hud, actions, targetUnit, isSeen, staleGh
                                     x = x0,
                                     y = y0,
                                 })
+                    end,
+                })
+    end
+
+    local pathRig = hud._game.boardRig:getPathRig()
+    if pathRig and targetUnit:getTraits().tagged or targetUnit:getTraits().patrolObserved then
+        local unitVisibility = pathRig:getUnitVisibility(targetUnit:getID())
+        local doHide = not unitVisibility.hidePath
+        table.insert(
+                actions, {
+                    txt = "",
+                    icon = doHide and ICON_PATH or ICON_PATH_OFF,
+                    x = x,
+                    y = y,
+                    z = z,
+                    enabled = true,
+                    layoutID = targetUnit:getID(),
+                    tooltip = doHide and hide_path_tooltip(hud, targetUnit) or
+                            show_path_tooltip(targetUnit),
+                    priority = -9.8,
+                    onClick = function()
+                        pathRig:setUnitPathVisibility(targetUnit:getID(), not doHide)
+                        pathRig:refreshAllTracks()
+                        hud:refreshHud()
+                    end,
+                })
+    end
+    if pathRig and pathRig:isUnitTrackKnown(targetUnit:getID()) then
+        local unitVisibility = pathRig:getUnitVisibility(targetUnit:getID())
+        local doHide = not unitVisibility.hideTracks
+        table.insert(
+                actions, {
+                    txt = "",
+                    icon = doHide and ICON_TRACKS or ICON_TRACKS_OFF,
+                    x = x,
+                    y = y,
+                    z = z,
+                    enabled = true,
+                    layoutID = targetUnit:getID(),
+                    tooltip = doHide and hide_tracks_tooltip(hud, targetUnit) or
+                            show_tracks_tooltip(targetUnit),
+                    priority = -9.8,
+                    onClick = function()
+                        pathRig:setUnitTracksVisibility(targetUnit:getID(), not doHide)
+                        pathRig:refreshAllTracks()
+                        hud:refreshHud()
                     end,
                 })
     end

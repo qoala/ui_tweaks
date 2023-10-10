@@ -54,10 +54,16 @@ function PathRig:refreshPlannedPath(unitID)
     oldRefreshPlannedPath(self, unitID)
 
     if uitr_util.checkOption("coloredTracks") and self._plannedPaths[unitID] then
-        local pathCellColors = calculatePathColors(self, unitID, self._plannedPaths[unitID])
-
-        for i, prop in ipairs(self._plannedPathProps[unitID]) do
-            prop:setColor(pathCellColors[i]:unpack())
+        if self._singleVisibility then
+            local clr = track_colors.getColor(self._boardRig:getSim():getUnit(unitID))
+            for i, prop in ipairs(self._plannedPathProps[unitID]) do
+                prop:setColor(clr:unpack())
+            end
+        else
+            local pathCellColors = calculatePathColors(self, unitID, self._plannedPaths[unitID])
+            for i, prop in ipairs(self._plannedPathProps[unitID]) do
+                prop:setColor(pathCellColors[i]:unpack())
+            end
         end
     end
 end
@@ -92,6 +98,19 @@ function PathRig:_isTrackPointKnown(optFootprints, pathPoint)
         return pathPoint.isSeen or pathPoint.isTracked
     elseif optFootprints == "full" then
         return pathPoint.isSeen or pathPoint.isTracked or pathPoint.isHeard
+    end
+end
+function PathRig:isUnitTrackKnown(unitID)
+    local player = self._boardRig:getSim():getPC()
+    local path = player and player:getTracks(unitID)
+    if not path then
+        return false
+    end
+    local optFootprints = uitr_util.checkOption("recentFootprints")
+    if optFootprints == "seen" then
+        return path.info.wasSeen or path.info.wasTracked
+    elseif optFootprints == "full" then
+        return path.info.wasSeen or path.info.wasTracked or path.info.wasHeard
     end
 end
 
@@ -188,6 +207,60 @@ end
 -- ===
 -- Shared.
 
+local oldInit = PathRig.init
+function PathRig:init(boardRig, layer, throwLayer, ...)
+    oldInit(self, boardRig, layer, throwLayer, ...)
+
+    -- Table mapping UnitID to {hidePath, hideTracks}.
+    self._unitVisibility = {}
+    -- Can be set to a struct with {unitID, showPath, showTracks} to hide all others.
+    self._singleVisibility = nil
+end
+
+function PathRig:_shouldDrawPath(unitID)
+    if self._singleVisibility then
+        return self._singleVisibility.unitID == unitID and self._singleVisibility.showPath
+    end
+    return not (self._unitVisibility[unitID] and self._unitVisibility[unitID].hidePath)
+end
+function PathRig:_shouldDrawTracks(unitID)
+    if self._singleVisibility then
+        return self._singleVisibility.unitID == unitID and self._singleVisibility.showTracks
+    end
+    return not (self._unitVisibility[unitID] and self._unitVisibility[unitID].hideTracks)
+end
+
+function PathRig:resetVisibility()
+    self._singleVisibility = nil
+    self._unitVisibility = {}
+end
+
+function PathRig:getUnitVisibility(unitID)
+    return self._unitVisibility[unitID] or {}
+end
+-- Takes a struct with {unitID, showPath, showTracks} to hide all other units.
+function PathRig:setSingleVisibility(showVisibility)
+    self._singleVisibility = showVisibility
+end
+
+function PathRig:setUnitPathVisibility(unitID, isShown)
+    local unitVis = self._unitVisibility[unitID]
+    if unitVis then
+        unitVis.hidePath = not isShown
+    elseif not isShown then
+        self._unitVisibility[unitID] = {hidePath = true}
+    end
+end
+function PathRig:setUnitTracksVisibility(unitID, isShown)
+    local unitVis = self._unitVisibility[unitID]
+    if unitVis then
+        unitVis.hideTracks = not isShown
+    elseif not isShown then
+        self._unitVisibility[unitID] = {hideTracks = true}
+    end
+end
+-- Also, PathRig:isUnitTrackKnown(unitID) above
+
 -- UITR: Override (unless all relevant options are disabled)
 local oldRefreshAllTracks = PathRig.refreshAllTracks
 function PathRig:refreshAllTracks()
@@ -212,7 +285,12 @@ function PathRig:refreshAllTracks()
         end
     end
     for unitID, trackProps in pairs(self._tracks) do
-        self:refreshTracks(unitID, player:getTracks(unitID))
+        if self:_shouldDrawTracks(unitID) then
+            self:refreshTracks(unitID, player:getTracks(unitID))
+        elseif trackProps and #trackProps > 0 then
+            -- Free up current track props.
+            self:refreshTrackProps(false, nil, nil, trackProps)
+        end
     end
 
     -- UITR: Copy vanilla code for resetting and then regenerating all observed (planned) paths.
@@ -221,7 +299,12 @@ function PathRig:refreshAllTracks()
             self._plannedPaths[unitID] = {}
         end
     end
-    for unitID, pathProps in pairs(self._plannedPaths) do
-        self:regeneratePath(unitID)
+    for unitID, path in pairs(self._plannedPaths) do
+        if self:_shouldDrawPath(unitID) then
+            self:regeneratePath(unitID)
+        elseif self._plannedPathProps[unitID] and #self._plannedPathProps[unitID] > 0 then
+            -- Free up current track props.
+            self:refreshProps(nil, self._plannedPathProps[unitID], nil)
+        end
     end
 end

@@ -140,6 +140,7 @@ function simplayer:trackFootstep(sim, unit, cellx, celly)
         footpath.info = {}
     end
     footpath.info.wasSeen = footpath.info.wasSeen or footstep.isSeen
+    footpath.info.wasHeard = footpath.info.wasHeard or footstep.isHeard
     footpath.info.wasTracked = footpath.info.wasTracked or footstep.isTracked
 
     sim:dispatchEvent(simdefs.EV_UNIT_REFRESH_TRACKS, unit:getID())

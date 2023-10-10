@@ -41,6 +41,7 @@ function hudAppend:uitr_setVisionMode(doEnable)
 
     if not doEnable then
         self._game.simCore:uitr_resetAllUnitVision()
+        self._game.boardRig:getPathRig():resetVisibility()
         self._game.boardRig:refresh()
     end
     self:refreshHud()
@@ -172,6 +173,7 @@ hud.createHud = function(...)
 
             if ev.eventType == simdefs.EV_TURN_END then
                 self._game.simCore:uitr_resetAllUnitVision()
+                self._game.boardRig:getPathRig():resetVisibility()
             end
 
             return result
