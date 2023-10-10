@@ -577,13 +577,15 @@ local function UITRpreviewSprintNoise(boardrig, unit, path, id)
         else
             -- check ghost units
             local ghostCell = sim:getPC()._ghost_cells[simquery.toCellID(cell.x, cell.y)]
-            for _, ghostUnit in ipairs(ghostCell.units) do
-                local unit = uitr_util.getKnownUnitFromGhost(sim, ghostUnit)
-                if unit and ghostUnit:getTraits().hasHearing and ghostUnit:getPlayerOwner() ~=
-                        sim:getPC() and not unit:isDown() then
-                    table.insert(units, unit)
-                    hasAnyUnits = true
-                    hasFocusUnits = hasFocusUnits or isFocus
+            if ghostCell then
+                for _, ghostUnit in ipairs(ghostCell.units) do
+                    local unit = uitr_util.getKnownUnitFromGhost(sim, ghostUnit)
+                    if unit and ghostUnit:getTraits().hasHearing and ghostUnit:getPlayerOwner() ~=
+                            sim:getPC() and not unit:isDown() then
+                        table.insert(units, unit)
+                        hasAnyUnits = true
+                        hasFocusUnits = hasFocusUnits or isFocus
+                    end
                 end
             end
         end
