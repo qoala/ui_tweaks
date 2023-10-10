@@ -14,9 +14,9 @@ local ICON_VISION_OFF = "gui/icons/uitr-icon-action_unpeek.png"
 local ICON_VISION = "gui/icons/uitr-icon-action_peek.png"
 local ICON_VISION_OFF = "gui/icons/uitr-icon-action_unpeek.png"
 local ICON_PATH = "gui/icons/uitr-icon-action_paths.png"
-local ICON_PATH_OFF = "gui/icons/uitr-icon-action_paths.png"
+local ICON_PATH_OFF = "gui/icons/uitr-icon-action_paths_off.png"
 local ICON_TRACKS = "gui/icons/uitr-icon-action_footprints.png"
-local ICON_TRACKS_OFF = "gui/icons/uitr-icon-action_footprints.png"
+local ICON_TRACKS_OFF = "gui/icons/uitr-icon-action_footprints_off.png"
 local ICON_SCAN = "gui/icons/action_icons/Action_icon_Small/icon-action_scanner_small.png"
 
 -- ====
