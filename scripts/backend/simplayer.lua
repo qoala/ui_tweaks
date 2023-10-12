@@ -148,6 +148,38 @@ function simplayer:trackFootstep(sim, unit, cellx, celly)
     sim:dispatchEvent(simdefs.EV_UNIT_REFRESH_TRACKS, unit:getID())
 end
 
+-- Record a unit's observed path at end of turn.
+-- Based on pathrig:regeneratePath().
+--
+-- Not sure if this is useful to record at end of turn. If not otherwise sensed, the player doesn't
+-- know if the unit actually followed this.
+local function recordObservedPath(player, unit)
+    local path = unit:getPather():getPath(unit)
+    if path and path.path and not path.result then
+        local plannedPath = {}
+        local movePoints = unit:getTraits().mpMax
+        local path = unit:getPather():getPath(unit)
+        local moveCostFn = simquery.getMoveCost
+        if simquery.getTrueMoveCost then
+            moveCostFn = function(cell1, cell2)
+                return simquery.getTrueMoveCost(unit, cell1, cell2)
+            end
+        end
+        local prevNode
+        for _, node in ipairs(path.path:getNodes()) do
+            if movePoints and node and prevNode then
+                movePoints = movePoints - moveCostFn(prevNode.location, node.location)
+                if movePoints < 0 then
+                    break -- that's all the path we have time for right now
+                end
+            end
+            table.insert(plannedPath, {x = node.location.x, y = node.location.y})
+            prevNode = node
+        end
+        return plannedPath
+    end
+end
+
 local oldOnEndTurn = simplayer.onEndTurn
 function simplayer:onEndTurn(sim)
     -- Record any known units for next turn's footpaths.
@@ -155,7 +187,11 @@ function simplayer:onEndTurn(sim)
         self._nextFootstepsInfo = {}
         for _, unit in ipairs(self:getSeenUnits()) do
             if simquery.isAgent(unit) then
-                self._nextFootstepsInfo[unitID] = {wasSeen = true}
+                local info = {wasSeen = true}
+                if unit:getTraits().patrolObserved then
+                    info.plannedPath = recordObservedPath(self, unit)
+                end
+                self._nextFootstepsInfo[unit:getID()] = info
             end
         end
         for unitID, ghostUnit in pairs(self._ghost_units) do
