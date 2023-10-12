@@ -121,6 +121,8 @@ function simplayer:trackFootstep(sim, unit, cellx, celly)
         isSeen = canSeeUnit,
         isHeard = closestRange <= simquery.getMoveSoundRange(unit, sim:getCell(cellx, celly)),
         -- UITR: Instead of 'tagged' setting isHeard, set its own trait.
+        -- Also, limit 'known tracked steps' to cells that the player knows. Unknown cells are not
+        -- shown for TAGs/observed paths.
         -- simunit:onEndTurn clears getTraits().patrolObserved, so that's already expired.
         -- Fixing that would require figuring out if the path has deviated during the guard turn.
         isTracked = (unitTraits.tagged) and self:getCell(cellx, celly),
@@ -137,7 +139,7 @@ function simplayer:trackFootstep(sim, unit, cellx, celly)
     -- Need to also do a hasKnownGhost check in case the unit was seen or glimpsed for other
     -- reasons.
     if not footpath.info then
-        footpath.info = {}
+        footpath.info = self._nextFootstepsInfo[unit:getID()] or {}
     end
     footpath.info.wasSeen = footpath.info.wasSeen or footstep.isSeen
     footpath.info.wasHeard = footpath.info.wasHeard or footstep.isHeard
@@ -148,22 +150,20 @@ end
 
 local oldOnEndTurn = simplayer.onEndTurn
 function simplayer:onEndTurn(sim)
-    -- Record any known ghosts for next turn's footpaths.
-    -- (Non-ghosts should already be handled by moving while seen.)
-    local lastKnownGhosts = {}
+    -- Record any known units for next turn's footpaths.
     if sim:getCurrentPlayer() == self then
+        self._nextFootstepsInfo = {}
+        for _, unit in ipairs(self:getSeenUnits()) do
+            if simquery.isAgent(unit) then
+                self._nextFootstepsInfo[unitID] = {wasSeen = true}
+            end
+        end
         for unitID, ghostUnit in pairs(self._ghost_units) do
             if simquery.isAgent(ghostUnit) and uitr_util.getKnownUnitFromGhost(sim, ghostUnit) then
-                table.insert(lastKnownGhosts, unitID)
+                self._nextFootstepsInfo[unitID] = {wasSeen = true}
             end
         end
     end
 
     oldOnEndTurn(self, sim)
-
-    if sim:getCurrentPlayer() == self then
-        for _, unitID in ipairs(lastKnownGhosts) do
-            self._footsteps[unitID] = {info = {wasSeen = true}}
-        end
-    end
 end
