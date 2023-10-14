@@ -86,20 +86,23 @@ function simplayer:clearTracks(unitID)
     -- units and tiles.
 end
 
+-- Returns canSeeCell, canSeeUnit, canSenseUnit
 -- Mix of simengine:canPlayerSee() and simquery:couldUnitSee().
--- The unit hasn't moved yet when tracking footsteps.
+-- Done manually because the unit hasn't moved yet when trackFootsteps is called.
 local function couldPlayerSeeCellAndUnit(player, unit, x, y)
     local sim = unit:getSim()
-    local canSeeCell = false
+    local canSeeCell, canSenseUnit = false, false
     for i, playerUnit in ipairs(player:getUnits()) do
         if sim:canUnitSee(playerUnit, x, y) then
             if simquery.couldUnitSee(sim, playerUnit, unit, false, sim:getCell(x, y)) then
-                return true, true
+                return true, true, canSenseUnit
             end
             canSeeCell = true
+        elseif playerUnit:getUnitData().type == "simpressureplate" and playerUnit.canGlimpseTarget then
+            canSenseUnit = canSenseUnit or playerUnit:canGlimpseTarget(sim, unit)
         end
     end
-    return canSeeCell, false
+    return canSeeCell, false, canSenseUnit
 end
 
 -- UITR: Override vanilla.
@@ -111,7 +114,7 @@ function simplayer:trackFootstep(sim, unit, cellx, celly)
     local closestUnit, closestRange = simquery.findClosestUnit(
             self._units, cellx, celly, simquery.canHear)
     -- Vision
-    local canSeeCell, canSeeUnit = couldPlayerSeeCellAndUnit(self, unit, cellx, celly)
+    local canSeeCell, canSeeUnit, canSenseUnit = couldPlayerSeeCellAndUnit(self, unit, cellx, celly)
     local footstep = {
         x = cellx,
         y = celly,
@@ -125,7 +128,9 @@ function simplayer:trackFootstep(sim, unit, cellx, celly)
         -- shown for TAGs/observed paths.
         -- simunit:onEndTurn clears getTraits().patrolObserved, so that's already expired.
         -- Fixing that would require figuring out if the path has deviated during the guard turn.
-        isTracked = (unitTraits.tagged) and self:getCell(cellx, celly),
+        isTagged = unitTraits.tagged and self:getCell(cellx, celly) and true,
+        -- Non-visual/non-aural senses (Neptune pressure plates)
+        isSensed = canSenseUnit
     }
 
     local footpath = self._footsteps[unitID]
