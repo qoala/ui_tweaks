@@ -41,11 +41,70 @@ function hudAppend:uitr_setVisionMode(doEnable)
 
     if not doEnable then
         self._game.simCore:uitr_resetAllUnitVision()
-        self._game.boardRig:getPathRig():resetVisibility()
+        self._game.boardRig:getPathRig():resetTemporaryVisibility()
         self._game.boardRig:refresh()
     end
     self:refreshHud()
 end
+
+local function toggleGlobalPathVisibility(pathRig)
+    local visibility = pathRig:getGlobalPathVisibility()
+    if visibility == uitr_util.VISIBILITY.SHOW then
+        pathRig:setGlobalPathVisibility(uitr_util.VISIBILITY.HIDE)
+    else
+        pathRig:setGlobalPathVisibility(uitr_util.VISIBILITY.SHOW)
+    end
+end
+local function toggleGlobalTrackVisibility(pathRig)
+    local visibility = pathRig:getGlobalTrackVisibility()
+    if visibility == uitr_util.VISIBILITY.SHOW then
+        pathRig:setGlobalTrackVisibility(uitr_util.VISIBILITY.ENEMY_TURN)
+    else
+        pathRig:setGlobalTrackVisibility(uitr_util.VISIBILITY.SHOW)
+    end
+end
+local function onClickPathVisibilityToggle(hud)
+    local pathRig = hud._game.boardRig:getPathRig()
+    toggleGlobalPathVisibility(pathRig)
+    pathRig:refreshAllTracks()
+    hud:uitr_refreshInfoGlobalButtons()
+end
+local function onClickTrackVisibilityToggle(hud)
+    local pathRig = hud._game.boardRig:getPathRig()
+    toggleGlobalTrackVisibility(pathRig)
+    pathRig:refreshAllTracks()
+    hud:uitr_refreshInfoGlobalButtons()
+end
+
+function hudAppend:uitr_refreshInfoGlobalButtons()
+    local pathRig = self._game.boardRig:getPathRig()
+    local pathVisibility = pathRig:getGlobalPathVisibility()
+    local trackVisibility = pathRig:getGlobalTrackVisibility()
+
+    local btnTogglePaths = self._screen.binder.topPnl.binder.btnInfoTogglePaths
+    if pathVisibility == uitr_util.VISIBILITY.SHOW then
+        btnTogglePaths:setInactiveImage("gui/hud3/UserButtons/uitr_btn_enable_visionmode.png")
+        btnTogglePaths:setActiveImage("gui/hud3/UserButtons/uitr_btn_enable_visionmode_hl.png")
+        btnTogglePaths:setHoverImage("gui/hud3/UserButtons/uitr_btn_enable_visionmode_hl.png")
+    else
+        btnTogglePaths:setInactiveImage("gui/hud3/UserButtons/uitr_btn_disable_visionmode.png")
+        btnTogglePaths:setActiveImage("gui/hud3/UserButtons/uitr_btn_disable_visionmode_hl.png")
+        btnTogglePaths:setHoverImage("gui/hud3/UserButtons/uitr_btn_disable_visionmode_hl.png")
+    end
+
+    local btnToggleTracks = self._screen.binder.topPnl.binder.btnInfoToggleTracks
+    if trackVisibility == uitr_util.VISIBILITY.SHOW then
+        btnToggleTracks:setInactiveImage("gui/hud3/UserButtons/uitr_btn_enable_visionmode.png")
+        btnToggleTracks:setActiveImage("gui/hud3/UserButtons/uitr_btn_enable_visionmode_hl.png")
+        btnToggleTracks:setHoverImage("gui/hud3/UserButtons/uitr_btn_enable_visionmode_hl.png")
+    else
+        btnToggleTracks:setInactiveImage("gui/hud3/UserButtons/uitr_btn_disable_visionmode.png")
+        btnToggleTracks:setActiveImage("gui/hud3/UserButtons/uitr_btn_disable_visionmode_hl.png")
+        btnToggleTracks:setHoverImage("gui/hud3/UserButtons/uitr_btn_disable_visionmode_hl.png")
+    end
+end
+
+-- ===
 
 -- ===
 
@@ -166,6 +225,7 @@ hud.createHud = function(...)
     if btnToggleVisionMode and not btnToggleVisionMode.isnull then -- Vision Mode
         hudObject._uitr_isVisionMode = false
         hudObject.uitr_setVisionMode = hudAppend.uitr_setVisionMode
+        hudObject.uitr_refreshInfoGlobalButtons = hudAppend.uitr_refreshInfoGlobalButtons
 
         local oldOnSimEvent = hudObject.onSimEvent
         function hudObject:onSimEvent(ev, ...)
@@ -174,6 +234,7 @@ hud.createHud = function(...)
             if ev.eventType == simdefs.EV_TURN_END then
                 self._game.simCore:uitr_resetAllUnitVision()
                 self._game.boardRig:getPathRig():resetVisibility()
+                self._game.boardRig:getPathRig():refreshAllTracks()
             end
 
             return result
@@ -182,9 +243,15 @@ hud.createHud = function(...)
         btnToggleVisionMode:setTooltip(visionModeTooltip(false))
         btnToggleVisionMode:setHotkey("UITR_VISIONMODE")
         btnToggleVisionMode.onClick = util.makeDelegate(nil, onClickVisionToggle, hudObject)
+
+        local btnTogglePaths = hudObject._screen.binder.topPnl.binder.btnInfoTogglePaths
+        btnTogglePaths.onClick = util.makeDelegate(nil, onClickPathVisibilityToggle, hudObject)
+        local btnToggleTracks = hudObject._screen.binder.topPnl.binder.btnInfoToggleTracks
+        btnToggleTracks.onClick = util.makeDelegate(nil, onClickTrackVisibilityToggle, hudObject)
+        hudObject:uitr_refreshInfoGlobalButtons()
     end
 
-    do -- Grid Coordinates
+    do -- Grid Coordinates, HUD-refresh for Info global buttons.
         hudObject._refreshUITRGridCoordinates = hudAppend._refreshUITRGridCoordinates
         hudObject._refreshUITRGridCoordinatesAgentRelative =
                 hudAppend._refreshUITRGridCoordinatesAgentRelative
@@ -193,6 +260,7 @@ hud.createHud = function(...)
         function hudObject:refreshHud(...)
             oldRefreshHud(self, ...)
 
+            self:uitr_refreshInfoGlobalButtons()
             self:_refreshUITRGridCoordinates()
         end
     end

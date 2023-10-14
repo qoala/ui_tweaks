@@ -26,6 +26,14 @@ local REFRESH = {
 }
 makeStrict(REFRESH)
 
+local VISIBILITY = {
+    HIDE = 0,
+    SHOW = 1,
+    -- Only show during the enemy turn.
+    ENEMY_TURN = 2,
+}
+makeStrict(VISIBILITY)
+
 local UITR_OPTIONS = {
     {
         id = "enabled",
@@ -539,6 +547,8 @@ end
 return {
     DEBUG = DEBUG,
     REFRESH = REFRESH,
+    VISIBILITY = VISIBILITY,
+
     UITR_OPTIONS = UITR_OPTIONS,
     checkEnabled = checkEnabled,
     checkOption = checkOption,

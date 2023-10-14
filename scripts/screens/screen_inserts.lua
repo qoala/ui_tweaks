@@ -47,6 +47,104 @@ local visionModeInserts = {
     },
     {
         "hud.lua",
+        {"widgets", 16, "children"}, -- topPnl
+        {
+            name = [[uitrInfoGlobalsGroup]],
+            isVisible = true,
+            noInput = false,
+            anchor = 1,
+            rotation = 0,
+            x = -122,
+            xpx = true,
+            y = -63,
+            ypx = true,
+            w = 0,
+            h = 0,
+            sx = 1,
+            sy = 1,
+            ctor = [[group]],
+            children = {
+                {
+                    name = [[btnInfoTogglePaths]],
+                    isVisible = true,
+                    noInput = false,
+                    anchor = 1,
+                    rotation = 0,
+                    x = -24,
+                    xpx = true,
+                    y = 0,
+                    ypx = true,
+                    w = 45,
+                    wpx = true,
+                    h = 40,
+                    hpx = true,
+                    sx = 1,
+                    sy = 1,
+                    ctor = [[button]],
+                    clickSound = [[SpySociety/HUD/menu/click]],
+                    hoverSound = [[SpySociety/HUD/menu/rollover]],
+                    hoverScale = 1,
+                    halign = MOAITextBox.CENTER_JUSTIFY,
+                    valign = MOAITextBox.CENTER_JUSTIFY,
+                    text_style = [[]],
+                    images = {
+                        {
+                            file = [[gui/hud3/UserButtons/uitr_btn_enable_visionmode.png]],
+                            name = [[inactive]],
+                        },
+                        {
+                            file = [[gui/hud3/UserButtons/uitr_btn_enable_visionmode_hl.png]],
+                            name = [[hover]],
+                        },
+                        {
+                            file = [[gui/hud3/UserButtons/uitr_btn_enable_visionmode_hl.png]],
+                            name = [[active]],
+                        },
+                    },
+                },
+                {
+                    name = [[btnInfoToggleTracks]],
+                    isVisible = true,
+                    noInput = false,
+                    anchor = 1,
+                    rotation = 0,
+                    x = 24,
+                    xpx = true,
+                    y = 0,
+                    ypx = true,
+                    w = 45,
+                    wpx = true,
+                    h = 40,
+                    hpx = true,
+                    sx = 1,
+                    sy = 1,
+                    ctor = [[button]],
+                    clickSound = [[SpySociety/HUD/menu/click]],
+                    hoverSound = [[SpySociety/HUD/menu/rollover]],
+                    hoverScale = 1,
+                    halign = MOAITextBox.CENTER_JUSTIFY,
+                    valign = MOAITextBox.CENTER_JUSTIFY,
+                    text_style = [[]],
+                    images = {
+                        {
+                            file = [[gui/hud3/UserButtons/uitr_btn_enable_visionmode.png]],
+                            name = [[inactive]],
+                        },
+                        {
+                            file = [[gui/hud3/UserButtons/uitr_btn_enable_visionmode_hl.png]],
+                            name = [[hover]],
+                        },
+                        {
+                            file = [[gui/hud3/UserButtons/uitr_btn_enable_visionmode_hl.png]],
+                            name = [[active]],
+                        },
+                    },
+                },
+            },
+        },
+    },
+    {
+        "hud.lua",
         {"widgets", 5, "children"}, -- agentPanel
         {
             name = [[uitrNonVisionActionsGroup]],
@@ -347,6 +445,10 @@ local visionModeInserts = {
             },
         },
     },
+}
+array.concat(inserts, visionModeInserts)
+
+local mainframeInserts = {
     {
         "hud-inworld.lua",
         {"skins"},
@@ -459,7 +561,7 @@ local visionModeInserts = {
         },
     },
 }
-array.concat(inserts, visionModeInserts)
+array.concat(inserts, mainframeInserts)
 
 local coordinateGridInserts = {
     {
