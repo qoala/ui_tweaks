@@ -509,8 +509,9 @@ local function getKnownUnitFromGhost(sim, ghostUnit)
         local gx, gy = ghostUnit:getLocation()
         local x, y = unit:getLocation()
         if x == gx and y == gy then
-            return unit
+            return unit, unit
         end
+        return nil, unit
     end
 end
 

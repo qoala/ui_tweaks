@@ -93,8 +93,11 @@ function PathRig:refreshTracks(unitID, tracks)
 end
 
 -- UITR: (New)
+-- Also accepts pathInfo
 function PathRig:_isTrackPointKnown(optFootprints, pathPoint)
-    if optFootprints == "seen" then
+    if not pathPoint then
+        return false
+    elseif optFootprints == "seen" then
         return pathPoint.isSeen or pathPoint.isTracked
     elseif optFootprints == "full" then
         return pathPoint.isSeen or pathPoint.isTracked or pathPoint.isHeard
@@ -107,11 +110,7 @@ function PathRig:isUnitTrackKnown(unitID)
         return false
     end
     local optFootprints = uitr_util.checkOption("recentFootprints")
-    if optFootprints == "seen" then
-        return path.info.wasSeen or path.info.wasTracked
-    elseif optFootprints == "full" then
-        return path.info.wasSeen or path.info.wasTracked or path.info.wasHeard
-    end
+    return self:_isTrackPointKnown(optFootprints, path.info)
 end
 
 -- UITR: Copy of vanilla local getTrackProp
@@ -141,55 +140,132 @@ local function calculateTrackProp(boardRig, x0, y0, x1, y1)
     return isDiag, propX, propY, theta, scale
 end
 
+-- Updates the prop and returns (prop, newParity)
+-- tex is a STRUCT[isDiag][parity]
+function PathRig:_updateTrackProp(prop, point0, point1, tex, clr, parity)
+    local x, y = self._boardRig:cellToWorld(point0.x, point0.y)
+    local nx, ny = self._boardRig:cellToWorld(point1.x, point1.y)
+    local dx, dy = point1.x - point0.x, point1.y - point0.y
+    local theta = math.atan2(dy, dx)
+    local scale = math.sqrt(2 * dx * dx + 2 * dy * dy)
+
+    local isDiag = not (dx == 0 or dy == 0)
+    local propX, propY = (x + nx) / 2, (y + ny) / 2
+
+    -- simlog(
+    --         "[UITR] draw%s [%d] %d,%d-%d,%d diag=%s parity=%s", tex.dbg_name, tex.dbg_unit,
+    --         point0.x, point0.y, point1.x, point1.y, tostring(isDiag), tostring(parity))
+    prop = prop or self:_getTrackProp()
+    prop:setDeck(tex[isDiag][parity])
+    prop:setRot(math.deg(theta))
+    prop:setScl(scale, parity)
+    prop:setLoc(propX, propY)
+    prop:setColor(clr:unpack())
+
+    return prop, (isDiag and (parity * -1) or parity)
+end
+
 -- UITR: (New) Based on vanilla :refreshProps
+--
+-- For each segment, if either the previous point or current point were sensed by the player, it is
+-- drawn. Both the coming and going are assumed to be available, so the track will barely extend
+-- into the unknown on each end.
+--
+-- Exception: Neptune pressure plates only show tracks if both points were sensed.
 function PathRig:refreshTrackProps(optFootprints, unit, pathPoints, props)
     -- # of props used.
     local j = 1
     if pathPoints then
         -- Update extant tracks
         local player = self._boardRig:getSim():getPC()
-        local texOrth = resources.find("uitrFootprintTrail")
-        local texDiag = resources.find("uitrFootprintTrailDiag")
+
+        -- Track textures STRUCT[isDiag][parity]
+        local texTrack = {[false] = {}, [true] = {}, dbg_name = "Track", dbg_unit = unit:getID()}
+        local texGuess = {[false] = {}, [true] = {}, dbg_name = "Guess", dbg_unit = unit:getID()}
+        texTrack[false][1] = resources.find("uitrFootprintTrail")
+        texTrack[false][-1] = texTrack[false][1]
+        texTrack[true][1] = resources.find("uitrFootprintTrailDiag")
+        texTrack[true][-1] = texTrack[true][1]
+        texGuess[false][1] = resources.find("uitrFootprintQuestion")
+        texGuess[false][-1] = resources.find("uitrFootprintQuestionFlip")
+        texGuess[true][1] = resources.find("uitrFootprintQuestionDiag")
+        texGuess[true][-1] = resources.find("uitrFootprintQuestionDiagFlip")
 
         local unitColor = UNKNOWN_TRACK_COLOR
-        local colorAlpha = 0.3
-        if pathPoints.info.wasSeen or pathPoints.info.wasTracked or
-                (unit and uitr_util.playerKnowsUnit(player, unit)) then
+        if pathPoints.info.isSeen or pathPoints.info.isTracked or
+                uitr_util.playerKnowsUnit(player, unit) then
             -- If we know/knew the unit, use its color.
             unitColor = track_colors.getColor(unit)
-            colorAlpha = 0.5
         end
 
-        -- Flip sprite after diagonal steps (odd count)
+        -- Flip sprite after diagonal steps (odd count).
         local parity = 1
+        -- Parallel iteration over observedPath.
+        local obsPoints, obsIdx, obsParity
+        if pathPoints.info.observedPath and
+                not (unit:getTraits().patrolObserved or unit:getTraits().tagged) then
+            obsPoints = pathPoints.info.observedPath
+            obsIdx, obsParity = 2, 1
+        end
+        -- Observed path if the tracked path is proceeding from an undrawn position.
+        local prevSegmentDrawn = false
 
+        -- Iterate over tracked path.
         for i = 2, #pathPoints do
             local prevPathPoint, pathPoint = pathPoints[i - 1], pathPoints[i]
+
+            -- Draw any preceding observed but unconfirmed path
+            if (not prevSegmentDrawn and obsIdx and prevPathPoint.observedIdx and obsIdx <=
+                    prevPathPoint.observedIdx) then
+                while obsIdx <= prevPathPoint.observedIdx do
+                    local prevObsPoint, obsPoint = obsPoints[obsIdx - 1], obsPoints[obsIdx]
+                    -- simlog("[UITR] guess [%d] #%d %d,%d-%d,%d known=%s,%s", unit:getID(), obsIdx, prevObsPoint.x, prevObsPoint.y, obsPoint.x, obsPoint.y, tostring(prevObsPoint.isObserved), tostring(obsPoint.isObserved))
+                    if prevObsPoint.isObserved or obsPoint.isObserved then
+                        props[j], obsParity = self:_updateTrackProp(
+                                props[j], prevObsPoint, obsPoint, texGuess, unitColor, obsParity)
+                        j = j + 1
+                    end
+                    obsIdx = obsIdx + 1
+                end
+                parity = obsParity
+            end
+
             local isKnown0 = self:_isTrackPointKnown(optFootprints, prevPathPoint)
             local isKnown1 = self:_isTrackPointKnown(optFootprints, pathPoint)
-            -- if unit:getID() == 1046 then
-            --     simlog("[UITR] track [%d] %d,%d-%d,%d known=%s,%s", unit:getID(), prevPathPoint.x, prevPathPoint.y, pathPoint.x, pathPoint.y, tostring(isKnown0), tostring(isKnown1))
+            local areBothSensed = prevPathPoint.isSensed and pathPoint.isSensed
+            -- simlog("[UITR] track [%d] #%d %d,%d-%d,%d known=%s,%s sensed=%s", unit:getID(), i, prevPathPoint.x, prevPathPoint.y, pathPoint.x, pathPoint.y, tostring(isKnown0), tostring(isKnown1), tostring(areBothSensed))
+            -- if prevPathPoint.observedIdx or pathPoint.observedIdx then
+            --     simlog("[UITR]                   guessed as %s-%s", prevPathPoint.observedIdx or "/", pathPoint.observedIdx or "/")
             -- end
-            if isKnown0 or isKnown1 then
-                local prop = props[j] or self:_getTrackProp()
-                props[j] = prop
-
-                local isDiag, propX, propY, theta, scale = calculateTrackProp(
-                        self._boardRig, prevPathPoint.x, prevPathPoint.y, pathPoint.x, pathPoint.y)
-
-                if isDiag then
-                    prop:setDeck(texDiag)
-                    parity = parity * -1
-                else
-                    prop:setDeck(texOrth)
-                end
-                prop:setRot(math.deg(theta))
-                prop:setScl(scale, parity)
-                prop:setLoc(propX, propY)
-                local r, g, b, _ = unitColor:unpack()
-                prop:setColor(r, g, b, colorAlpha)
-
+            if isKnown0 or isKnown1 or areBothSensed then
+                props[j], parity = self:_updateTrackProp(
+                        props[j], prevPathPoint, pathPoint, texTrack, unitColor, parity)
                 j = j + 1
+
+                if obsIdx and pathPoint.observedIdx then
+                    if pathPoint.observedIdx >= obsIdx then
+                        -- Path up to here has been confirmed.
+                        obsIdx = pathPoint.observedIdx + 1
+                        obsParity = parity
+                    end
+                elseif obsIdx then
+                    -- Sensed track has deviated from observation. Cancel any further obs drawing.
+                    obsIdx = nil
+                end
+            end
+        end
+
+        -- Draw the remaining unconfirmed path.
+        if obsIdx then
+            while obsIdx <= #obsPoints do
+                local prevObsPoint, obsPoint = obsPoints[obsIdx - 1], obsPoints[obsIdx]
+                -- simlog("[UITR] guess [%d] #%d %d,%d-%d,%d", unit:getID(), obsIdx, prevObsPoint.x, prevObsPoint.y, obsPoint.x, obsPoint.y, tostring(prevObsPoint.isObserved), tostring(obsPoint.isObserved))
+                if prevObsPoint.isObserved or obsPoint.isObserved then
+                    props[j], obsParity = self:_updateTrackProp(
+                            props[j], prevObsPoint, obsPoint, texGuess, unitColor, obsParity)
+                    j = j + 1
+                end
+                obsIdx = obsIdx + 1
             end
         end
     end
