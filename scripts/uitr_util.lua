@@ -21,8 +21,12 @@ local DEBUG = {MF_LAYOUT = "UITRDEBUG_MF_LAYOUT"}
 makeStrict(DEBUG)
 
 local REFRESH = {
+    -- Refresh the hud. (Selected by default)
     HUD = "HUD", -- Default
+    -- Refresh the boardrig.
     BOARDRIG = "BOARDRIG",
+    -- Refresh info toggles after changes to default states.
+    INFO_DEFAULTS = "INFO_DEFAULTS",
 }
 makeStrict(REFRESH)
 
@@ -33,6 +37,14 @@ local VISIBILITY = {
     ENEMY_TURN = 2,
 }
 makeStrict(VISIBILITY)
+VISIBILITY_MODE = {
+    e = {VISIBILITY.ENEMY_TURN, VISIBILITY.SHOW},
+    h = {VISIBILITY.HIDE, VISIBILITY.SHOW},
+    s = {VISIBILITY.SHOW, VISIBILITY.HIDE},
+}
+VISIBILITY_MODE["h!"] = VISIBILITY_MODE["h"]
+VISIBILITY_MODE["s!"] = VISIBILITY_MODE["s"]
+makeStrict(VISIBILITY_MODE)
 
 local UITR_OPTIONS = {
     {
@@ -44,8 +56,8 @@ local UITR_OPTIONS = {
             return {[true] = value}
         end,
     },
-    { -- Off By Default
-        -- These options depart sufficiently from the base game that they're off by default.
+    { -- Paths and Tracks
+        -- Full tracks departs sufficiently from the base game that they're "seen only" by default.
         -- Show them first to be easier for players to enable.
         sectionHeader = true,
 
@@ -56,6 +68,27 @@ local UITR_OPTIONS = {
         value = "seen",
         strings = STRINGS.UITWEAKSR.OPTIONS.RECENT_FOOTPRINTS_OPTIONS,
         refreshTypes = {[REFRESH.BOARDRIG] = true},
+        maskFn = function(self, value)
+            return {recentFootprintsMode = (value ~= false)}
+        end,
+    },
+    {
+        id = "recentFootprintsMode",
+        name = STRINGS.UITWEAKSR.OPTIONS.RECENT_FOOTPRINTS_MODE,
+        tip = STRINGS.UITWEAKSR.OPTIONS.RECENT_FOOTPRINTS_MODE_TIP,
+        values = {"e", "h", "s", "h!", "s!"},
+        value = "e",
+        strings = STRINGS.UITWEAKSR.OPTIONS.RECENT_FOOTPRINTS_MODE_OPTIONS,
+        refreshTypes = {[REFRESH.BOARDRIG] = true, [REFRESH.INFO_DEFAULTS] = true},
+    },
+    {
+        id = "coloredTracks",
+        name = STRINGS.UITWEAKSR.OPTIONS.COLORED_TRACKS,
+        tip = STRINGS.UITWEAKSR.OPTIONS.COLORED_TRACKS_TIP,
+        values = {false, 1},
+        value = 1,
+        strings = {STRINGS.UITWEAKSR.OPTIONS.VANILLA, STRINGS.UITWEAKSR.OPTIONS.COLORED_TRACKS_A},
+        needsReload = true,
     },
     { -- Additional interface detail.
         sectionHeader = true,
@@ -97,15 +130,6 @@ local UITR_OPTIONS = {
         values = {false, 1, 2},
         value = 1,
         strings = STRINGS.UITWEAKSR.OPTIONS.TACTICAL_CLOUD_OPTIONS,
-    },
-    {
-        id = "coloredTracks",
-        name = STRINGS.UITWEAKSR.OPTIONS.COLORED_TRACKS,
-        tip = STRINGS.UITWEAKSR.OPTIONS.COLORED_TRACKS_TIP,
-        values = {false, 1},
-        value = 1,
-        strings = {STRINGS.UITWEAKSR.OPTIONS.VANILLA, STRINGS.UITWEAKSR.OPTIONS.COLORED_TRACKS_A},
-        needsReload = true,
     },
     {
         id = "cleanShift",
@@ -548,6 +572,7 @@ return {
     DEBUG = DEBUG,
     REFRESH = REFRESH,
     VISIBILITY = VISIBILITY,
+    VISIBILITY_MODE = VISIBILITY_MODE,
 
     UITR_OPTIONS = UITR_OPTIONS,
     checkEnabled = checkEnabled,
@@ -557,6 +582,7 @@ return {
     initOptions = initOptions,
 
     extractUpvalue = extractUpvalue,
+    makeStrict = makeStrict,
     propagateSuperclass = propagateSuperclass,
     overwriteInheritance = overwriteInheritance,
 

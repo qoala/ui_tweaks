@@ -12,7 +12,11 @@ local COLLISION_PATH_COLOR = color(1, 1, 1, 1)
 local UNKNOWN_TRACK_COLOR = color(0.8, 0.8, 0.8, 0.5)
 
 local DEFAULT_PATH_VISIBILITY = uitr_util.VISIBILITY.SHOW
-local DEFAULT_TRACK_VISIBILITY = uitr_util.VISIBILITY.ENEMY_TURN
+
+function defaultTrackVisibility()
+    local option = uitr_util.checkOption("recentFootprintsMode") or "e"
+    return uitr_util.VISIBILITY_MODE[option][1]
+end
 
 -- ===
 -- Colored Tracks for observed paths.
@@ -295,10 +299,69 @@ function PathRig:init(boardRig, layer, throwLayer, ...)
     self._singleVisibility = nil
     -- Global visibility toggles (between Options and buttons by the Info Mode toggle)
     self._globalPathVisibility = DEFAULT_PATH_VISIBILITY
-    self._globalTrackVisibility = DEFAULT_TRACK_VISIBILITY
+    self._globalTrackVisibility = defaultTrackVisibility()
     -- Table mapping UnitID to {hidePath, hideTracks}.
     self._unitVisibility = {}
 end
+
+function PathRig:resetTemporaryVisibility()
+    self._singleVisibility = nil
+    self._unitVisibility = {}
+end
+function PathRig:resetVisibility()
+    self._globalPathVisibility = DEFAULT_PATH_VISIBILITY
+    self._globalTrackVisibility = defaultTrackVisibility()
+    self._singleVisibility = nil
+    self._unitVisibility = {}
+end
+
+function PathRig:getGlobalPathVisibility()
+    return self._globalPathVisibility
+end
+function PathRig:getGlobalTrackVisibility()
+    return self._globalTrackVisibility
+end
+function PathRig:getUnitVisibility(unitID)
+    return self._unitVisibility[unitID] or {}
+end
+
+function PathRig:setGlobalPathVisibility(visibility)
+    if visibility then
+        self._globalPathVisibility = visibility
+    else -- Reset.
+        self._globalPathVisibility = DEFAULT_PATH_VISIBILITY
+    end
+end
+function PathRig:setGlobalTrackVisibility(visibility)
+    if visibility then
+        self._globalTrackVisibility = visibility
+    else -- Reset.
+        self._globalTrackVisibility = defaultTrackVisibility()
+    end
+end
+
+-- Takes a struct with {unitID, showPath, showTracks} to hide all other units.
+function PathRig:setSingleVisibility(showVisibility)
+    self._singleVisibility = showVisibility
+end
+
+function PathRig:setUnitPathVisibility(unitID, isShown)
+    local unitVis = self._unitVisibility[unitID]
+    if unitVis then
+        unitVis.hidePath = not isShown
+    elseif not isShown then
+        self._unitVisibility[unitID] = {hidePath = true}
+    end
+end
+function PathRig:setUnitTracksVisibility(unitID, isShown)
+    local unitVis = self._unitVisibility[unitID]
+    if unitVis then
+        unitVis.hideTracks = not isShown
+    elseif not isShown then
+        self._unitVisibility[unitID] = {hideTracks = true}
+    end
+end
+-- Also, PathRig:isUnitTrackKnown(unitID) above
 
 function PathRig:_checkGlobalVisibility(globalVisibility)
     if globalVisibility == uitr_util.VISIBILITY.ENEMY_TURN then
@@ -329,65 +392,6 @@ function PathRig:_shouldDrawTracks(unitID)
     end
     return not (self._unitVisibility[unitID] and self._unitVisibility[unitID].hideTracks)
 end
-
-function PathRig:resetTemporaryVisibility()
-    self._singleVisibility = nil
-    self._unitVisibility = {}
-end
-function PathRig:resetVisibility()
-    self._globalPathVisibility = DEFAULT_PATH_VISIBILITY
-    self._globalTrackVisibility = DEFAULT_TRACK_VISIBILITY
-    self._singleVisibility = nil
-    self._unitVisibility = {}
-end
-
-function PathRig:getGlobalPathVisibility()
-    return self._globalPathVisibility
-end
-function PathRig:getGlobalTrackVisibility()
-    return self._globalTrackVisibility
-end
-function PathRig:getUnitVisibility(unitID)
-    return self._unitVisibility[unitID] or {}
-end
-
-function PathRig:setGlobalPathVisibility(visibility)
-    if visibility then
-        self._globalPathVisibility = visibility
-    else -- Reset.
-        self._globalPathVisibility = DEFAULT_PATH_VISIBILITY
-    end
-end
-function PathRig:setGlobalTrackVisibility(visibility)
-    if visibility then
-        self._globalTrackVisibility = visibility
-    else -- Reset.
-        self._globalTrackVisibility = DEFAULT_TRACK_VISIBILITY
-    end
-end
-
--- Takes a struct with {unitID, showPath, showTracks} to hide all other units.
-function PathRig:setSingleVisibility(showVisibility)
-    self._singleVisibility = showVisibility
-end
-
-function PathRig:setUnitPathVisibility(unitID, isShown)
-    local unitVis = self._unitVisibility[unitID]
-    if unitVis then
-        unitVis.hidePath = not isShown
-    elseif not isShown then
-        self._unitVisibility[unitID] = {hidePath = true}
-    end
-end
-function PathRig:setUnitTracksVisibility(unitID, isShown)
-    local unitVis = self._unitVisibility[unitID]
-    if unitVis then
-        unitVis.hideTracks = not isShown
-    elseif not isShown then
-        self._unitVisibility[unitID] = {hideTracks = true}
-    end
-end
--- Also, PathRig:isUnitTrackKnown(unitID) above
 
 -- UITR: Override (unless all relevant options are disabled)
 local oldRefreshAllTracks = PathRig.refreshAllTracks

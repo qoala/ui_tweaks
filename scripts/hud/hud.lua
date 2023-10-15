@@ -47,6 +47,11 @@ function hudAppend:uitr_setVisionMode(doEnable)
     self:refreshHud()
 end
 
+-- ===
+
+STICKY_VISIBILITY = {e = false, h = false, s = false, ["h!"] = true, ["s!"] = true}
+uitr_util.makeStrict(STICKY_VISIBILITY)
+
 local function toggleGlobalPathVisibility(pathRig)
     local visibility = pathRig:getGlobalPathVisibility()
     if visibility == uitr_util.VISIBILITY.SHOW then
@@ -57,10 +62,11 @@ local function toggleGlobalPathVisibility(pathRig)
 end
 local function toggleGlobalTrackVisibility(pathRig)
     local visibility = pathRig:getGlobalTrackVisibility()
-    if visibility == uitr_util.VISIBILITY.SHOW then
-        pathRig:setGlobalTrackVisibility(uitr_util.VISIBILITY.ENEMY_TURN)
+    local mode = uitr_util.VISIBILITY_MODE[uitr_util.checkOption("recentFootprintsMode") or "e"]
+    if visibility == mode[1] then
+        pathRig:setGlobalTrackVisibility(mode[2])
     else
-        pathRig:setGlobalTrackVisibility(uitr_util.VISIBILITY.SHOW)
+        pathRig:setGlobalTrackVisibility(mode[1])
     end
 end
 local function onClickPathVisibilityToggle(hud)
@@ -147,7 +153,7 @@ function hudAppend:_refreshUITRGridCoordinatesAgentRelative()
         end
         -- else, if there is no local player, just reveal everything
     end
-    simlog("[UITR:TODO] coords %s,%s vs %s,%s-%s,%s", x0, y0, minX, minY, maxX, maxY)
+    -- simlog("[UITR:TODO] coords %s,%s vs %s,%s-%s,%s", x0, y0, minX, minY, maxX, maxY)
 
     for i, lbl in ipairs(GRID_N_LABELS) do
         if y0 + i > maxY then
@@ -233,7 +239,12 @@ hud.createHud = function(...)
 
             if ev.eventType == simdefs.EV_TURN_END then
                 self._game.simCore:uitr_resetAllUnitVision()
-                self._game.boardRig:getPathRig():resetVisibility()
+                if STICKY_VISIBILITY[uitr_util.checkOption("recentFootprintsMode")] then
+                    -- Global toggles are sticky.
+                    self._game.boardRig:getPathRig():resetTemporaryVisibility()
+                else
+                    self._game.boardRig:getPathRig():resetVisibility()
+                end
                 self._game.boardRig:getPathRig():refreshAllTracks()
             end
 

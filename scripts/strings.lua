@@ -4,12 +4,31 @@ local UI_TWEAKS_STRINGS = {
         VANILLA = "OFF/VANILLA",
 
         RECENT_FOOTPRINTS = "Guard Trails",
-        RECENT_FOOTPRINTS_TIP = "Trail footprints behind guards that you see or otherwise sense walking.",
+        RECENT_FOOTPRINTS_TIP = ("Trail footprints behind guards that you see or otherwise sense walking.\n" ..
+                "SEEN ONLY: Only show seen or otherwise directly observed (TAG, etc) tracks.\n" ..
+                "FULL: Also show the location of heard tracks. Camera/Pulse drones do NOT make movement noise."),
         RECENT_FOOTPRINTS_OPTIONS = { --
             "OFF/VANILLA",
             "SEEN ONLY",
             "FULL",
         },
+        RECENT_FOOTPRINTS_MODE = "    Trail Visibility Mode",
+        RECENT_FOOTPRINTS_MODE_TIP = ("When should footprints be shown by default? " ..
+                "Visibility can be temporarily toggled from buttons near the Info Mode toggle.\n" ..
+                "ENEMY TURN (AUTO): Normally only shown during the enemy turn, resetting on End Turn.\n" ..
+                "SHOW/HIDE (AUTO): Normally shown or hidden, resetting on End Turn.\n" ..
+                "SHOW/HIDE (STICKY): Shown or hidden at start of mission. Does not reset automatically."),
+        RECENT_FOOTPRINTS_MODE_OPTIONS = { --
+            "ENEMY TURN (AUTO)",
+            "HIDE (AUTO)",
+            "SHOW (AUTO)",
+            "HIDE (STICKY)",
+            "SHOW (STICKY)",
+        },
+        COLORED_TRACKS = "Colored Guard Tracks",
+        COLORED_TRACKS_TIP = "Guards get uniquely colored tracks and interest points",
+        COLORED_TRACKS_A = "PALETTE A",
+
         GRID_COORDS = "Grid Coordinates",
         GRID_COORDS_TIP = "Show an overlay of grid coordinates.",
         GRID_COORDS_OPTIONS = { --
@@ -30,9 +49,6 @@ local UI_TWEAKS_STRINGS = {
             "ON",
             "ALWAYS",
         },
-        COLORED_TRACKS = "Colored Guard Tracks",
-        COLORED_TRACKS_TIP = "Guards get uniquely colored tracks and interest points",
-        COLORED_TRACKS_A = "PALETTE A",
         CLEAN_SHIFT = "SHIFT Hides Context Actions.",
         CLEAN_SHIFT_TIP = "Holding SHIFT hides targeted action icons, making it easier to select or move agents in crowded areas.\nThis is in addition to the vanilla keybinding where holding SHIFT highlights tiles watched by units under the cursor.",
         SPRINT_NOISE_PREVIEW = "Sprint Noise Preview",

@@ -4,7 +4,12 @@ local simdefs = include("sim/simdefs")
 local function onUnitRefreshTracks(viz, eventData)
     local unitID = eventData
     local player = viz.game.boardRig:getLocalPlayer()
-    viz.game.boardRig:getPathRig():refreshTracks(unitID, player:getTracks(unitID))
+    local pathRig = viz.game.boardRig:getPathRig()
+    if pathRig:_shouldDrawTracks(unitID) then
+        pathRig:refreshTracks(unitID, player:getTracks(unitID))
+    elseif pathRig._tracks[unitID] then
+        pathRig:refreshTrackProps(false, nil, nil, pathRig._tracks[unitID])
+    end
 end
 
 local oldInit = viz_manager.init

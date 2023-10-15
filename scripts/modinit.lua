@@ -82,6 +82,7 @@ local function init(modApi)
     include(modApi:getScriptPath() .. "/hud/targeting")
     include(modApi:getScriptPath() .. "/hud/viz_manager")
     include(modApi:getScriptPath() .. "/hud/world_hud")
+    include(modApi:getScriptPath() .. "/hud/viz/reveal_path")
 
     if config.DEV then
         local debugDecoRig = include(modApi:getScriptPath() .. "/hud/uitrdebug_decorig")
