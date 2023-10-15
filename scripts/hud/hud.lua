@@ -110,20 +110,56 @@ local function onClickPathTrackVisibilityCycle(hud)
     pathRig:refreshAllTracks()
 end
 
+local function globalPathToggleTooltip(isVisible)
+    return mui_tooltip(
+            STRINGS.UITWEAKSR.UI.BTN_GLOBAL_PATHS_HEADER,
+            isVisible and STRINGS.UITWEAKSR.UI.BTN_GLOBAL_PATHS_ON_TXT or
+                    STRINGS.UITWEAKSR.UI.BTN_GLOBAL_PATHS_OFF_TXT)
+end
+local function globalTrackToggleTooltip(isVisible)
+    local txt
+    local mode = uitr_util.checkOption("recentFootprintsMode") or "e"
+    if mode == "e" then
+        txt = isVisible and STRINGS.UITWEAKSR.UI.BTN_GLOBAL_TRACKS_E_ON_TXT or
+                      STRINGS.UITWEAKSR.UI.BTN_GLOBAL_TRACKS_E_OFF_TXT
+    else
+        txt = isVisible and STRINGS.UITWEAKSR.UI.BTN_GLOBAL_TRACKS_ON_TXT or
+                      STRINGS.UITWEAKSR.UI.BTN_GLOBAL_TRACKS_OFF_TXT
+    end
+    return mui_tooltip(STRINGS.UITWEAKSR.UI.BTN_GLOBAL_TRACKS_HEADER, txt)
+end
+local function globalPathTrackCycleTooltip(pathVisible, trackVisible)
+    local txt = STRINGS.UITWEAKSR.UI.BTN_GLOBAL_PT_CYCLE_TXT
+    if pathVisible and trackVisible then
+        txt = STRINGS.UITWEAKSR.UI.BTN_GLOBAL_PT_CYCLE_BOTH_TXT
+    elseif pathVisible then
+        txt = STRINGS.UITWEAKSR.UI.BTN_GLOBAL_PT_CYCLE_P_TXT
+    elseif trackVisible then
+        txt = STRINGS.UITWEAKSR.UI.BTN_GLOBAL_PT_CYCLE_T_TXT
+    end
+    return mui_tooltip(
+            STRINGS.UITWEAKSR.UI.BTN_GLOBAL_PT_CYCLE_HEADER, txt, "UITR_CYCLE_PATH_FOOTPRINT")
+end
+
 function hudAppend:uitr_refreshInfoGlobalButtons()
     local pathRig = self._game.boardRig:getPathRig()
 
     local btnTogglePaths = self._screen.binder.topPnl.binder.btnInfoTogglePaths
     local arePathsShown = pathRig:getGlobalPathVisibility() == uitr_util.VISIBILITY.SHOW
+    btnTogglePaths:setTooltip(globalPathToggleTooltip(arePathsShown))
     btnTogglePaths:setInactiveImage(arePathsShown and IMG_PATH or IMG_PATH_OFF)
     btnTogglePaths:setActiveImage(arePathsShown and IMG_PATH_HL or IMG_PATH_OFF_HL)
     btnTogglePaths:setHoverImage(arePathsShown and IMG_PATH_HL or IMG_PATH_OFF_HL)
 
     local btnToggleTracks = self._screen.binder.topPnl.binder.btnInfoToggleTracks
     local areTracksShown = pathRig:getGlobalTrackVisibility() == uitr_util.VISIBILITY.SHOW
+    btnToggleTracks:setTooltip(globalTrackToggleTooltip(areTracksShown))
     btnToggleTracks:setInactiveImage(areTracksShown and IMG_TRACK or IMG_TRACK_OFF)
     btnToggleTracks:setActiveImage(areTracksShown and IMG_TRACK_HL or IMG_TRACK_OFF_HL)
     btnToggleTracks:setHoverImage(areTracksShown and IMG_TRACK_HL or IMG_TRACK_OFF_HL)
+
+    local btnCyclePathsTracks = self._screen.binder.topPnl.binder.btnInfoCyclePathsTracks
+    btnCyclePathsTracks:setTooltip(globalPathTrackCycleTooltip(arePathsShown, areTracksShown))
 end
 
 -- ===
