@@ -7,6 +7,21 @@ local simquery = include("sim/simquery")
 
 local uitr_util = include(SCRIPT_PATHS.qed_uitr .. "/uitr_util")
 
+local IMG_INFO = "gui/hud3/UserButtons/uitr_btn_info.png"
+local IMG_INFO_HL = "gui/hud3/UserButtons/uitr_btn_info_hl.png"
+local IMG_INFO_ACTIVE = "gui/hud3/UserButtons/uitr_btn_info_active.png"
+local IMG_INFO_ACTIVE_HL = "gui/hud3/UserButtons/uitr_btn_info_active_hl.png"
+
+local IMG_PATH = "gui/hud3/UserButtons/uitr_btn_path.png"
+local IMG_PATH_HL = "gui/hud3/UserButtons/uitr_btn_path_hl.png"
+local IMG_PATH_OFF = "gui/hud3/UserButtons/uitr_btn_path_off.png"
+local IMG_PATH_OFF_HL = "gui/hud3/UserButtons/uitr_btn_path_off_hl.png"
+
+local IMG_TRACK = "gui/hud3/UserButtons/uitr_btn_track.png"
+local IMG_TRACK_HL = "gui/hud3/UserButtons/uitr_btn_track_hl.png"
+local IMG_TRACK_OFF = "gui/hud3/UserButtons/uitr_btn_track_off.png"
+local IMG_TRACK_OFF_HL = "gui/hud3/UserButtons/uitr_btn_track_off_hl.png"
+
 -- ===
 
 local hudAppend = {}
@@ -29,15 +44,9 @@ function hudAppend:uitr_setVisionMode(doEnable)
 
     local btnToggleVisionMode = self._screen.binder.topPnl.binder.btnToggleVisionMode
     btnToggleVisionMode:setTooltip(visionModeTooltip(doEnable))
-    btnToggleVisionMode:setInactiveImage(
-            doEnable and "gui/hud3/UserButtons/uitr_btn_disable_visionmode.png" or
-                    "gui/hud3/UserButtons/uitr_btn_enable_visionmode.png")
-    btnToggleVisionMode:setActiveImage(
-            doEnable and "gui/hud3/UserButtons/uitr_btn_disable_visionmode_hl.png" or
-                    "gui/hud3/UserButtons/uitr_btn_enable_visionmode_hl.png")
-    btnToggleVisionMode:setHoverImage(
-            doEnable and "gui/hud3/UserButtons/uitr_btn_disable_visionmode_hl.png" or
-                    "gui/hud3/UserButtons/uitr_btn_enable_visionmode_hl.png")
+    btnToggleVisionMode:setInactiveImage(doEnable and IMG_INFO_ACTIVE or IMG_INFO)
+    btnToggleVisionMode:setActiveImage(doEnable and IMG_INFO_ACTIVE_HL or IMG_INFO_HL)
+    btnToggleVisionMode:setHoverImage(doEnable and IMG_INFO_ACTIVE_HL or IMG_INFO_HL)
 
     if not doEnable then
         self._game.simCore:uitr_resetAllUnitVision()
@@ -103,30 +112,18 @@ end
 
 function hudAppend:uitr_refreshInfoGlobalButtons()
     local pathRig = self._game.boardRig:getPathRig()
-    local pathVisibility = pathRig:getGlobalPathVisibility()
-    local trackVisibility = pathRig:getGlobalTrackVisibility()
 
     local btnTogglePaths = self._screen.binder.topPnl.binder.btnInfoTogglePaths
-    if pathVisibility == uitr_util.VISIBILITY.SHOW then
-        btnTogglePaths:setInactiveImage("gui/hud3/UserButtons/uitr_btn_enable_visionmode.png")
-        btnTogglePaths:setActiveImage("gui/hud3/UserButtons/uitr_btn_enable_visionmode_hl.png")
-        btnTogglePaths:setHoverImage("gui/hud3/UserButtons/uitr_btn_enable_visionmode_hl.png")
-    else
-        btnTogglePaths:setInactiveImage("gui/hud3/UserButtons/uitr_btn_disable_visionmode.png")
-        btnTogglePaths:setActiveImage("gui/hud3/UserButtons/uitr_btn_disable_visionmode_hl.png")
-        btnTogglePaths:setHoverImage("gui/hud3/UserButtons/uitr_btn_disable_visionmode_hl.png")
-    end
+    local arePathsShown = pathRig:getGlobalPathVisibility() == uitr_util.VISIBILITY.SHOW
+    btnTogglePaths:setInactiveImage(arePathsShown and IMG_PATH or IMG_PATH_OFF)
+    btnTogglePaths:setActiveImage(arePathsShown and IMG_PATH_HL or IMG_PATH_OFF_HL)
+    btnTogglePaths:setHoverImage(arePathsShown and IMG_PATH_HL or IMG_PATH_OFF_HL)
 
     local btnToggleTracks = self._screen.binder.topPnl.binder.btnInfoToggleTracks
-    if trackVisibility == uitr_util.VISIBILITY.SHOW then
-        btnToggleTracks:setInactiveImage("gui/hud3/UserButtons/uitr_btn_enable_visionmode.png")
-        btnToggleTracks:setActiveImage("gui/hud3/UserButtons/uitr_btn_enable_visionmode_hl.png")
-        btnToggleTracks:setHoverImage("gui/hud3/UserButtons/uitr_btn_enable_visionmode_hl.png")
-    else
-        btnToggleTracks:setInactiveImage("gui/hud3/UserButtons/uitr_btn_disable_visionmode.png")
-        btnToggleTracks:setActiveImage("gui/hud3/UserButtons/uitr_btn_disable_visionmode_hl.png")
-        btnToggleTracks:setHoverImage("gui/hud3/UserButtons/uitr_btn_disable_visionmode_hl.png")
-    end
+    local areTracksShown = pathRig:getGlobalTrackVisibility() == uitr_util.VISIBILITY.SHOW
+    btnToggleTracks:setInactiveImage(areTracksShown and IMG_TRACK or IMG_TRACK_OFF)
+    btnToggleTracks:setActiveImage(areTracksShown and IMG_TRACK_HL or IMG_TRACK_OFF_HL)
+    btnToggleTracks:setHoverImage(areTracksShown and IMG_TRACK_HL or IMG_TRACK_OFF_HL)
 end
 
 -- ===

@@ -12,13 +12,13 @@ local visionModeInserts = {
             noInput = false,
             anchor = 1,
             rotation = 0,
-            x = -122,
+            x = -165,
             xpx = true,
-            y = -21,
+            y = 2,
             ypx = true,
-            w = 45,
+            w = 120,
             wpx = true,
-            h = 40,
+            h = 27,
             hpx = true,
             sx = 1,
             sy = 1,
@@ -30,16 +30,16 @@ local visionModeInserts = {
             valign = MOAITextBox.CENTER_JUSTIFY,
             text_style = [[]],
             images = {
-                {
-                    file = [[gui/hud3/UserButtons/uitr_btn_enable_visionmode.png]],
+                { --
+                    file = [[gui/hud3/UserButtons/uitr_btn_info.png]],
                     name = [[inactive]],
                 },
-                {
-                    file = [[gui/hud3/UserButtons/uitr_btn_enable_visionmode_hl.png]],
+                { --
+                    file = [[gui/hud3/UserButtons/uitr_btn_info_hl.png]],
                     name = [[hover]],
                 },
-                {
-                    file = [[gui/hud3/UserButtons/uitr_btn_enable_visionmode_hl.png]],
+                { --
+                    file = [[gui/hud3/UserButtons/uitr_btn_info_hl.png]],
                     name = [[active]],
                 },
             },
@@ -54,9 +54,9 @@ local visionModeInserts = {
             noInput = false,
             anchor = 1,
             rotation = 0,
-            x = -122,
+            x = -165,
             xpx = true,
-            y = -63,
+            y = -34,
             ypx = true,
             w = 0,
             h = 0,
@@ -70,13 +70,13 @@ local visionModeInserts = {
                     noInput = false,
                     anchor = 1,
                     rotation = 0,
-                    x = -36,
+                    x = -40,
                     xpx = true,
                     y = 0,
                     ypx = true,
-                    w = 45,
+                    w = 40,
                     wpx = true,
-                    h = 40,
+                    h = 36,
                     hpx = true,
                     sx = 1,
                     sy = 1,
@@ -88,16 +88,16 @@ local visionModeInserts = {
                     valign = MOAITextBox.CENTER_JUSTIFY,
                     text_style = [[]],
                     images = {
-                        {
-                            file = [[gui/hud3/UserButtons/uitr_btn_enable_visionmode.png]],
+                        { --
+                            file = [[gui/hud3/UserButtons/uitr_btn_path.png]],
                             name = [[inactive]],
                         },
-                        {
-                            file = [[gui/hud3/UserButtons/uitr_btn_enable_visionmode_hl.png]],
+                        { --
+                            file = [[gui/hud3/UserButtons/uitr_btn_path_hl.png]],
                             name = [[hover]],
                         },
-                        {
-                            file = [[gui/hud3/UserButtons/uitr_btn_enable_visionmode_hl.png]],
+                        { --
+                            file = [[gui/hud3/UserButtons/uitr_btn_path_hl.png]],
                             name = [[active]],
                         },
                     },
@@ -112,9 +112,9 @@ local visionModeInserts = {
                     xpx = true,
                     y = 0,
                     ypx = true,
-                    w = 25,
+                    w = 30,
                     wpx = true,
-                    h = 40,
+                    h = 36,
                     hpx = true,
                     sx = 1,
                     sy = 1,
@@ -126,16 +126,16 @@ local visionModeInserts = {
                     valign = MOAITextBox.CENTER_JUSTIFY,
                     text_style = [[]],
                     images = {
-                        {
-                            file = [[gui/hud3/UserButtons/uitr_btn_enable_visionmode.png]],
+                        { --
+                            file = [[gui/hud3/UserButtons/uitr_btn_cycle_pt.png]],
                             name = [[inactive]],
                         },
-                        {
-                            file = [[gui/hud3/UserButtons/uitr_btn_enable_visionmode_hl.png]],
+                        { --
+                            file = [[gui/hud3/UserButtons/uitr_btn_cycle_pt_hl.png]],
                             name = [[hover]],
                         },
-                        {
-                            file = [[gui/hud3/UserButtons/uitr_btn_enable_visionmode_hl.png]],
+                        { --
+                            file = [[gui/hud3/UserButtons/uitr_btn_cycle_pt_hl.png]],
                             name = [[active]],
                         },
                     },
@@ -146,13 +146,13 @@ local visionModeInserts = {
                     noInput = false,
                     anchor = 1,
                     rotation = 0,
-                    x = 36,
+                    x = 40,
                     xpx = true,
                     y = 0,
                     ypx = true,
-                    w = 45,
+                    w = 40,
                     wpx = true,
-                    h = 40,
+                    h = 36,
                     hpx = true,
                     sx = 1,
                     sy = 1,
@@ -164,16 +164,16 @@ local visionModeInserts = {
                     valign = MOAITextBox.CENTER_JUSTIFY,
                     text_style = [[]],
                     images = {
-                        {
-                            file = [[gui/hud3/UserButtons/uitr_btn_enable_visionmode.png]],
+                        { --
+                            file = [[gui/hud3/UserButtons/uitr_btn_track.png]],
                             name = [[inactive]],
                         },
-                        {
-                            file = [[gui/hud3/UserButtons/uitr_btn_enable_visionmode_hl.png]],
+                        { --
+                            file = [[gui/hud3/UserButtons/uitr_btn_track_hl.png]],
                             name = [[hover]],
                         },
-                        {
-                            file = [[gui/hud3/UserButtons/uitr_btn_enable_visionmode_hl.png]],
+                        { --
+                            file = [[gui/hud3/UserButtons/uitr_btn_track_hl.png]],
                             name = [[active]],
                         },
                     },
