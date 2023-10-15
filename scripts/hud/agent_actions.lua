@@ -69,13 +69,12 @@ function explode_tooltip:activate(screen)
 
     local cells
     local unit = self._unit
-    if (unit:getUnitData().type == "simemppack" and not unit:getTraits().flash_pack) or
+    if not unit.getExplodeCells or
+            (unit:getUnitData().type == "simemppack" and not unit:getTraits().flash_pack) or
             unit:getTraits().targeting_ignoreLOS then
         local sim = self._game.simCore
         local x0, y0 = unit:getLocation()
         cells = simquery.rasterCircle(sim, x0, y0, unit:getTraits().range)
-    else
-        cells = unit:getExplodeCells()
     end
 
     self._hiliteID = self._game.boardRig:hiliteCells(cells)
@@ -278,6 +277,21 @@ end
 -- Helper functions
 -- ====
 
+-- Grenade or EMP pack.
+-- getExplodeCells = grenade or EMP pack.
+-- has range = not stickycam/holo cover/transport beacon
+-- not has carryable or deployed = planted EMP or deployed grenade, not dropped item
+local function isExplodingUnit(unit)
+    return unit.getExplodeCells and (not unit:hasAbility("carryable") or unit:getTraits().deployed)
+end
+-- Frostspire, etc.
+-- Must be active and NPC-owned.
+local function isRangedEmitter(unit)
+    return
+            unit:getUnitData().type == "frostspire" and unit:getTraits().mainframe_status ==
+                    "active" and unit:isNPC()
+end
+
 local function addVisionActionsForUnit(hud, actions, targetUnit, isSeen, staleGhost)
     local localPlayer = hud._game:getLocalPlayer()
     local x, y
@@ -320,11 +334,8 @@ local function addVisionActionsForUnit(hud, actions, targetUnit, isSeen, staleGh
                     priority = 10.1,
                 })
     end
-    -- getExplodeCells = grenade or EMP pack.
-    -- has range = not stickycam/holo cover/transport beacon
-    -- not has carryable or deployed = planted EMP or deployed grenade, not dropped item
-    if not staleGhost and targetUnit.getExplodeCells and targetUnit:hasTrait("range") and
-            (not targetUnit:hasAbility("carryable") or targetUnit:getTraits().deployed) then
+    if not staleGhost and targetUnit:hasTrait("range") and
+            (isExplodingUnit(targetUnit) or isRangedEmitter(targetUnit)) then
         table.insert(
                 actions, {
                     txt = "",
