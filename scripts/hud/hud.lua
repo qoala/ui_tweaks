@@ -7,6 +7,21 @@ local simquery = include("sim/simquery")
 
 local uitr_util = include(SCRIPT_PATHS.qed_uitr .. "/uitr_util")
 
+local IMG_INFO = "gui/hud3/UserButtons/uitr_btn_info.png"
+local IMG_INFO_HL = "gui/hud3/UserButtons/uitr_btn_info_hl.png"
+local IMG_INFO_ACTIVE = "gui/hud3/UserButtons/uitr_btn_info_active.png"
+local IMG_INFO_ACTIVE_HL = "gui/hud3/UserButtons/uitr_btn_info_active_hl.png"
+
+local IMG_PATH = "gui/hud3/UserButtons/uitr_btn_path.png"
+local IMG_PATH_HL = "gui/hud3/UserButtons/uitr_btn_path_hl.png"
+local IMG_PATH_OFF = "gui/hud3/UserButtons/uitr_btn_path_off.png"
+local IMG_PATH_OFF_HL = "gui/hud3/UserButtons/uitr_btn_path_off_hl.png"
+
+local IMG_TRACK = "gui/hud3/UserButtons/uitr_btn_track.png"
+local IMG_TRACK_HL = "gui/hud3/UserButtons/uitr_btn_track_hl.png"
+local IMG_TRACK_OFF = "gui/hud3/UserButtons/uitr_btn_track_off.png"
+local IMG_TRACK_OFF_HL = "gui/hud3/UserButtons/uitr_btn_track_off_hl.png"
+
 -- ===
 
 local hudAppend = {}
@@ -29,22 +44,125 @@ function hudAppend:uitr_setVisionMode(doEnable)
 
     local btnToggleVisionMode = self._screen.binder.topPnl.binder.btnToggleVisionMode
     btnToggleVisionMode:setTooltip(visionModeTooltip(doEnable))
-    btnToggleVisionMode:setInactiveImage(
-            doEnable and "gui/hud3/UserButtons/uitr_btn_disable_visionmode.png" or
-                    "gui/hud3/UserButtons/uitr_btn_enable_visionmode.png")
-    btnToggleVisionMode:setActiveImage(
-            doEnable and "gui/hud3/UserButtons/uitr_btn_disable_visionmode_hl.png" or
-                    "gui/hud3/UserButtons/uitr_btn_enable_visionmode_hl.png")
-    btnToggleVisionMode:setHoverImage(
-            doEnable and "gui/hud3/UserButtons/uitr_btn_disable_visionmode_hl.png" or
-                    "gui/hud3/UserButtons/uitr_btn_enable_visionmode_hl.png")
+    btnToggleVisionMode:setInactiveImage(doEnable and IMG_INFO_ACTIVE or IMG_INFO)
+    btnToggleVisionMode:setActiveImage(doEnable and IMG_INFO_ACTIVE_HL or IMG_INFO_HL)
+    btnToggleVisionMode:setHoverImage(doEnable and IMG_INFO_ACTIVE_HL or IMG_INFO_HL)
 
     if not doEnable then
         self._game.simCore:uitr_resetAllUnitVision()
+        self._game.boardRig:getPathRig():resetTemporaryVisibility()
         self._game.boardRig:refresh()
     end
     self:refreshHud()
 end
+
+-- ===
+
+STICKY_VISIBILITY = {e = false, h = false, s = false, ["h!"] = true, ["s!"] = true}
+uitr_util.makeStrict(STICKY_VISIBILITY)
+
+local function toggleGlobalPathVisibility(pathRig)
+    local visibility = pathRig:getGlobalPathVisibility()
+    if visibility == uitr_util.VISIBILITY.SHOW then
+        pathRig:setGlobalPathVisibility(uitr_util.VISIBILITY.HIDE)
+    else
+        pathRig:setGlobalPathVisibility(uitr_util.VISIBILITY.SHOW)
+    end
+end
+local function toggleGlobalTrackVisibility(pathRig)
+    local visibility = pathRig:getGlobalTrackVisibility()
+    local mode = uitr_util.VISIBILITY_MODE[uitr_util.checkOption("recentFootprintsMode") or "e"]
+    if visibility == mode[1] then
+        pathRig:setGlobalTrackVisibility(mode[2])
+    else
+        pathRig:setGlobalTrackVisibility(mode[1])
+    end
+end
+local function onClickPathVisibilityToggle(hud)
+    local pathRig = hud._game.boardRig:getPathRig()
+    toggleGlobalPathVisibility(pathRig)
+    hud:uitr_refreshInfoGlobalButtons()
+    pathRig:refreshAllTracks()
+end
+local function onClickTrackVisibilityToggle(hud)
+    local pathRig = hud._game.boardRig:getPathRig()
+    toggleGlobalTrackVisibility(pathRig)
+    hud:uitr_refreshInfoGlobalButtons()
+    pathRig:refreshAllTracks()
+end
+local function onClickPathTrackVisibilityCycle(hud)
+    local pathRig = hud._game.boardRig:getPathRig()
+    local arePathsShown = pathRig:getGlobalPathVisibility() == uitr_util.VISIBILITY.SHOW
+    local areTracksShown = pathRig:getGlobalTrackVisibility() == uitr_util.VISIBILITY.SHOW
+    -- Both -> Paths -> Tracks -> Both
+    if arePathsShown and areTracksShown then
+        toggleGlobalTrackVisibility(pathRig)
+    elseif arePathsShown then
+        toggleGlobalPathVisibility(pathRig)
+        toggleGlobalTrackVisibility(pathRig)
+    elseif areTracksShown then
+        toggleGlobalPathVisibility(pathRig)
+    else
+        -- Neither -> Reset to Default
+        pathRig:resetVisibility()
+    end
+    hud:uitr_refreshInfoGlobalButtons()
+    pathRig:refreshAllTracks()
+end
+
+local function globalPathToggleTooltip(isVisible)
+    return mui_tooltip(
+            STRINGS.UITWEAKSR.UI.BTN_GLOBAL_PATHS_HEADER,
+            isVisible and STRINGS.UITWEAKSR.UI.BTN_GLOBAL_PATHS_ON_TXT or
+                    STRINGS.UITWEAKSR.UI.BTN_GLOBAL_PATHS_OFF_TXT)
+end
+local function globalTrackToggleTooltip(isVisible)
+    local txt
+    local mode = uitr_util.checkOption("recentFootprintsMode") or "e"
+    if mode == "e" then
+        txt = isVisible and STRINGS.UITWEAKSR.UI.BTN_GLOBAL_TRACKS_E_ON_TXT or
+                      STRINGS.UITWEAKSR.UI.BTN_GLOBAL_TRACKS_E_OFF_TXT
+    else
+        txt = isVisible and STRINGS.UITWEAKSR.UI.BTN_GLOBAL_TRACKS_ON_TXT or
+                      STRINGS.UITWEAKSR.UI.BTN_GLOBAL_TRACKS_OFF_TXT
+    end
+    return mui_tooltip(STRINGS.UITWEAKSR.UI.BTN_GLOBAL_TRACKS_HEADER, txt)
+end
+local function globalPathTrackCycleTooltip(pathVisible, trackVisible)
+    local txt = STRINGS.UITWEAKSR.UI.BTN_GLOBAL_PT_CYCLE_TXT
+    if pathVisible and trackVisible then
+        txt = STRINGS.UITWEAKSR.UI.BTN_GLOBAL_PT_CYCLE_BOTH_TXT
+    elseif pathVisible then
+        txt = STRINGS.UITWEAKSR.UI.BTN_GLOBAL_PT_CYCLE_P_TXT
+    elseif trackVisible then
+        txt = STRINGS.UITWEAKSR.UI.BTN_GLOBAL_PT_CYCLE_T_TXT
+    end
+    return mui_tooltip(
+            STRINGS.UITWEAKSR.UI.BTN_GLOBAL_PT_CYCLE_HEADER, txt, "UITR_CYCLE_PATH_FOOTPRINT")
+end
+
+function hudAppend:uitr_refreshInfoGlobalButtons()
+    local pathRig = self._game.boardRig:getPathRig()
+
+    local btnTogglePaths = self._screen.binder.topPnl.binder.btnInfoTogglePaths
+    local arePathsShown = pathRig:getGlobalPathVisibility() == uitr_util.VISIBILITY.SHOW
+    btnTogglePaths:setTooltip(globalPathToggleTooltip(arePathsShown))
+    btnTogglePaths:setInactiveImage(arePathsShown and IMG_PATH or IMG_PATH_OFF)
+    btnTogglePaths:setActiveImage(arePathsShown and IMG_PATH_HL or IMG_PATH_OFF_HL)
+    btnTogglePaths:setHoverImage(arePathsShown and IMG_PATH_HL or IMG_PATH_OFF_HL)
+
+    local btnToggleTracks = self._screen.binder.topPnl.binder.btnInfoToggleTracks
+    local areTracksShown = pathRig:getGlobalTrackVisibility() == uitr_util.VISIBILITY.SHOW
+    btnToggleTracks:setTooltip(globalTrackToggleTooltip(areTracksShown))
+    btnToggleTracks:setInactiveImage(areTracksShown and IMG_TRACK or IMG_TRACK_OFF)
+    btnToggleTracks:setActiveImage(areTracksShown and IMG_TRACK_HL or IMG_TRACK_OFF_HL)
+    btnToggleTracks:setHoverImage(areTracksShown and IMG_TRACK_HL or IMG_TRACK_OFF_HL)
+
+    local btnCyclePathsTracks = self._screen.binder.topPnl.binder.btnInfoCyclePathsTracks
+    btnCyclePathsTracks:setTooltip(globalPathTrackCycleTooltip(arePathsShown, areTracksShown))
+end
+
+-- ===
 
 -- ===
 
@@ -87,7 +205,7 @@ function hudAppend:_refreshUITRGridCoordinatesAgentRelative()
         end
         -- else, if there is no local player, just reveal everything
     end
-    simlog("[UITR:TODO] coords %s,%s vs %s,%s-%s,%s", x0, y0, minX, minY, maxX, maxY)
+    -- simlog("[UITR:TODO] coords %s,%s vs %s,%s-%s,%s", x0, y0, minX, minY, maxX, maxY)
 
     for i, lbl in ipairs(GRID_N_LABELS) do
         if y0 + i > maxY then
@@ -165,6 +283,7 @@ hud.createHud = function(...)
     if btnToggleVisionMode and not btnToggleVisionMode.isnull then -- Vision Mode
         hudObject._uitr_isVisionMode = false
         hudObject.uitr_setVisionMode = hudAppend.uitr_setVisionMode
+        hudObject.uitr_refreshInfoGlobalButtons = hudAppend.uitr_refreshInfoGlobalButtons
 
         local oldOnSimEvent = hudObject.onSimEvent
         function hudObject:onSimEvent(ev, ...)
@@ -172,6 +291,13 @@ hud.createHud = function(...)
 
             if ev.eventType == simdefs.EV_TURN_END then
                 self._game.simCore:uitr_resetAllUnitVision()
+                if STICKY_VISIBILITY[uitr_util.checkOption("recentFootprintsMode")] then
+                    -- Global toggles are sticky.
+                    self._game.boardRig:getPathRig():resetTemporaryVisibility()
+                else
+                    self._game.boardRig:getPathRig():resetVisibility()
+                end
+                self._game.boardRig:getPathRig():refreshAllTracks()
             end
 
             return result
@@ -180,9 +306,19 @@ hud.createHud = function(...)
         btnToggleVisionMode:setTooltip(visionModeTooltip(false))
         btnToggleVisionMode:setHotkey("UITR_VISIONMODE")
         btnToggleVisionMode.onClick = util.makeDelegate(nil, onClickVisionToggle, hudObject)
+
+        local btnTogglePaths = hudObject._screen.binder.topPnl.binder.btnInfoTogglePaths
+        btnTogglePaths.onClick = util.makeDelegate(nil, onClickPathVisibilityToggle, hudObject)
+        local btnToggleTracks = hudObject._screen.binder.topPnl.binder.btnInfoToggleTracks
+        btnToggleTracks.onClick = util.makeDelegate(nil, onClickTrackVisibilityToggle, hudObject)
+        local btnCyclePathsTracks = hudObject._screen.binder.topPnl.binder.btnInfoCyclePathsTracks
+        btnCyclePathsTracks:setHotkey("UITR_CYCLE_PATH_FOOTPRINT")
+        btnCyclePathsTracks.onClick = util.makeDelegate(
+                nil, onClickPathTrackVisibilityCycle, hudObject)
+        hudObject:uitr_refreshInfoGlobalButtons()
     end
 
-    do -- Grid Coordinates
+    do -- Grid Coordinates, HUD-refresh for Info global buttons.
         hudObject._refreshUITRGridCoordinates = hudAppend._refreshUITRGridCoordinates
         hudObject._refreshUITRGridCoordinatesAgentRelative =
                 hudAppend._refreshUITRGridCoordinatesAgentRelative
@@ -191,6 +327,7 @@ hud.createHud = function(...)
         function hudObject:refreshHud(...)
             oldRefreshHud(self, ...)
 
+            self:uitr_refreshInfoGlobalButtons()
             self:_refreshUITRGridCoordinates()
         end
     end

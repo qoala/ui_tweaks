@@ -6,6 +6,19 @@ local simquery = include("sim/simquery")
 
 local uitr_util = include(SCRIPT_PATHS.qed_uitr .. "/uitr_util")
 
+local ICON_EXPLODE = "gui/icons/uitr-icon-action_explode_small.png"
+local ICON_MAPPOINT_ALERT = "gui/icons/uitr-icon-action_mappoint_alert.png"
+local ICON_MAPPOINT_INVESTIGATE = "gui/icons/uitr-icon-action_mappoint_investigate.png"
+local ICON_VISION = "gui/icons/uitr-icon-action_peek.png"
+local ICON_VISION_OFF = "gui/icons/uitr-icon-action_unpeek.png"
+local ICON_VISION = "gui/icons/uitr-icon-action_peek.png"
+local ICON_VISION_OFF = "gui/icons/uitr-icon-action_unpeek.png"
+local ICON_PATH = "gui/icons/uitr-icon-action_paths.png"
+local ICON_PATH_OFF = "gui/icons/uitr-icon-action_paths_off.png"
+local ICON_TRACKS = "gui/icons/uitr-icon-action_footprints.png"
+local ICON_TRACKS_OFF = "gui/icons/uitr-icon-action_footprints_off.png"
+local ICON_SCAN = "gui/icons/action_icons/Action_icon_Small/icon-action_scanner_small.png"
+
 -- ====
 -- Tooltips for vision mode actions
 -- ====
@@ -43,12 +56,15 @@ end
 
 local explode_tooltip = class(mui_tooltip)
 
-function explode_tooltip:init(hud, unit)
+function explode_tooltip:init(hud, unit, rangeTrait)
     mui_tooltip.init(
             self, util.sformat(STRINGS.UITWEAKSR.UI.HOVER_EFFECT, util.toupper(unit:getName())),
             nil, nil)
     self._game = hud._game
     self._unit = unit
+    if type(rangeTrait) == "string" then
+        self._rangeTrait = rangeTrait
+    end
 end
 
 function explode_tooltip:activate(screen)
@@ -56,13 +72,12 @@ function explode_tooltip:activate(screen)
 
     local cells
     local unit = self._unit
-    if (unit:getUnitData().type == "simemppack" and not unit:getTraits().flash_pack) or
+    if self._rangeTrait or not unit.getExplodeCells or
+            (unit:getUnitData().type == "simemppack" and not unit:getTraits().flash_pack) or
             unit:getTraits().targeting_ignoreLOS then
         local sim = self._game.simCore
         local x0, y0 = unit:getLocation()
-        cells = simquery.rasterCircle(sim, x0, y0, unit:getTraits().range)
-    else
-        cells = unit:getExplodeCells()
+        cells = simquery.rasterCircle(sim, x0, y0, unit:getTraits()[self._rangeTrait or "range"])
     end
 
     self._hiliteID = self._game.boardRig:hiliteCells(cells)
@@ -200,8 +215,92 @@ function show_interest_tooltip:deactivate()
 end
 
 -- ====
+
+function show_path_tooltip(unit)
+    return string.format(
+            "<ttheader>%s\n<ttbody>%s</>",
+            util.sformat(STRINGS.UITWEAKSR.UI.BTN_UNIT_PATH_HEADER, util.toupper(unit:getName())),
+            STRINGS.UITWEAKSR.UI.BTN_UNIT_PATH_HIDE_TXT)
+end
+function show_tracks_tooltip(unit)
+    return string.format(
+            "<ttheader>%s\n<ttbody>%s</>", util.sformat(
+                    STRINGS.UITWEAKSR.UI.BTN_UNIT_TRACKS_HEADER, util.toupper(unit:getName())),
+            STRINGS.UITWEAKSR.UI.BTN_UNIT_TRACKS_HIDE_TXT)
+end
+
+local hide_path_tooltip = class(mui_tooltip)
+local hide_tracks_tooltip = class(mui_tooltip)
+
+function hide_path_tooltip:init(hud, unit)
+    mui_tooltip.init(
+            self,
+            util.sformat(STRINGS.UITWEAKSR.UI.BTN_UNIT_PATH_HEADER, util.toupper(unit:getName())),
+            STRINGS.UITWEAKSR.UI.BTN_UNIT_PATH_HIDE_TXT, nil)
+    self._boardRig = hud._game.boardRig
+    self._pathRig = self._boardRig:getPathRig()
+    self._unitID = unit:getID()
+end
+function hide_path_tooltip:activate(screen)
+    mui_tooltip.activate(self, screen)
+
+    -- Enable single-unit pathrig visibility.
+    self._pathRig:setSingleVisibility({unitID = self._unitID, showPath = true})
+    self._pathRig:refreshAllTracks()
+end
+function hide_path_tooltip:deactivate()
+    mui_tooltip.deactivate(self)
+    self._pathRig:setSingleVisibility(nil)
+    self._pathRig:refreshAllTracks()
+end
+
+function hide_tracks_tooltip:init(hud, unit)
+    mui_tooltip.init(
+            self, util.sformat(
+                    STRINGS.UITWEAKSR.UI.BTN_UNIT_TRACKS_HEADER, util.toupper(unit:getName())),
+            STRINGS.UITWEAKSR.UI.BTN_UNIT_TRACKS_HIDE_TXT, nil)
+    self._boardRig = hud._game.boardRig
+    self._pathRig = self._boardRig:getPathRig()
+    self._unitID = unit:getID()
+end
+function hide_tracks_tooltip:activate(screen)
+    mui_tooltip.activate(self, screen)
+
+    -- Enable single-unit pathrig visibility.
+    self._pathRig:setSingleVisibility({unitID = self._unitID, showTracks = true})
+    self._pathRig:refreshAllTracks()
+end
+function hide_tracks_tooltip:deactivate()
+    mui_tooltip.deactivate(self)
+    self._pathRig:setSingleVisibility(nil)
+    self._pathRig:refreshAllTracks()
+end
+
+-- ====
 -- Helper functions
 -- ====
+
+-- Grenade or EMP pack.
+-- getExplodeCells = grenade or EMP pack.
+-- has range = not stickycam/holo cover/transport beacon
+-- not has carryable or deployed = planted EMP or deployed grenade, not dropped item
+local function isExplodingUnit(unit)
+    return unit.getExplodeCells and (not unit:hasAbility("carryable") or unit:getTraits().deployed)
+end
+-- Frostspire, etc.
+-- Must be active and NPC-owned.
+local function isMainframeEmitter(unit)
+    if unit:getUnitData().type == "frostspire" and unit:getTraits().mainframe_status == "active" and
+            unit:isNPC() then
+        return true
+    end
+end
+-- Plastech Modded recapture, etc.
+local function isGuardEmitter(unit)
+    if unit:getTraits().mainframeRecapture and unit:isNPC() and not unit:isKO() then
+        return "mainframeRecapture"
+    end
+end
 
 local function addVisionActionsForUnit(hud, actions, targetUnit, isSeen, staleGhost)
     local localPlayer = hud._game:getLocalPlayer()
@@ -222,36 +321,57 @@ local function addVisionActionsForUnit(hud, actions, targetUnit, isSeen, staleGh
         return
     end
 
+    -- Ordering:
+    -- * Unit visibility (priority near 10)
+    --   * Unit vision
+    --   * Unit planned path
+    --   * Unit historical tracks
+    -- * Unit Properties (prioritiy from 9 and lower)
+    --   * Explosion radius
+    --   * Scan radius
+
     if not staleGhost and unitCanSee and (not isSeen or targetUnit:getPlayerOwner() == localPlayer) then
         table.insert(
                 actions, {
                     txt = "",
-                    icon = "gui/items/icon-action_peek.png",
+                    icon = ICON_VISION,
                     x = x,
                     y = y,
                     z = z,
                     enabled = false,
                     layoutID = targetUnit:getID(),
                     tooltip = vision_tooltip(hud, targetUnit),
-                    priority = -10.1,
+                    priority = 10.1,
                 })
     end
-    -- getExplodeCells = grenade or EMP pack.
-    -- has range = not stickycam/holo cover/transport beacon
-    -- not has carryable or deployed = planted EMP or deployed grenade, not dropped item
-    if not staleGhost and targetUnit.getExplodeCells and targetUnit:hasTrait("range") and
-            (not targetUnit:hasAbility("carryable") or targetUnit:getTraits().deployed) then
+    if not staleGhost and targetUnit:hasTrait("range") and
+            (isExplodingUnit(targetUnit) or isMainframeEmitter(targetUnit)) then
         table.insert(
                 actions, {
                     txt = "",
-                    icon = "gui/items/icon-emp.png",
+                    icon = ICON_EXPLODE,
                     x = x,
                     y = y,
                     z = z,
                     enabled = false,
                     layoutID = targetUnit:getID(),
                     tooltip = explode_tooltip(hud, targetUnit),
-                    priority = -9,
+                    priority = 9,
+                })
+    end
+    if not staleGhost and isGuardEmitter(targetUnit) then
+        local trait = isGuardEmitter(targetUnit)
+        table.insert(
+                actions, {
+                    txt = "",
+                    icon = ICON_EXPLODE,
+                    x = x,
+                    y = y,
+                    z = z,
+                    enabled = false,
+                    layoutID = targetUnit:getID(),
+                    tooltip = explode_tooltip(hud, targetUnit, trait),
+                    priority = 9,
                 })
     end
     if not staleGhost and targetUnit:getTraits().pulseScan and targetUnit:isNPC() and
@@ -259,14 +379,14 @@ local function addVisionActionsForUnit(hud, actions, targetUnit, isSeen, staleGh
         table.insert(
                 actions, {
                     txt = "",
-                    icon = "gui/items/icon-emp.png",
+                    icon = ICON_SCAN,
                     x = x,
                     y = y,
                     z = z,
                     enabled = false,
                     layoutID = targetUnit:getID(),
                     tooltip = pulse_scan_tooltip(hud, targetUnit),
-                    priority = -8,
+                    priority = 8,
                 })
     end
     if not staleGhost and unitCanSee and canNormallySeeLOS and
@@ -275,8 +395,7 @@ local function addVisionActionsForUnit(hud, actions, targetUnit, isSeen, staleGh
         table.insert(
                 actions, {
                     txt = "",
-                    icon = doEnable and "gui/items/icon-action_peek.png" or
-                            "gui/items/uitr-icon-action_unpeek.png",
+                    icon = doEnable and ICON_VISION or ICON_VISION_OFF,
                     x = x,
                     y = y,
                     z = z,
@@ -284,7 +403,7 @@ local function addVisionActionsForUnit(hud, actions, targetUnit, isSeen, staleGh
                     layoutID = targetUnit:getID(),
                     tooltip = doEnable and hidevision_tooltip(hud, targetUnit) or
                             showvision_tooltip(targetUnit),
-                    priority = -10,
+                    priority = 10,
                     onClick = function()
                         targetUnit:getTraits().uitr_hideVision = not targetUnit:getTraits().uitr_hideVision
                         hud._game.boardRig:refresh()
@@ -299,15 +418,15 @@ local function addVisionActionsForUnit(hud, actions, targetUnit, isSeen, staleGh
         table.insert(
                 actions, {
                     txt = "",
-                    icon = targetUnit:isAlerted() and "gui/icons/thought_icons/status_hunting.png" or
-                            "gui/icons/thought_icons/status_investigating.png",
+                    icon = targetUnit:isAlerted() and ICON_MAPPOINT_ALERT or
+                            ICON_MAPPOINT_INVESTIGATE,
                     x = x,
                     y = y,
                     z = z,
                     enabled = true,
                     layoutID = targetUnit:getID(),
                     tooltip = show_interest_tooltip(hud, targetUnit, xc, yc, x0, y0),
-                    priority = -9.9,
+                    priority = 9.7,
                     onClick = function()
                         hud._game:cameraPanToCell(xc, yc)
                         hud._game.fxmgr:addAnimFx(
@@ -318,6 +437,52 @@ local function addVisionActionsForUnit(hud, actions, targetUnit, isSeen, staleGh
                                     x = x0,
                                     y = y0,
                                 })
+                    end,
+                })
+    end
+
+    local pathRig = hud._game.boardRig:getPathRig()
+    if pathRig and targetUnit:getTraits().tagged or targetUnit:getTraits().patrolObserved then
+        local unitVisibility = pathRig:getUnitVisibility(targetUnit:getID())
+        local doHide = not unitVisibility.hidePath
+        table.insert(
+                actions, {
+                    txt = "",
+                    icon = doHide and ICON_PATH or ICON_PATH_OFF,
+                    x = x,
+                    y = y,
+                    z = z,
+                    enabled = true,
+                    layoutID = targetUnit:getID(),
+                    tooltip = doHide and hide_path_tooltip(hud, targetUnit) or
+                            show_path_tooltip(targetUnit),
+                    priority = 9.9,
+                    onClick = function()
+                        pathRig:setUnitPathVisibility(targetUnit:getID(), not doHide)
+                        pathRig:refreshAllTracks()
+                        hud:refreshHud()
+                    end,
+                })
+    end
+    if pathRig and pathRig:isUnitTrackKnown(targetUnit:getID()) then
+        local unitVisibility = pathRig:getUnitVisibility(targetUnit:getID())
+        local doHide = not unitVisibility.hideTracks
+        table.insert(
+                actions, {
+                    txt = "",
+                    icon = doHide and ICON_TRACKS or ICON_TRACKS_OFF,
+                    x = x,
+                    y = y,
+                    z = z,
+                    enabled = true,
+                    layoutID = targetUnit:getID(),
+                    tooltip = doHide and hide_tracks_tooltip(hud, targetUnit) or
+                            show_tracks_tooltip(targetUnit),
+                    priority = 9.8,
+                    onClick = function()
+                        pathRig:setUnitTracksVisibility(targetUnit:getID(), not doHide)
+                        pathRig:refreshAllTracks()
+                        hud:refreshHud()
                     end,
                 })
     end

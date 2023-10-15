@@ -12,13 +12,13 @@ local visionModeInserts = {
             noInput = false,
             anchor = 1,
             rotation = 0,
-            x = -122,
+            x = -165,
             xpx = true,
-            y = -21,
+            y = 2,
             ypx = true,
-            w = 45,
+            w = 120,
             wpx = true,
-            h = 40,
+            h = 27,
             hpx = true,
             sx = 1,
             sy = 1,
@@ -30,17 +30,153 @@ local visionModeInserts = {
             valign = MOAITextBox.CENTER_JUSTIFY,
             text_style = [[]],
             images = {
-                {
-                    file = [[gui/hud3/UserButtons/uitr_btn_enable_visionmode.png]],
+                { --
+                    file = [[gui/hud3/UserButtons/uitr_btn_info.png]],
                     name = [[inactive]],
                 },
-                {
-                    file = [[gui/hud3/UserButtons/uitr_btn_enable_visionmode_hl.png]],
+                { --
+                    file = [[gui/hud3/UserButtons/uitr_btn_info_hl.png]],
                     name = [[hover]],
                 },
-                {
-                    file = [[gui/hud3/UserButtons/uitr_btn_enable_visionmode_hl.png]],
+                { --
+                    file = [[gui/hud3/UserButtons/uitr_btn_info_hl.png]],
                     name = [[active]],
+                },
+            },
+        },
+    },
+    {
+        "hud.lua",
+        {"widgets", 16, "children"}, -- topPnl
+        {
+            name = [[uitrInfoGlobalsGroup]],
+            isVisible = true,
+            noInput = false,
+            anchor = 1,
+            rotation = 0,
+            x = -165,
+            xpx = true,
+            y = -34,
+            ypx = true,
+            w = 0,
+            h = 0,
+            sx = 1,
+            sy = 1,
+            ctor = [[group]],
+            children = {
+                {
+                    name = [[btnInfoTogglePaths]],
+                    isVisible = true,
+                    noInput = false,
+                    anchor = 1,
+                    rotation = 0,
+                    x = -40,
+                    xpx = true,
+                    y = 0,
+                    ypx = true,
+                    w = 40,
+                    wpx = true,
+                    h = 36,
+                    hpx = true,
+                    sx = 1,
+                    sy = 1,
+                    ctor = [[button]],
+                    clickSound = [[SpySociety/HUD/menu/click]],
+                    hoverSound = [[SpySociety/HUD/menu/rollover]],
+                    hoverScale = 1,
+                    halign = MOAITextBox.CENTER_JUSTIFY,
+                    valign = MOAITextBox.CENTER_JUSTIFY,
+                    text_style = [[]],
+                    images = {
+                        { --
+                            file = [[gui/hud3/UserButtons/uitr_btn_path.png]],
+                            name = [[inactive]],
+                        },
+                        { --
+                            file = [[gui/hud3/UserButtons/uitr_btn_path_hl.png]],
+                            name = [[hover]],
+                        },
+                        { --
+                            file = [[gui/hud3/UserButtons/uitr_btn_path_hl.png]],
+                            name = [[active]],
+                        },
+                    },
+                },
+                {
+                    name = [[btnInfoCyclePathsTracks]],
+                    isVisible = true,
+                    noInput = false,
+                    anchor = 1,
+                    rotation = 0,
+                    x = 0,
+                    xpx = true,
+                    y = 0,
+                    ypx = true,
+                    w = 30,
+                    wpx = true,
+                    h = 36,
+                    hpx = true,
+                    sx = 1,
+                    sy = 1,
+                    ctor = [[button]],
+                    clickSound = [[SpySociety/HUD/menu/click]],
+                    hoverSound = [[SpySociety/HUD/menu/rollover]],
+                    hoverScale = 1,
+                    halign = MOAITextBox.CENTER_JUSTIFY,
+                    valign = MOAITextBox.CENTER_JUSTIFY,
+                    text_style = [[]],
+                    images = {
+                        { --
+                            file = [[gui/hud3/UserButtons/uitr_btn_cycle_pt.png]],
+                            name = [[inactive]],
+                        },
+                        { --
+                            file = [[gui/hud3/UserButtons/uitr_btn_cycle_pt_hl.png]],
+                            name = [[hover]],
+                        },
+                        { --
+                            file = [[gui/hud3/UserButtons/uitr_btn_cycle_pt_hl.png]],
+                            name = [[active]],
+                        },
+                    },
+                },
+                {
+                    name = [[btnInfoToggleTracks]],
+                    isVisible = true,
+                    noInput = false,
+                    anchor = 1,
+                    rotation = 0,
+                    x = 40,
+                    xpx = true,
+                    y = 0,
+                    ypx = true,
+                    w = 40,
+                    wpx = true,
+                    h = 36,
+                    hpx = true,
+                    sx = 1,
+                    sy = 1,
+                    ctor = [[button]],
+                    clickSound = [[SpySociety/HUD/menu/click]],
+                    hoverSound = [[SpySociety/HUD/menu/rollover]],
+                    hoverScale = 1,
+                    halign = MOAITextBox.CENTER_JUSTIFY,
+                    valign = MOAITextBox.CENTER_JUSTIFY,
+                    text_style = [[]],
+                    images = {
+                        { --
+                            file = [[gui/hud3/UserButtons/uitr_btn_track.png]],
+                            name = [[inactive]],
+                        },
+                        { --
+                            file = [[gui/hud3/UserButtons/uitr_btn_track_hl.png]],
+                            name = [[hover]],
+                        },
+                        { --
+                            file = [[gui/hud3/UserButtons/uitr_btn_track_hl.png]],
+                            name = [[active]],
+                        },
+                    },
                 },
             },
         },
@@ -347,6 +483,10 @@ local visionModeInserts = {
             },
         },
     },
+}
+array.concat(inserts, visionModeInserts)
+
+local mainframeInserts = {
     {
         "hud-inworld.lua",
         {"skins"},
@@ -459,7 +599,7 @@ local visionModeInserts = {
         },
     },
 }
-array.concat(inserts, visionModeInserts)
+array.concat(inserts, mainframeInserts)
 
 local coordinateGridInserts = {
     {

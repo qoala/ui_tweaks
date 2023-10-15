@@ -1,13 +1,16 @@
-local agentrig = include("gameplay/agentrig").rig
+local AgentRig = include("gameplay/agentrig").rig
 local cdefs = include("client_defs")
 local util = include("client_util")
 
 local uitr_util = include(SCRIPT_PATHS.qed_uitr .. "/uitr_util")
+local track_colors = include(SCRIPT_PATHS.qed_uitr .. "/features/track_colors")
 
+-- ===
+-- Highlighting for Selected Units
 -- Credit for selected highlights to Hekateras and Sizzlefrost.
 
-local oldSelectedToggle = agentrig.selectedToggle
-function agentrig:selectedToggle(toggle, ...)
+local oldSelectedToggle = AgentRig.selectedToggle
+function AgentRig:selectedToggle(toggle, ...)
     oldSelectedToggle(self, toggle, ...)
 
     self._uitrSelected = toggle
@@ -210,8 +213,8 @@ local function shouldHighlightTile(uiTweaks, isTacticalView)
     end
 end
 
-local oldRefreshRenderFilter = agentrig.refreshRenderFilter
-function agentrig:refreshRenderFilter(...)
+local oldRefreshRenderFilter = AgentRig.refreshRenderFilter
+function AgentRig:refreshRenderFilter(...)
     local uiTweaks = uitr_util:getOptions()
 
     if uiTweaks.selectionFilterStyle ~= false then
@@ -259,4 +262,20 @@ function agentrig:refreshRenderFilter(...)
         end
     end
 
+end
+
+-- ===
+-- Colored Tracks for guard interest points.
+
+local oldDrawInterest = AgentRig.drawInterest
+function AgentRig:drawInterest(interest, alerted)
+    oldDrawInterest(self, interest, alerted)
+
+    if uitr_util.checkOption("coloredTracks") and self.interestProp then
+        local color = track_colors.getColor(self:getUnit())
+        self.interestProp:setSymbolModulate("interest_border", color:unpack())
+        self.interestProp:setSymbolModulate("down_line", color:unpack())
+        self.interestProp:setSymbolModulate("down_line_moving", color:unpack())
+        self.interestProp:setSymbolModulate("interest_line_moving", color:unpack())
+    end
 end

@@ -15,15 +15,36 @@ local function makeStrict(t)
 end
 
 -- ===
+-- Options defs
 
 local DEBUG = {MF_LAYOUT = "UITRDEBUG_MF_LAYOUT"}
 makeStrict(DEBUG)
 
 local REFRESH = {
+    -- Refresh the hud. (Selected by default)
     HUD = "HUD", -- Default
+    -- Refresh the boardrig.
     BOARDRIG = "BOARDRIG",
+    -- Refresh info toggles after changes to default states.
+    INFO_DEFAULTS = "INFO_DEFAULTS",
 }
 makeStrict(REFRESH)
+
+local VISIBILITY = {
+    HIDE = 0,
+    SHOW = 1,
+    -- Only show during the enemy turn.
+    ENEMY_TURN = 2,
+}
+makeStrict(VISIBILITY)
+VISIBILITY_MODE = {
+    e = {VISIBILITY.ENEMY_TURN, VISIBILITY.SHOW},
+    h = {VISIBILITY.HIDE, VISIBILITY.SHOW},
+    s = {VISIBILITY.SHOW, VISIBILITY.HIDE},
+}
+VISIBILITY_MODE["h!"] = VISIBILITY_MODE["h"]
+VISIBILITY_MODE["s!"] = VISIBILITY_MODE["s"]
+makeStrict(VISIBILITY_MODE)
 
 local UITR_OPTIONS = {
     {
@@ -34,8 +55,42 @@ local UITR_OPTIONS = {
         maskFn = function(self, value)
             return {[true] = value}
         end,
-    }, -- Additional interface detail.
+    },
+    { -- Paths and Tracks
+        -- Full tracks departs sufficiently from the base game that they're "seen only" by default.
+        -- Show them first to be easier for players to enable.
+        sectionHeader = true,
+
+        id = "recentFootprints",
+        name = STRINGS.UITWEAKSR.OPTIONS.RECENT_FOOTPRINTS,
+        tip = STRINGS.UITWEAKSR.OPTIONS.RECENT_FOOTPRINTS_TIP,
+        values = {false, "seen", "full"},
+        value = "seen",
+        strings = STRINGS.UITWEAKSR.OPTIONS.RECENT_FOOTPRINTS_OPTIONS,
+        refreshTypes = {[REFRESH.BOARDRIG] = true},
+        maskFn = function(self, value)
+            return {recentFootprintsMode = (value ~= false)}
+        end,
+    },
     {
+        id = "recentFootprintsMode",
+        name = STRINGS.UITWEAKSR.OPTIONS.RECENT_FOOTPRINTS_MODE,
+        tip = STRINGS.UITWEAKSR.OPTIONS.RECENT_FOOTPRINTS_MODE_TIP,
+        values = {"e", "h", "s", "h!", "s!"},
+        value = "e",
+        strings = STRINGS.UITWEAKSR.OPTIONS.RECENT_FOOTPRINTS_MODE_OPTIONS,
+        refreshTypes = {[REFRESH.BOARDRIG] = true, [REFRESH.INFO_DEFAULTS] = true},
+    },
+    {
+        id = "coloredTracks",
+        name = STRINGS.UITWEAKSR.OPTIONS.COLORED_TRACKS,
+        tip = STRINGS.UITWEAKSR.OPTIONS.COLORED_TRACKS_TIP,
+        values = {false, 1},
+        value = 1,
+        strings = {STRINGS.UITWEAKSR.OPTIONS.VANILLA, STRINGS.UITWEAKSR.OPTIONS.COLORED_TRACKS_A},
+        needsReload = true,
+    },
+    { -- Additional interface detail.
         sectionHeader = true,
 
         id = "gridCoords",
@@ -77,15 +132,6 @@ local UITR_OPTIONS = {
         strings = STRINGS.UITWEAKSR.OPTIONS.TACTICAL_CLOUD_OPTIONS,
     },
     {
-        id = "coloredTracks",
-        name = STRINGS.UITWEAKSR.OPTIONS.COLORED_TRACKS,
-        tip = STRINGS.UITWEAKSR.OPTIONS.COLORED_TRACKS_TIP,
-        values = {false, 1},
-        value = 1,
-        strings = {STRINGS.UITWEAKSR.OPTIONS.VANILLA, STRINGS.UITWEAKSR.OPTIONS.COLORED_TRACKS_A},
-        needsReload = true,
-    },
-    {
         id = "cleanShift",
         name = STRINGS.UITWEAKSR.OPTIONS.CLEAN_SHIFT,
         tip = STRINGS.UITWEAKSR.OPTIONS.CLEAN_SHIFT_TIP,
@@ -96,8 +142,8 @@ local UITR_OPTIONS = {
         name = STRINGS.UITWEAKSR.OPTIONS.MAINFRAME_LAYOUT,
         tip = STRINGS.UITWEAKSR.OPTIONS.MAINFRAME_LAYOUT_TIP,
         check = true,
-    }, -- DEBUG: Mainframe Layout
-    {
+    },
+    { -- DEBUG: Mainframe Layout
         sectionHeader = true,
 
         id = "mainframeLayoutDebug",
@@ -168,8 +214,8 @@ local UITR_OPTIONS = {
         values = {false, 9, 11, 13, 15, 17, 19, 21, 23, 25},
         value = 21,
         debugKey = DEBUG.MF_LAYOUT,
-    }, -- Action/Movement warnings.
-    {
+    },
+    { -- Action/Movement warnings.
         sectionHeader = true,
 
         id = "overwatchMovement",
@@ -190,8 +236,8 @@ local UITR_OPTIONS = {
         values = {false, 1, 2, 1 + 2},
         value = 1 + 2,
         strings = STRINGS.UITWEAKSR.OPTIONS.SPRINT_NOISE_PREVIEW_OPTIONS,
-    }, -- QoL interface.
-    {
+    },
+    { -- QoL interface.
         sectionHeader = true,
 
         id = "emptyPockets",
@@ -223,8 +269,8 @@ local UITR_OPTIONS = {
         name = STRINGS.UITWEAKSR.OPTIONS.STEP_CAREFULLY,
         tip = STRINGS.UITWEAKSR.OPTIONS.STEP_CAREFULLY_TIP,
         check = true,
-    }, -- Selection highlight.
-    {
+    },
+    { -- Selection highlight.
         sectionHeader = true,
 
         id = "selectionFilterAgentColor",
@@ -397,6 +443,7 @@ local function initOptions()
 end
 
 -- ===
+-- Metaprogramming Utilities
 
 -- Extract a local variable from the given function's upvalues
 local function extractUpvalue(fn, name)
@@ -483,10 +530,50 @@ local function overwriteInheritance(c, oldBaseClass, newBaseClass, sentinelKey, 
 end
 
 -- ===
+-- Sim Utilities
+
+-- Returns the real unit if the player has the correct location for the provided ghost unit.
+-- Otherwise, returns nil.
+-- Same criteria as the vanilla SHIFT keybind to inspect watched cells.
+local function getKnownUnitFromGhost(sim, ghostUnit)
+    local unit = sim:getUnit(ghostUnit:getID())
+    if unit then
+        local gx, gy = ghostUnit:getLocation()
+        local x, y = unit:getLocation()
+        if x == gx and y == gy then
+            return unit, unit
+        end
+        return nil, unit
+    end
+end
+
+-- True if unit is either seen or known from a ghost as above.
+local function playerKnowsUnit(player, unit)
+    local array = include("modules/array")
+    if array.find(player:getSeenUnits(), unit) then
+        return true
+    end
+
+    local originalID = unit:getID()
+    if player._ghost_units then
+        for unitID, ghost in pairs(player._ghost_units) do
+            if unitID == originalID then
+                local gx, gy = ghost:getLocation()
+                local x, y = unit:getLocation()
+                return x == gx and y == gy
+            end
+        end
+    end
+end
+
+-- ===
 
 return {
     DEBUG = DEBUG,
     REFRESH = REFRESH,
+    VISIBILITY = VISIBILITY,
+    VISIBILITY_MODE = VISIBILITY_MODE,
+
     UITR_OPTIONS = UITR_OPTIONS,
     checkEnabled = checkEnabled,
     checkOption = checkOption,
@@ -495,6 +582,10 @@ return {
     initOptions = initOptions,
 
     extractUpvalue = extractUpvalue,
+    makeStrict = makeStrict,
     propagateSuperclass = propagateSuperclass,
     overwriteInheritance = overwriteInheritance,
+
+    getKnownUnitFromGhost = getKnownUnitFromGhost,
+    playerKnowsUnit = playerKnowsUnit,
 }

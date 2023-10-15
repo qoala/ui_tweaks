@@ -69,7 +69,7 @@ local function predictScurry(sim, unit, cellx, celly)
                 -- Not seen. Unit is scurrying through.
                 isScurry = true
                 local senses = seerUnit:getBrain() and seerUnit:getBrain():getSenses()
-                if senses:hasTarget(unit) then
+                if senses and senses:hasTarget(unit) then
                     -- Escape overwatch through scurry. Very valuable.
                     isEscape = true
                 end

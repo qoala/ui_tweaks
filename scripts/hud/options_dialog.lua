@@ -256,12 +256,21 @@ function options_dialog:refreshHudUitrSettings(refreshTypes)
 
     uitr_util._setTempOptions(uitrSettings)
 
-    -- Run all refreshes if not refreshing for a single setting.
-    if refreshTypes[REFRESH.HUD] then
-        self._game.hud:refreshHud()
+    -- Refresh the requested UI entities.
+    local hud = self._game.hud
+    local boardRig = self._game.boardRig
+    local pathRig = boardRig and boardRig:getPathRig()
+    if refreshTypes[REFRESH.INFO_DEFAULTS] and pathRig then
+        -- Reset toggle states. Will be refreshed by boardRig.
+        pathRig:resetVisibility()
     end
-    if refreshTypes[REFRESH.BOARDRIG] then
-        self._game.boardRig:refresh()
+    if refreshTypes[REFRESH.HUD] and hud then
+        hud:refreshHud()
+    end
+    if refreshTypes[REFRESH.BOARDRIG] and boardRig then
+        boardRig:refresh()
+    elseif refreshTypes[REFRESH.INFO_DEFAULTS] and pathRig then
+        pathRig:refreshAllTracks()
     end
 end
 

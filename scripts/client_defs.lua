@@ -9,6 +9,12 @@ table.insert(
             txt = STRINGS.UITWEAKSR.UI.OPTIONS_KEYBIND_VISIONMODE,
             defaultBinding = mui_util.makeBinding(mui_defs.K_B),
         })
+table.insert(
+        cdefs.ALL_KEYBINDINGS, {
+            name = "UITR_CYCLE_PATH_FOOTPRINT",
+            txt = STRINGS.UITWEAKSR.UI.OPTIONS_KEYBIND_CYCLE_PATH_FOOTPRINT,
+            defaultBinding = mui_util.makeBinding(mui_defs.K_H),
+        })
 
 -- focus_target but for penalties, such as sprint warnings. (red instead of green)
 cdefs.RENDER_FILTERS["uitr_focus_penalty"] = {
