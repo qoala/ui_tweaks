@@ -56,12 +56,15 @@ end
 
 local explode_tooltip = class(mui_tooltip)
 
-function explode_tooltip:init(hud, unit)
+function explode_tooltip:init(hud, unit, rangeTrait)
     mui_tooltip.init(
             self, util.sformat(STRINGS.UITWEAKSR.UI.HOVER_EFFECT, util.toupper(unit:getName())),
             nil, nil)
     self._game = hud._game
     self._unit = unit
+    if type(rangeTrait) == "string" then
+        self._rangeTrait = rangeTrait
+    end
 end
 
 function explode_tooltip:activate(screen)
@@ -69,12 +72,12 @@ function explode_tooltip:activate(screen)
 
     local cells
     local unit = self._unit
-    if not unit.getExplodeCells or
+    if self._rangeTrait or not unit.getExplodeCells or
             (unit:getUnitData().type == "simemppack" and not unit:getTraits().flash_pack) or
             unit:getTraits().targeting_ignoreLOS then
         local sim = self._game.simCore
         local x0, y0 = unit:getLocation()
-        cells = simquery.rasterCircle(sim, x0, y0, unit:getTraits().range)
+        cells = simquery.rasterCircle(sim, x0, y0, unit:getTraits()[self._rangeTrait or "range"])
     end
 
     self._hiliteID = self._game.boardRig:hiliteCells(cells)
@@ -286,10 +289,17 @@ local function isExplodingUnit(unit)
 end
 -- Frostspire, etc.
 -- Must be active and NPC-owned.
-local function isRangedEmitter(unit)
-    return
-            unit:getUnitData().type == "frostspire" and unit:getTraits().mainframe_status ==
-                    "active" and unit:isNPC()
+local function isMainframeEmitter(unit)
+    if unit:getUnitData().type == "frostspire" and unit:getTraits().mainframe_status == "active" and
+            unit:isNPC() then
+        return true
+    end
+end
+-- Plastech Modded recapture, etc.
+local function isGuardEmitter(unit)
+    if unit:getTraits().mainframeRecapture and unit:isNPC() and not unit:isKO() then
+        return "mainframeRecapture"
+    end
 end
 
 local function addVisionActionsForUnit(hud, actions, targetUnit, isSeen, staleGhost)
@@ -335,7 +345,7 @@ local function addVisionActionsForUnit(hud, actions, targetUnit, isSeen, staleGh
                 })
     end
     if not staleGhost and targetUnit:hasTrait("range") and
-            (isExplodingUnit(targetUnit) or isRangedEmitter(targetUnit)) then
+            (isExplodingUnit(targetUnit) or isMainframeEmitter(targetUnit)) then
         table.insert(
                 actions, {
                     txt = "",
@@ -346,6 +356,21 @@ local function addVisionActionsForUnit(hud, actions, targetUnit, isSeen, staleGh
                     enabled = false,
                     layoutID = targetUnit:getID(),
                     tooltip = explode_tooltip(hud, targetUnit),
+                    priority = 9,
+                })
+    end
+    if not staleGhost and isGuardEmitter(targetUnit) then
+        local trait = isGuardEmitter(targetUnit)
+        table.insert(
+                actions, {
+                    txt = "",
+                    icon = ICON_EXPLODE,
+                    x = x,
+                    y = y,
+                    z = z,
+                    enabled = false,
+                    layoutID = targetUnit:getID(),
+                    tooltip = explode_tooltip(hud, targetUnit, trait),
                     priority = 9,
                 })
     end
