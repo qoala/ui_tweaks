@@ -6,7 +6,7 @@ local oldAddInterest = Senses.addInterest
 function Senses:addInterest(...)
     local interest = oldAddInterest(self, ...)
 
-    if interest.alwaysDraw then
+    if interest and interest.alwaysDraw then
         track_colors.ensureUnitHasColor(self.unit)
     end
 
