@@ -72,14 +72,33 @@ end
 local function onClickPathVisibilityToggle(hud)
     local pathRig = hud._game.boardRig:getPathRig()
     toggleGlobalPathVisibility(pathRig)
-    pathRig:refreshAllTracks()
     hud:uitr_refreshInfoGlobalButtons()
+    pathRig:refreshAllTracks()
 end
 local function onClickTrackVisibilityToggle(hud)
     local pathRig = hud._game.boardRig:getPathRig()
     toggleGlobalTrackVisibility(pathRig)
-    pathRig:refreshAllTracks()
     hud:uitr_refreshInfoGlobalButtons()
+    pathRig:refreshAllTracks()
+end
+local function onClickPathTrackVisibilityCycle(hud)
+    local pathRig = hud._game.boardRig:getPathRig()
+    local arePathsShown = pathRig:getGlobalPathVisibility() == uitr_util.VISIBILITY.SHOW
+    local areTracksShown = pathRig:getGlobalTrackVisibility() == uitr_util.VISIBILITY.SHOW
+    -- Both -> Paths -> Tracks -> Both
+    if arePathsShown and areTracksShown then
+        toggleGlobalTrackVisibility(pathRig)
+    elseif arePathsShown then
+        toggleGlobalPathVisibility(pathRig)
+        toggleGlobalTrackVisibility(pathRig)
+    elseif areTracksShown then
+        toggleGlobalPathVisibility(pathRig)
+    else
+        -- Neither -> Reset to Default
+        pathRig:resetVisibility()
+    end
+    hud:uitr_refreshInfoGlobalButtons()
+    pathRig:refreshAllTracks()
 end
 
 function hudAppend:uitr_refreshInfoGlobalButtons()
@@ -259,6 +278,10 @@ hud.createHud = function(...)
         btnTogglePaths.onClick = util.makeDelegate(nil, onClickPathVisibilityToggle, hudObject)
         local btnToggleTracks = hudObject._screen.binder.topPnl.binder.btnInfoToggleTracks
         btnToggleTracks.onClick = util.makeDelegate(nil, onClickTrackVisibilityToggle, hudObject)
+        local btnCyclePathsTracks = hudObject._screen.binder.topPnl.binder.btnInfoCyclePathsTracks
+        btnCyclePathsTracks:setHotkey("UITR_CYCLE_PATH_FOOTPRINT")
+        btnCyclePathsTracks.onClick = util.makeDelegate(
+                nil, onClickPathTrackVisibilityCycle, hudObject)
         hudObject:uitr_refreshInfoGlobalButtons()
     end
 

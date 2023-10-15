@@ -13,7 +13,7 @@ local UI_TWEAKS_STRINGS = {
             "FULL",
         },
         RECENT_FOOTPRINTS_MODE = "    Trail Visibility Mode",
-        RECENT_FOOTPRINTS_MODE_TIP = ("When should footprints be shown by default? " ..
+        RECENT_FOOTPRINTS_MODE_TIP = ("When should footprints be shown? " ..
                 "Visibility can be temporarily toggled from buttons near the Info Mode toggle.\n" ..
                 "ENEMY TURN (AUTO): Normally only shown during the enemy turn, resetting on End Turn.\n" ..
                 "SHOW/HIDE (AUTO): Normally shown or hidden, resetting on End Turn.\n" ..
@@ -25,8 +25,8 @@ local UI_TWEAKS_STRINGS = {
             "HIDE (STICKY)",
             "SHOW (STICKY)",
         },
-        COLORED_TRACKS = "Colored Guard Tracks",
-        COLORED_TRACKS_TIP = "Guards get uniquely colored tracks and interest points",
+        COLORED_TRACKS = "Colored Guard Paths",
+        COLORED_TRACKS_TIP = "Guards get uniquely colored paths and interest points",
         COLORED_TRACKS_A = "PALETTE A",
 
         GRID_COORDS = "Grid Coordinates",
@@ -127,6 +127,7 @@ local UI_TWEAKS_STRINGS = {
 
         OPTIONS_KEYBIND_CATEGORY = "MOD - UI TWEAKS RELOADED",
         OPTIONS_KEYBIND_VISIONMODE = "TOGGLE VISION MODE",
+        OPTIONS_KEYBIND_CYCLE_PATH_FOOTPRINT = "CYCLE PATH/TRAIL VISIBILITY",
         BTN_RESET_OPTIONS = "RESET TO DEFAULTS",
         CAMPAIGN_WARNING = "Requires a new campaign.",
         RELOAD_WARNING = "Some options may require reloading\nfrom the main menu to apply.",
