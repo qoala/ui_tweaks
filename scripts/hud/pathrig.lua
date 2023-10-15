@@ -160,7 +160,7 @@ function PathRig:_updateTrackProp(prop, point0, point1, tex, clr, parity)
     local propX, propY = (x + nx) / 2, (y + ny) / 2
 
     -- simlog(
-    --         "[UITR] draw%s [%d] %d,%d-%d,%d diag=%s parity=%s", tex.dbg_name, tex.dbg_unit,
+    --         "[UITR] draw%s [%d] %d,%d-%d,%d diag=%s parity=%s", tex.dbg_name, tostring(tex.dbg_unit),
     --         point0.x, point0.y, point1.x, point1.y, tostring(isDiag), tostring(parity))
     prop = prop or self:_getTrackProp()
     prop:setDeck(tex[isDiag][parity])
@@ -187,8 +187,8 @@ function PathRig:refreshTrackProps(optFootprints, unit, pathPoints, props)
         local player = self._boardRig:getSim():getPC()
 
         -- Track textures STRUCT[isDiag][parity]
-        local texTrack = {[false] = {}, [true] = {}, dbg_name = "Track", dbg_unit = unit:getID()}
-        local texGuess = {[false] = {}, [true] = {}, dbg_name = "Guess", dbg_unit = unit:getID()}
+        local texTrack = {[false] = {}, [true] = {}, dbg_name = "Track", dbg_unit = unit and unit:getID()}
+        local texGuess = {[false] = {}, [true] = {}, dbg_name = "Guess", dbg_unit = unit and unit:getID()}
         texTrack[false][1] = resources.find("uitrFootprintTrail")
         texTrack[false][-1] = texTrack[false][1]
         texTrack[true][1] = resources.find("uitrFootprintTrailDiag")
@@ -199,8 +199,8 @@ function PathRig:refreshTrackProps(optFootprints, unit, pathPoints, props)
         texGuess[true][-1] = resources.find("uitrFootprintQuestionDiagFlip")
 
         local unitColor = UNKNOWN_TRACK_COLOR
-        if pathPoints.info.isSeen or pathPoints.info.isTracked or
-                uitr_util.playerKnowsUnit(player, unit) then
+        if unit and (pathPoints.info.isSeen or pathPoints.info.isTracked or
+                uitr_util.playerKnowsUnit(player, unit)) then
             -- If we know/knew the unit, use its color.
             unitColor = track_colors.getColor(unit)
         end
@@ -209,8 +209,8 @@ function PathRig:refreshTrackProps(optFootprints, unit, pathPoints, props)
         local parity = 1
         -- Parallel iteration over observedPath.
         local obsPoints, obsIdx, obsParity
-        if pathPoints.info.observedPath and
-                not (unit:getTraits().patrolObserved or unit:getTraits().tagged) then
+        if pathPoints.info.observedPath and (not unit or
+                not (unit:getTraits().patrolObserved or unit:getTraits().tagged)) then
             obsPoints = pathPoints.info.observedPath
             obsIdx, obsParity = 2, 1
         end

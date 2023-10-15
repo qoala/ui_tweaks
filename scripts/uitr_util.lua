@@ -549,6 +549,9 @@ end
 
 -- True if unit is either seen or known from a ghost as above.
 local function playerKnowsUnit(player, unit)
+    if not unit then
+        return false
+    end
     local array = include("modules/array")
     if array.find(player:getSeenUnits(), unit) then
         return true
