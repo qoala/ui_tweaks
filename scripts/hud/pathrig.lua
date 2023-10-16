@@ -366,7 +366,7 @@ end
 function PathRig:_checkGlobalVisibility(globalVisibility)
     if globalVisibility == uitr_util.VISIBILITY.ENEMY_TURN then
         local sim = self._boardRig:getSim()
-        if sim:getCurrentPlayer():isNPC() then
+        if sim:getCurrentPlayer() and sim:getCurrentPlayer():isNPC() then
             return uitr_util.VISIBILITY.SHOW
         else
             return uitr_util.VISIBILITY.HIDE
