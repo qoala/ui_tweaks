@@ -187,8 +187,18 @@ function PathRig:refreshTrackProps(optFootprints, unit, pathPoints, props)
         local player = self._boardRig:getSim():getPC()
 
         -- Track textures STRUCT[isDiag][parity]
-        local texTrack = {[false] = {}, [true] = {}, dbg_name = "Track", dbg_unit = unit and unit:getID()}
-        local texGuess = {[false] = {}, [true] = {}, dbg_name = "Guess", dbg_unit = unit and unit:getID()}
+        local texTrack = {
+            [false] = {},
+            [true] = {},
+            dbg_name = "Track",
+            dbg_unit = unit and unit:getID(),
+        }
+        local texGuess = {
+            [false] = {},
+            [true] = {},
+            dbg_name = "Guess",
+            dbg_unit = unit and unit:getID(),
+        }
         texTrack[false][1] = resources.find("uitrFootprintTrail")
         texTrack[false][-1] = texTrack[false][1]
         texTrack[true][1] = resources.find("uitrFootprintTrailDiag")
@@ -199,8 +209,9 @@ function PathRig:refreshTrackProps(optFootprints, unit, pathPoints, props)
         texGuess[true][-1] = resources.find("uitrFootprintQuestionDiagFlip")
 
         local unitColor = UNKNOWN_TRACK_COLOR
-        if unit and (pathPoints.info.isSeen or pathPoints.info.isTracked or
-                uitr_util.playerKnowsUnit(player, unit)) then
+        if unit and
+                (pathPoints.info.isSeen or pathPoints.info.isTracked or
+                        uitr_util.playerKnowsUnit(player, unit)) then
             -- If we know/knew the unit, use its color.
             unitColor = track_colors.getColor(unit)
         end
@@ -209,8 +220,8 @@ function PathRig:refreshTrackProps(optFootprints, unit, pathPoints, props)
         local parity = 1
         -- Parallel iteration over observedPath.
         local obsPoints, obsIdx, obsParity
-        if pathPoints.info.observedPath and (not unit or
-                not (unit:getTraits().patrolObserved or unit:getTraits().tagged)) then
+        if pathPoints.info.observedPath and
+                (not unit or not (unit:getTraits().patrolObserved or unit:getTraits().tagged)) then
             obsPoints = pathPoints.info.observedPath
             obsIdx, obsParity = 2, 1
         end

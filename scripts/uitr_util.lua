@@ -1,3 +1,12 @@
+-- From SimConstructor strict.lua
+local function canDebugTrace()
+    local d = debug.getinfo(3, "S")
+    local what = d and d.what or "C"
+    if what ~= "C" then
+        return true
+    end
+end
+
 local STRICT_MT
 do
     STRICT_MT = {
@@ -584,6 +593,7 @@ return {
     _setTempOptions = _setTempOptions,
     initOptions = initOptions,
 
+    canDebugTrace = canDebugTrace,
     extractUpvalue = extractUpvalue,
     makeStrict = makeStrict,
     propagateSuperclass = propagateSuperclass,

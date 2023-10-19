@@ -1,6 +1,10 @@
 -- Colored Tracks: Core functionality shared between multiple rigs.
 local color = include("modules/color")
 
+local uitr_util = include(SCRIPT_PATHS.qed_uitr .. "/uitr_util")
+
+-- ===
+
 PATH_COLORS = {
     color(0, 1, 0.1, 1.0), -- Green
     color(1, 1, 0.1, 1.0), -- Yellow
@@ -11,15 +15,6 @@ PATH_COLORS = {
 }
 
 local _M = {}
-
--- From SimConstructor strict.lua
-local function safeDebug()
-    local d = debug.getinfo(3, "S")
-    local what = d and d.what or "C"
-    if what ~= "C" then
-        return true
-    end
-end
 
 function _M._assignColor(unit, traits)
     local sim = unit:getSim()
@@ -48,7 +43,8 @@ function _M.getColor(unit)
     if not traits.pathColor then
         simlog(
                 "[UITR][WARN] Assigning [%d] unit color from client. Colors may change on rewind/reload.%s",
-                tostring(unit and unit:getID()), (safeDebug() and ("\n" .. debug.traceback()) or ""))
+                tostring(unit and unit:getID()),
+                (uitr_util.canDebugTrace() and ("\n" .. debug.traceback()) or ""))
         _M._assignColor(unit, traits)
     end
     return traits.pathColor
