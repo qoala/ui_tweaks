@@ -269,7 +269,9 @@ local function isWatchedByGuard(sim, guardThreats, selectedUnit, cell, prevCell)
             -- Was already watched in the previous cell
             -- Threat will turn towards the destination.
             -- (senses:729 `if self:hasTarget // and prevCanSee`)
-            if facing < simdefs.DIR_MAX then
+            if selectedUnit:getTraits().ITB_HenryUntrackable then
+                -- Guards do not turn to track Archive Henry.
+            elseif facing < simdefs.DIR_MAX then
                 simlog(
                         "LOG_UITR_OW", "  %s,%s-%s,%s %s[%s] TRACK f=%s->%s",
                         prevCell and prevCell.x or "*", prevCell and prevCell.y or "*", cell.x,
@@ -290,7 +292,9 @@ local function isWatchedByGuard(sim, guardThreats, selectedUnit, cell, prevCell)
             -- Threat is eligible to turn if peripheral checks pass
             -- (senses:769 `if self:hasLostTarget(...) and not simquery.checkCover(...)`)
 
-            if couldSee and tracker:predictPeripheralLos(tracker.facing)[cell.id] then
+            if selectedUnit:getTraits().ITB_HenryUntrackable then
+                -- Guards do not turn to track Archive Henry.
+            elseif couldSee and tracker:predictPeripheralLos(tracker.facing)[cell.id] then
                 -- We just stepped into peripheral from a non-cover cell.
                 -- Threat will turn to face this cell.
                 -- (senses:749 `if not canSee and canSense`)
