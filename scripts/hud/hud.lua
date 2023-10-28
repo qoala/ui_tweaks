@@ -12,15 +12,27 @@ local IMG_INFO_HL = "gui/hud3/UserButtons/uitr_btn_info_hl.png"
 local IMG_INFO_ACTIVE = "gui/hud3/UserButtons/uitr_btn_info_active.png"
 local IMG_INFO_ACTIVE_HL = "gui/hud3/UserButtons/uitr_btn_info_active_hl.png"
 
-local IMG_PATH = "gui/hud3/UserButtons/uitr_btn_path.png"
-local IMG_PATH_HL = "gui/hud3/UserButtons/uitr_btn_path_hl.png"
-local IMG_PATH_OFF = "gui/hud3/UserButtons/uitr_btn_path_off.png"
-local IMG_PATH_OFF_HL = "gui/hud3/UserButtons/uitr_btn_path_off_hl.png"
-
-local IMG_TRACK = "gui/hud3/UserButtons/uitr_btn_track.png"
-local IMG_TRACK_HL = "gui/hud3/UserButtons/uitr_btn_track_hl.png"
-local IMG_TRACK_OFF = "gui/hud3/UserButtons/uitr_btn_track_off.png"
-local IMG_TRACK_OFF_HL = "gui/hud3/UserButtons/uitr_btn_track_off_hl.png"
+-- [paths visible][tracks visible]
+local IMG_PATHTRACK = {
+    [true] = {
+        [true] = "gui/hud3/UserButtons/uitr_btn_cycle_pt_ss.png",
+        [false] = "gui/hud3/UserButtons/uitr_btn_cycle_pt_sh.png",
+    },
+    [false] = {
+        [true] = "gui/hud3/UserButtons/uitr_btn_cycle_pt_hs.png",
+        [false] = "gui/hud3/UserButtons/uitr_btn_cycle_pt_hh.png",
+    },
+}
+local IMG_PATHTRACK_HL = {
+    [true] = {
+        [true] = "gui/hud3/UserButtons/uitr_btn_cycle_pt_ss_hl.png",
+        [false] = "gui/hud3/UserButtons/uitr_btn_cycle_pt_sh_hl.png",
+    },
+    [false] = {
+        [true] = "gui/hud3/UserButtons/uitr_btn_cycle_pt_hs_hl.png",
+        [false] = "gui/hud3/UserButtons/uitr_btn_cycle_pt_hh_hl.png",
+    },
+}
 
 -- ===
 
@@ -78,15 +90,16 @@ local function toggleGlobalTrackVisibility(pathRig)
         pathRig:setGlobalTrackVisibility(mode[1])
     end
 end
-local function onClickPathVisibilityToggle(hud)
+local function onClickHidePathsTracks(hud)
     local pathRig = hud._game.boardRig:getPathRig()
-    toggleGlobalPathVisibility(pathRig)
-    hud:uitr_refreshInfoGlobalButtons()
-    pathRig:refreshAllTracks()
-end
-local function onClickTrackVisibilityToggle(hud)
-    local pathRig = hud._game.boardRig:getPathRig()
-    toggleGlobalTrackVisibility(pathRig)
+    local arePathsShown = pathRig:getGlobalPathVisibility() == uitr_util.VISIBILITY.SHOW
+    local areTracksShown = pathRig:getGlobalTrackVisibility() == uitr_util.VISIBILITY.SHOW
+    if arePathsShown then
+        toggleGlobalPathVisibility(pathRig)
+    end
+    if areTracksShown then
+        toggleGlobalTrackVisibility(pathRig)
+    end
     hud:uitr_refreshInfoGlobalButtons()
     pathRig:refreshAllTracks()
 end
@@ -110,23 +123,10 @@ local function onClickPathTrackVisibilityCycle(hud)
     pathRig:refreshAllTracks()
 end
 
-local function globalPathToggleTooltip(isVisible)
+local function globalPathTrackHideTooltip()
     return mui_tooltip(
-            STRINGS.UITWEAKSR.UI.BTN_GLOBAL_PATHS_HEADER,
-            isVisible and STRINGS.UITWEAKSR.UI.BTN_GLOBAL_PATHS_ON_TXT or
-                    STRINGS.UITWEAKSR.UI.BTN_GLOBAL_PATHS_OFF_TXT)
-end
-local function globalTrackToggleTooltip(isVisible)
-    local txt
-    local mode = uitr_util.checkOption("recentFootprintsMode") or "e"
-    if mode == "e" then
-        txt = isVisible and STRINGS.UITWEAKSR.UI.BTN_GLOBAL_TRACKS_E_ON_TXT or
-                      STRINGS.UITWEAKSR.UI.BTN_GLOBAL_TRACKS_E_OFF_TXT
-    else
-        txt = isVisible and STRINGS.UITWEAKSR.UI.BTN_GLOBAL_TRACKS_ON_TXT or
-                      STRINGS.UITWEAKSR.UI.BTN_GLOBAL_TRACKS_OFF_TXT
-    end
-    return mui_tooltip(STRINGS.UITWEAKSR.UI.BTN_GLOBAL_TRACKS_HEADER, txt)
+            STRINGS.UITWEAKSR.UI.BTN_GLOBAL_PT_HIDE_HEADER,
+            STRINGS.UITWEAKSR.UI.BTN_GLOBAL_PT_HIDE_TXT)
 end
 local function globalPathTrackCycleTooltip(pathVisible, trackVisible)
     local txt = STRINGS.UITWEAKSR.UI.BTN_GLOBAL_PT_CYCLE_TXT
@@ -143,23 +143,17 @@ end
 
 function hudAppend:uitr_refreshInfoGlobalButtons()
     local pathRig = self._game.boardRig:getPathRig()
-
-    local btnTogglePaths = self._screen.binder.topPnl.binder.btnInfoTogglePaths
     local arePathsShown = pathRig:getGlobalPathVisibility() == uitr_util.VISIBILITY.SHOW
-    btnTogglePaths:setTooltip(globalPathToggleTooltip(arePathsShown))
-    btnTogglePaths:setInactiveImage(arePathsShown and IMG_PATH or IMG_PATH_OFF)
-    btnTogglePaths:setActiveImage(arePathsShown and IMG_PATH_HL or IMG_PATH_OFF_HL)
-    btnTogglePaths:setHoverImage(arePathsShown and IMG_PATH_HL or IMG_PATH_OFF_HL)
-
-    local btnToggleTracks = self._screen.binder.topPnl.binder.btnInfoToggleTracks
     local areTracksShown = pathRig:getGlobalTrackVisibility() == uitr_util.VISIBILITY.SHOW
-    btnToggleTracks:setTooltip(globalTrackToggleTooltip(areTracksShown))
-    btnToggleTracks:setInactiveImage(areTracksShown and IMG_TRACK or IMG_TRACK_OFF)
-    btnToggleTracks:setActiveImage(areTracksShown and IMG_TRACK_HL or IMG_TRACK_OFF_HL)
-    btnToggleTracks:setHoverImage(areTracksShown and IMG_TRACK_HL or IMG_TRACK_OFF_HL)
+
+    local btnHidePathsTracks = self._screen.binder.topPnl.binder.btnInfoHidePathsTracks
+    btnHidePathsTracks:setDisabled(not arePathsShown and not areTracksShown)
 
     local btnCyclePathsTracks = self._screen.binder.topPnl.binder.btnInfoCyclePathsTracks
     btnCyclePathsTracks:setTooltip(globalPathTrackCycleTooltip(arePathsShown, areTracksShown))
+    btnCyclePathsTracks:setInactiveImage(IMG_PATHTRACK[arePathsShown][areTracksShown])
+    btnCyclePathsTracks:setActiveImage(IMG_PATHTRACK_HL[arePathsShown][areTracksShown])
+    btnCyclePathsTracks:setHoverImage(IMG_PATHTRACK_HL[arePathsShown][areTracksShown])
 end
 
 -- ===
@@ -307,10 +301,9 @@ hud.createHud = function(...)
         btnToggleVisionMode:setHotkey("UITR_VISIONMODE")
         btnToggleVisionMode.onClick = util.makeDelegate(nil, onClickVisionToggle, hudObject)
 
-        local btnTogglePaths = hudObject._screen.binder.topPnl.binder.btnInfoTogglePaths
-        btnTogglePaths.onClick = util.makeDelegate(nil, onClickPathVisibilityToggle, hudObject)
-        local btnToggleTracks = hudObject._screen.binder.topPnl.binder.btnInfoToggleTracks
-        btnToggleTracks.onClick = util.makeDelegate(nil, onClickTrackVisibilityToggle, hudObject)
+        local btnHidePathsTracks = hudObject._screen.binder.topPnl.binder.btnInfoHidePathsTracks
+        btnHidePathsTracks.onClick = util.makeDelegate(nil, onClickHidePathsTracks, hudObject)
+        btnHidePathsTracks:setTooltip(globalPathTrackHideTooltip())
         local btnCyclePathsTracks = hudObject._screen.binder.topPnl.binder.btnInfoCyclePathsTracks
         btnCyclePathsTracks:setHotkey("UITR_CYCLE_PATH_FOOTPRINT")
         btnCyclePathsTracks.onClick = util.makeDelegate(
