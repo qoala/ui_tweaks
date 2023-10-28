@@ -445,9 +445,15 @@ function PathRig:refreshAllTracks()
     for unitID, path in pairs(self._plannedPaths) do
         if self:_shouldDrawPath(unitID) then
             self:regeneratePath(unitID)
-        elseif self._plannedPathProps[unitID] and #self._plannedPathProps[unitID] > 0 then
-            -- Free up current track props.
-            self:refreshProps(nil, self._plannedPathProps[unitID], nil)
+        else
+            if self._plannedPathProps[unitID] and #self._plannedPathProps[unitID] > 0 then
+                -- Free up current track props.
+                self:refreshProps(nil, self._plannedPathProps[unitID], nil)
+            end
+            if self._plannedThrowProps[unitID] then
+                self._throwLayer:removeProp(self._plannedThrowProps[unitID])
+                self._plannedThrowProps[unitID] = nil
+            end
         end
     end
 end
