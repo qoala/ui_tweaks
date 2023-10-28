@@ -70,7 +70,7 @@ end
 function explode_tooltip:activate(screen)
     mui_tooltip.activate(self, screen)
 
-    local cells
+    local cells -- Format: xypairs
     local unit = self._unit
     if self._rangeTrait or not unit.getExplodeCells or
             (unit:getUnitData().type == "simemppack" and not unit:getTraits().flash_pack) or
@@ -78,6 +78,14 @@ function explode_tooltip:activate(screen)
         local sim = self._game.simCore
         local x0, y0 = unit:getLocation()
         cells = simquery.rasterCircle(sim, x0, y0, unit:getTraits()[self._rangeTrait or "range"])
+    elseif unit.getExplodeCells then
+        -- Expand list of cells into xypairs format.
+        local cellsArray = unit:getExplodeCells()
+        cells = {}
+        for i, cell in ipairs(cellsArray) do
+            cells[2 * i - 1] = cell.x
+            cells[2 * i] = cell.y
+        end
     end
 
     self._hiliteID = self._game.boardRig:hiliteCells(cells)
