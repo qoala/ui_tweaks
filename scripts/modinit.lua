@@ -175,6 +175,12 @@ end
 
 local function lateLoad(modApi, options, params, mod_options)
     lateUnload(modApi, mod_options)
+    local scriptPath = modApi:getScriptPath()
+
+    if SCRIPT_PATHS.corp_neptune then
+        local modPrefabs = include(scriptPath .. "/patches/prefabs_neptune")
+        modPrefabs.patchNeptunePrefabs()
+    end
 end
 
 -- gets called before localization occurs and before content is loaded
