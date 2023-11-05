@@ -235,10 +235,6 @@ function options_dialog:retrieveUitrSettings(uitrSettings)
 end
 
 function options_dialog:refreshHudUitrSettings(refreshTypes)
-    if not (self._game and self._game.hud) then
-        return
-    end
-
     local original = self._originalSettings.uitr or {}
     local uitrSettings = {_tempID = self._uitr_tempID}
     self._uitr_tempID = self._uitr_tempID + 1
@@ -255,6 +251,13 @@ function options_dialog:refreshHudUitrSettings(refreshTypes)
     end
 
     uitr_util._setTempOptions(uitrSettings)
+
+    if refreshTypes[REFRESH.STATES] then
+        uitr_util:refreshStates()
+    end
+    if not (self._game and self._game.hud) then
+        return
+    end
 
     -- Refresh the requested UI entities.
     local hud = self._game.hud

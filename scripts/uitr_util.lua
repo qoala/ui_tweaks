@@ -36,6 +36,8 @@ local REFRESH = {
     BOARDRIG = "BOARDRIG",
     -- Refresh info toggles after changes to default states.
     INFO_DEFAULTS = "INFO_DEFAULTS",
+    -- StateManager interface layers.
+    STATES = "STATES",
 }
 makeStrict(REFRESH)
 
@@ -98,6 +100,15 @@ local UITR_OPTIONS = {
         value = 1,
         strings = {STRINGS.UITWEAKSR.OPTIONS.VANILLA, STRINGS.UITWEAKSR.OPTIONS.COLORED_TRACKS_A},
         needsReload = true,
+    },
+    {
+        id = "mapCrossDistanceMode",
+        name = "MAP DISTANCES",
+        tip = "",
+        values = {"top", "center", "shift"},
+        value = "top",
+        strings = {"top", "center", "shift"},
+        refreshTypes = {[REFRESH.STATES] = true},
     },
     { -- Additional interface detail.
         sectionHeader = true,
@@ -451,6 +462,19 @@ local function initOptions()
     end
 end
 
+function refreshStates()
+    simlog("[QEDBG] UITR Refreshing StateManager")
+    local states = statemgr.getStates()
+    for i = 1, #states do
+        if states[i].refreshUITR then
+            simlog("[QEDBG] refreshing states[%d]", i)
+            states[i]:refreshUITR()
+        else
+            simlog("[QEDBG] skipping states[%d]", i)
+        end
+    end
+end
+
 -- ===
 -- Metaprogramming Utilities
 
@@ -592,6 +616,7 @@ return {
     getOptions = getOptions,
     _setTempOptions = _setTempOptions,
     initOptions = initOptions,
+    refreshStates = refreshStates,
 
     canDebugTrace = canDebugTrace,
     extractUpvalue = extractUpvalue,

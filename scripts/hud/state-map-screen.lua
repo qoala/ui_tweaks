@@ -4,6 +4,8 @@ local locationPopup = include('client/fe/locationpopup')
 local rig_util = include("gameplay/rig_util")
 local mapScreen = include("states/state-map-screen")
 
+local uitr_util = include(SCRIPT_PATHS.qed_uitr .. "/uitr_util")
+
 local function calcTravelTime(loc0, loc1)
     return serverdefs.BASE_TRAVEL_TIME + serverdefs.calculateTravelTime(loc0, loc1)
 end
@@ -101,6 +103,8 @@ end
 
 local oldOnLoad = mapScreen.onLoad
 function mapScreen:onLoad(...)
+    -- ID of highlighted location
+    self._locationHighlight = nil
     -- Table of 'location' widgets, indexed by mapLocation ID.
     self._locationWidgets = {}
     -- Distance from current location, indexed by mapLocation ID.
@@ -109,6 +113,18 @@ function mapScreen:onLoad(...)
     self._locationCrossDistances = {}
 
     return oldOnLoad(self, ...)
+end
+
+function mapScreen:refreshUITR()
+    for locID, widget in pairs(self._locationWidgets) do
+        if self._locationHighlight == locID then
+            self:_widgetShowTimeHighlighted(widget)
+        elseif self._locationHighlight then
+            self:_widgetShowTime(widget)
+        else
+            self:_widgetShowIcon(widget)
+        end
+    end
 end
 
 local oldAddLocation = mapScreen.addLocation
@@ -131,9 +147,7 @@ function mapScreen:addLocation(situation, popin, ...)
 
     -- Travel time to this location from current.
     local travelTime = calcTravelTime(self._campaign.location, locID)
-    widget.binder.locationTravelTime:setText(
-            util.sformat(
-                    STRINGS.UITWEAKSR.UI.MAP_TRAVEL_TIME, travelTime))
+    self:_widgetShowIcon(widget, travelTime)
     self._locationDirectDistances[locID] = travelTime
 
     -- Override vanilla tooltip
@@ -141,30 +155,68 @@ function mapScreen:addLocation(situation, popin, ...)
     widget.binder.btn:setTooltip(toolTip)
 end
 
+function mapScreen:_widgetShowIcon(widget, travelTime)
+    if travelTime then
+        widget.binder.locationTravelTime:setText(
+                util.sformat(
+                        STRINGS.UITWEAKSR.UI.MAP_TRAVEL_TIME, travelTime))
+    end
+
+    local opt = uitr_util.checkOption("mapCrossDistanceMode") or "top"
+    widget.binder.icon:setVisible(true)
+    if opt == "top" then
+        widget.binder.locationTravelTime:setVisible(true)
+        widget.binder.locationTravelTime:setPosition(0, 25)
+    elseif opt == "center" then
+        widget.binder.locationTravelTime:setVisible(false)
+        widget.binder.locationTravelTime:setPosition(0, 0)
+    end
+end
+function mapScreen:_widgetShowTime(widget, travelTime)
+    if travelTime then
+        widget.binder.locationTravelTime:setText(
+                util.sformat(
+                        STRINGS.UITWEAKSR.UI.MAP_TRAVEL_TIME, travelTime))
+    end
+
+    local opt = uitr_util.checkOption("mapCrossDistanceMode") or "top"
+    widget.binder.locationTravelTime:setVisible(true)
+    if opt == "top" then
+        widget.binder.icon:setVisible(true)
+        widget.binder.locationTravelTime:setPosition(0, 25)
+    elseif opt == "center" then
+        widget.binder.icon:setVisible(false)
+    end
+end
+function mapScreen:_widgetShowTimeHighlighted(widget, travelTime)
+    if travelTime then
+        widget.binder.locationTravelTime:setText(
+                util.sformat(
+                        STRINGS.UITWEAKSR.UI.MAP_TRAVEL_TIME, travelTime))
+    end
+
+    widget.binder.icon:setVisible(true)
+    widget.binder.locationTravelTime:setVisible(false)
+end
+
 function mapScreen:_setRelativeTravelOrigin(locationID)
     if locationID then
         local distances = self._locationCrossDistances[locationID] or {}
         for loc1, widget in pairs(self._locationWidgets) do
             if loc1 == locationID then
-                widget.binder.locationTravelTime:setVisible(false)
+                self:_widgetShowTimeHighlighted(widget, self._locationDirectDistances[loc1])
             else
                 local travelTime = distances[loc1]
                 if not travelTime then
                     travelTime = calcTravelTime(locationID, loc1)
                     distances[loc1] = travelTime
                 end
-                widget.binder.locationTravelTime:setText(
-                        util.sformat(
-                                STRINGS.UITWEAKSR.UI.MAP_TRAVEL_TIME, travelTime))
+                self:_widgetShowTime(widget, travelTime)
             end
         end
     else
         for loc1, widget in pairs(self._locationWidgets) do
-            widget.binder.locationTravelTime:setText(
-                    util.sformat(
-                            STRINGS.UITWEAKSR.UI.MAP_TRAVEL_TIME,
-                            self._locationDirectDistances[loc1]))
-            widget.binder.locationTravelTime:setVisible(true)
+            self:_widgetShowIcon(widget, self._locationDirectDistances[loc1])
         end
     end
 end

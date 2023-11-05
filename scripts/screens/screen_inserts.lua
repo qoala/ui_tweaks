@@ -632,7 +632,7 @@ local mapInserts = {
         {"skins", 1, "children"}, -- location
         {
             name = [[locationTravelTime]],
-            isVisible = true,
+            isVisible = false,
             noInput = true,
             anchor = 1,
             rotation = 0,
@@ -640,7 +640,7 @@ local mapInserts = {
             xpx = true,
             y = 25,
             ypx = true,
-            w = 80,
+            w = 50,
             wpx = true,
             h = 30,
             hpx = true,
@@ -648,7 +648,7 @@ local mapInserts = {
             sy = 1,
             ctor = [[label]],
             halign = MOAITextBox.CENTER_JUSTIFY,
-            valign = MOAITextBox.BOTTOM_JUSTIFY,
+            valign = MOAITextBox.CENTER_JUSTIFY,
             text_style = [[font1_18_r]],
             color = {1, 1, 1, 1},
         },
