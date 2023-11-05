@@ -1,8 +1,7 @@
 local array = include("modules/array")
 
-local inserts = {}
-
-local visionModeInserts = {
+-- In-world HUD: Info Mode.
+local infoModeInserts = {
     {
         "hud.lua",
         {"widgets", 16, "children"}, -- topPnl
@@ -446,8 +445,8 @@ local visionModeInserts = {
         },
     },
 }
-array.concat(inserts, visionModeInserts)
 
+-- Mainframe HUD.
 local mainframeInserts = {
     {
         "hud-inworld.lua",
@@ -561,8 +560,8 @@ local mainframeInserts = {
         },
     },
 }
-array.concat(inserts, mainframeInserts)
 
+-- Visual coordinate grid for streaming. WIP.
 local coordinateGridInserts = {
     {
         "hud-inworld.lua",
@@ -625,6 +624,40 @@ local coordinateGridInserts = {
         },
     },
 }
-array.concat(inserts, coordinateGridInserts)
 
+-- World Map / Mission Select.
+local mapInserts = {
+    {
+        "map_screen.lua",
+        {"skins", 1, "children"}, -- location
+        {
+            name = [[locationTravelTime]],
+            isVisible = true,
+            noInput = true,
+            anchor = 1,
+            rotation = 0,
+            x = 0,
+            xpx = true,
+            y = 25,
+            ypx = true,
+            w = 80,
+            wpx = true,
+            h = 30,
+            hpx = true,
+            sx = 1,
+            sy = 1,
+            ctor = [[label]],
+            halign = MOAITextBox.CENTER_JUSTIFY,
+            valign = MOAITextBox.BOTTOM_JUSTIFY,
+            text_style = [[font1_18_r]],
+            color = {1, 1, 1, 1},
+        },
+    },
+}
+
+local inserts = {}
+array.concat(inserts, infoModeInserts)
+array.concat(inserts, mainframeInserts)
+array.concat(inserts, coordinateGridInserts)
+array.concat(inserts, mapInserts)
 return inserts
