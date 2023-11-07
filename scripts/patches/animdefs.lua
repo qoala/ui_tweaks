@@ -153,14 +153,8 @@ local animdefsTactical = {
     -- KO OFFICE ---------------------------------------------------------------------------------------------
 
     decor_ko_office_flag1 = {
-        build = {
-            "data/anims/KO_office/ko_office_decor_flag1.abld",
-            "data/anims/hek/mf_noncoverpieces_1x1.abld",
-        },
-        anims = {
-            "data/anims/KO_office/ko_office_decor_flag1.adef",
-            "data/anims/hek/mf_noncoverpieces_1x1.adef",
-        },
+        build = {"data/anims/KO_office/ko_office_decor_flag1.abld", abld(NONCOVER_1_1)},
+        anims = {"data/anims/KO_office/ko_office_decor_flag1.adef", adef(NONCOVER_1_1)},
         anim = "idle",
         scale = 0.25,
         boundType = BoundType.bound_1x1_med_med,
