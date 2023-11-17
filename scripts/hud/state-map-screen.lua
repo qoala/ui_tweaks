@@ -107,9 +107,9 @@ local function createIconFadeTimer()
     timer:setMode(MOAITimer.PING_PONG)
     timer:start()
     local iconDriver = function(uniforms)
-        local t = timer:getTime() / 2
+        local t = math.max(0, timer:getTime() - 0.5) / 1.5 -- 0 <-> 2 => 0 <-> 1
 
-        v = 0.4 + 0.3 * math.cos(t * math.pi) -- 0.1 <-> 0.7
+        v = 0.35 - 0.25 * math.cos(t * math.pi) -- 0.1 <-> 0.6
         uniforms:setUniformFloat("ease", v)
     end
 
