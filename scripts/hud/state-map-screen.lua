@@ -101,6 +101,21 @@ end
 
 ---
 
+local function createIconFadeTimer()
+    timer = MOAITimer.new()
+    timer:setSpan(2)
+    timer:setMode(MOAITimer.PING_PONG)
+    timer:start()
+    local iconDriver = function(uniforms)
+        local t = timer:getTime() / 2
+
+        v = 0.4 + 0.3 * math.cos(t * math.pi) -- 0.1 <-> 0.7
+        uniforms:setUniformFloat("ease", v)
+    end
+
+    return timer, iconDriver
+end
+
 local oldOnLoad = mapScreen.onLoad
 function mapScreen:onLoad(...)
     -- ID of highlighted location
@@ -112,7 +127,14 @@ function mapScreen:onLoad(...)
     -- 2D table of location-location distances. Indexed as [startLocationID][endLocationID].
     self._locationCrossDistances = {}
 
+    self._locationIconTimer, self._locationIconDriver = createIconFadeTimer()
+
     return oldOnLoad(self, ...)
+end
+local oldOnUnload = mapScreen.onUnload
+function mapScreen:onUnload(...)
+    self._locationIconTimer:stop()
+    return oldOnUnload(self, ...)
 end
 
 function mapScreen:refreshUITR()
@@ -145,6 +167,11 @@ function mapScreen:addLocation(situation, popin, ...)
     self._locationWidgets[locID] = widget
     self._locationCrossDistances[locID] = {}
 
+    -- Attach shading timer.
+    local iconUniforms = KLEIShaderUniforms.new()
+    iconUniforms:setUniformDriver(self._locationIconDriver)
+    widget.binder.icon._cont:getProp():setShaderUniforms(iconUniforms)
+
     -- Travel time to this location from current.
     local travelTime = calcTravelTime(self._campaign.location, locID)
     self:_widgetShowIcon(widget, travelTime)
@@ -164,12 +191,13 @@ function mapScreen:_widgetShowIcon(widget, travelTime)
 
     local opt = uitr_util.checkOption("mapCrossDistanceMode") or "top"
     widget.binder.icon:setVisible(true)
-    if opt == "top" then
+    widget.binder.icon._cont:getProp():setShader(nil)
+    widget.binder.locationEmptyIcon:setVisible(false)
+    if opt == "top" or opt == "shift" then
         widget.binder.locationTravelTime:setVisible(true)
         widget.binder.locationTravelTime:setPosition(0, 25)
     elseif opt == "center" then
         widget.binder.locationTravelTime:setVisible(false)
-        widget.binder.locationTravelTime:setPosition(0, 0)
     end
 end
 function mapScreen:_widgetShowTime(widget, travelTime)
@@ -184,8 +212,13 @@ function mapScreen:_widgetShowTime(widget, travelTime)
     if opt == "top" then
         widget.binder.icon:setVisible(true)
         widget.binder.locationTravelTime:setPosition(0, 25)
-    elseif opt == "center" then
-        widget.binder.icon:setVisible(false)
+    elseif opt == "center" or opt == "shift" then
+        widget.binder.icon._cont:getProp():setShader(
+                MOAIShaderMgr.getShader(
+                        MOAIShaderMgr.KLEI_POST_PROCESS_PASS_THROUGH_EASE))
+
+        widget.binder.locationEmptyIcon:setVisible(true)
+        widget.binder.locationTravelTime:setPosition(0, 0)
     end
 end
 function mapScreen:_widgetShowTimeHighlighted(widget, travelTime)

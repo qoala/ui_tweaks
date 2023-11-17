@@ -653,6 +653,35 @@ local mapInserts = {
             color = {1, 1, 1, 1},
         },
     },
+    {
+        "map_screen.lua",
+        {"skins", 1, "children"}, -- location
+        {
+            name = [[locationEmptyIcon]],
+            isVisible = false,
+            noInput = true,
+            anchor = 1,
+            rotation = 0,
+            x = 0,
+            xpx = true,
+            y = 1,
+            ypx = true,
+            w = 32,
+            wpx = true,
+            h = 32,
+            hpx = true,
+            sx = 1,
+            sy = 1,
+            ctor = [[image]],
+            color = {1, 1, 1, 1},
+            images = {
+                { --
+                    file = [[gui/icons/uitr-mission-empty.png]],
+                    name = [[]],
+                },
+            },
+        },
+    },
 }
 
 local inserts = {}
