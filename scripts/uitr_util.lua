@@ -103,11 +103,9 @@ local UITR_OPTIONS = {
     },
     {
         id = "mapCrossDistanceMode",
-        name = "MAP DISTANCES",
-        tip = "",
-        values = {"top", "center", "shift"},
-        value = "top",
-        strings = {"top", "center", "shift"},
+        name = STRINGS.UITWEAKSR.OPTIONS.MAP_DISTANCES,
+        tip = STRINGS.UITWEAKSR.OPTIONS.MAP_DISTANCES_TIP,
+        check = true,
         refreshTypes = {[REFRESH.STATES] = true},
     },
     { -- Additional interface detail.
@@ -448,6 +446,9 @@ local function initOptions()
     end
     if uitr["sprintNoisePreview"] == true then
         uitr["sprintNoisePreview"] = 1 + 2
+    end
+    if uitr["mapCrossDistanceMode"] ~= false then
+        uitr["mapCrossDistanceMode"] = true
     end
     -- Otherwise, init defaults.
     for _, optionDef in ipairs(UITR_OPTIONS) do

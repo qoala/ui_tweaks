@@ -189,14 +189,14 @@ function mapScreen:_widgetShowIcon(widget, travelTime)
                         STRINGS.UITWEAKSR.UI.MAP_TRAVEL_TIME, travelTime))
     end
 
-    local opt = uitr_util.checkOption("mapCrossDistanceMode") or "top"
+    local opt = uitr_util.checkOption("mapCrossDistanceMode")
     widget.binder.icon:setVisible(true)
     widget.binder.icon._cont:getProp():setShader(nil)
     widget.binder.locationEmptyIcon:setVisible(false)
-    if opt == "top" or opt == "shift" then
+    if opt then
         widget.binder.locationTravelTime:setVisible(true)
         widget.binder.locationTravelTime:setPosition(0, 25)
-    elseif opt == "center" then
+    else
         widget.binder.locationTravelTime:setVisible(false)
     end
 end
@@ -207,18 +207,20 @@ function mapScreen:_widgetShowTime(widget, travelTime)
                         STRINGS.UITWEAKSR.UI.MAP_TRAVEL_TIME, travelTime))
     end
 
-    local opt = uitr_util.checkOption("mapCrossDistanceMode") or "top"
-    widget.binder.locationTravelTime:setVisible(true)
-    if opt == "top" then
-        widget.binder.icon:setVisible(true)
-        widget.binder.locationTravelTime:setPosition(0, 25)
-    elseif opt == "center" or opt == "shift" then
+    local opt = uitr_util.checkOption("mapCrossDistanceMode")
+    if opt then
         widget.binder.icon._cont:getProp():setShader(
                 MOAIShaderMgr.getShader(
                         MOAIShaderMgr.KLEI_POST_PROCESS_PASS_THROUGH_EASE))
 
         widget.binder.locationEmptyIcon:setVisible(true)
+        widget.binder.locationTravelTime:setVisible(true)
         widget.binder.locationTravelTime:setPosition(0, 0)
+    else
+        widget.binder.icon:setVisible(true)
+        widget.binder.icon._cont:getProp():setShader(nil)
+        widget.binder.locationEmptyIcon:setVisible(false)
+        widget.binder.locationTravelTime:setVisible(false)
     end
 end
 function mapScreen:_widgetShowTimeHighlighted(widget, travelTime)

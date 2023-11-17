@@ -29,6 +29,9 @@ local UI_TWEAKS_STRINGS = {
         COLORED_TRACKS_TIP = "Guards get uniquely colored paths and interest points",
         COLORED_TRACKS_A = "PALETTE A",
 
+        MAP_DISTANCES = "Map Distances",
+        MAP_DISTANCES_TIP = "On the world map, show travel times to each location. On hover, values reflect distance from the hovered location.",
+
         GRID_COORDS = "Grid Coordinates",
         GRID_COORDS_TIP = "Show an overlay of grid coordinates.",
         GRID_COORDS_OPTIONS = { --
