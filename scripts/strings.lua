@@ -143,6 +143,8 @@ local UI_TWEAKS_STRINGS = {
         BTN_RESET_OPTIONS = "RESET TO DEFAULTS",
         CAMPAIGN_WARNING = "Requires a new campaign.",
         RELOAD_WARNING = "Some options may require reloading\nfrom the main menu to apply.",
+
+        OVERWATCH_WARNING_CLOAK_TT = "Cloak-piercing guards may react.",
     },
 }
 

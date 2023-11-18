@@ -55,7 +55,7 @@ function abilityutil.triggersOverwatchAfterCloaking(self, sim, abilityOwner)
         if (seerUnit and seerUnit:getTraits().detect_cloak and
                 simquery.couldUnitSee(sim, seerUnit, userUnit) and
                 simquery.isEnemyAgent(player, seerUnit) and playerKnowsUnit(player, seerUnit)) then
-            return true
+            return true, STRINGS.UITWEAKSR.UI.OVERWATCH_WARNING_CLOAK_TT
         end
     end
 end
@@ -311,6 +311,15 @@ function delayed_tooltip_section:addWarning(...)
     end
 end
 
+function delayed_tooltip_section:addOverwatchWarning(...)
+    if self._activateQueue then
+        table.insert(
+                self._activateQueue, {fn = util.tooltip_section.addOverwatchWarning, args = {...}})
+    else
+        util.tooltip_section.addOverwatchWarning(self, ...)
+    end
+end
+
 -- ===
 -- Customize tooltip_section's addWarning to apply effects whenever the overwatch warning string is used.
 -- ===
@@ -336,30 +345,12 @@ end
 
 local oldSectionAddWarning = util.tooltip_section.addWarning
 function util.tooltip_section:addWarning(title, line, icon, color, ...)
-    local isOverwatchWarning = false
     if title == STRINGS.UI.DOOR_TRACKED and line == STRINGS.UI.DOOR_TRACKED_TT then
-        isOverwatchWarning = true
+        self:_addOverwatchWarning(title, line, icon, color, ...)
     end
 
     oldSectionAddWarning(self, title, line, icon, color, ...)
 
-    if isOverwatchWarning then
-        -- Reorder this warning section to appear first.
-        array.removeElement(self._tooltip._sections, self)
-        table.insert(self._tooltip._sections, 1, self)
-
-        -- New warning is the last widget.
-        local widget = self._children[#self._children]
-
-        -- Blink the border and icon
-        local oldActivate = widget.activate
-        function widget:activate(screen, ...)
-            if oldActivate then
-                oldActivate(self, screen, ...)
-            end
-            widget:onUpdate(warningBlinkFn, color, util.color.WHITE)
-        end
-    end
     if color == cdefs.COLOR_WATCHED_BOLD then
         local widget = self._children[#self._children]
 
@@ -371,6 +362,39 @@ function util.tooltip_section:addWarning(title, line, icon, color, ...)
                         line))
     end
 end
+
+function util.tooltip_section:_addOverwatchWarning(title, line, icon, color, ...)
+    oldSectionAddWarning(self, title, line, icon, color, ...)
+
+    -- Reorder this warning section to appear first.
+    array.removeElement(self._tooltip._sections, self)
+    table.insert(self._tooltip._sections, 1, self)
+
+    -- New warning is the last widget.
+    local widget = self._children[#self._children]
+
+    -- Blink the border and icon
+    local oldActivate = widget.activate
+    function widget:activate(screen, ...)
+        if oldActivate then
+            oldActivate(self, screen, ...)
+        end
+        widget:onUpdate(warningBlinkFn, color, util.color.WHITE)
+    end
+
+    if color == cdefs.COLOR_WATCHED_BOLD then
+        local widget = self._children[#self._children]
+
+        -- Make the body text brighter, for legibility
+        widget.binder.desc:setColor(util.color.WHITE:unpack()) -- This is apparently necessary for format codes to modify color.
+        widget.binder.desc:setText(
+                string.format(
+                        "<font1_16_r><c:FF0101>%s</c></>\n<c:FFF0F0>%s</c>", util.toupper(title),
+                        line))
+    end
+end
+-- May be overridden by delayed_tooltip
+util.tooltip_section.addOverwatchWarning = util.tooltip_section._addOverwatchWarning
 
 local oldSectionActivate = util.tooltip_section.activate
 function util.tooltip_section:activate(screen, ...)
@@ -543,16 +567,20 @@ function abilityutil.uitr_wrappedOnTooltip(self, hud, sim, abilityOwner, ability
     end
 
     -- Overwatch warnings
-    local triggersOverwatch = self.triggersOverwatch == true or
-                                      (type(self.triggersOverwatch) == "function" and
-                                              self:triggersOverwatch(
-                            sim, abilityOwner, abilityUser, ...))
+    local triggersOverwatch, warningMessage
+    if self.triggersOverwatch == true then
+        triggersOverwatch = true
+    elseif type(self.triggersOverwatch) == "function" then
+        triggersOverwatch, warningMessage = self:triggersOverwatch(
+                sim, abilityOwner, abilityUser, ...)
+    end
     local dangerousOverwatch = triggersOverwatch and abilityUser and
                                        simquery.isUnitUnderOverwatch(abilityUser)
     if dangerousOverwatch then
-        tooltip:addSection():addWarning(
-                STRINGS.UI.DOOR_TRACKED, STRINGS.UI.DOOR_TRACKED_TT,
-                "gui/hud3/hud3_tracking_icon_sm.png", cdefs.COLOR_WATCHED_BOLD)
+        local msg = warningMessage or STRINGS.UI.DOOR_TRACKED_TT
+        tooltip:addSection():addOverwatchWarning(
+                STRINGS.UI.DOOR_TRACKED, msg, "gui/hud3/hud3_tracking_icon_sm.png",
+                cdefs.COLOR_WATCHED_BOLD)
     end
 
     return tooltip
@@ -567,7 +595,7 @@ function wrappedTargetingGenerateTooltip(self, x, y, ...)
     tooltip:addPrimarySection(mui_tooltip_section(tooltip, nil, result, nil))
 
     if self._dangerousOverwatch then
-        tooltip:addSection():addWarning(
+        tooltip:addSection():addOverwatchWarning(
                 STRINGS.UI.DOOR_TRACKED, STRINGS.UI.DOOR_TRACKED_TT,
                 "gui/hud3/hud3_tracking_icon_sm.png", cdefs.COLOR_WATCHED_BOLD)
     end
