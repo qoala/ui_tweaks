@@ -101,13 +101,14 @@ end
 
 -- UITR: (New)
 -- Also accepts pathInfo
-function PathRig:_isTrackPointKnown(optFootprints, pathPoint)
+-- isOrigin: whether or not a point is the origin or destination of a given step.
+function PathRig:_isTrackPointKnown(optFootprints, pathPoint, isOrigin)
     if not pathPoint then
         return false
     elseif optFootprints == "seen" then
         return pathPoint.isSeen or pathPoint.isTracked
     elseif optFootprints == "full" then
-        return pathPoint.isSeen or pathPoint.isTracked or pathPoint.isHeard
+        return pathPoint.isSeen or pathPoint.isTracked or (pathPoint.isHeard and not isOrigin)
     end
 end
 function PathRig:isUnitTrackKnown(unitID)
@@ -248,8 +249,8 @@ function PathRig:refreshTrackProps(optFootprints, unit, pathPoints, props)
                 parity = obsParity
             end
 
-            local isKnown0 = self:_isTrackPointKnown(optFootprints, prevPathPoint)
-            local isKnown1 = self:_isTrackPointKnown(optFootprints, pathPoint)
+            local isKnown0 = self:_isTrackPointKnown(optFootprints, prevPathPoint, true)
+            local isKnown1 = self:_isTrackPointKnown(optFootprints, pathPoint, false)
             local areBothSensed = prevPathPoint.isSensed and pathPoint.isSensed
             -- simlog("[UITR] track [%d] #%d %d,%d-%d,%d known=%s,%s sensed=%s", unit:getID(), i, prevPathPoint.x, prevPathPoint.y, pathPoint.x, pathPoint.y, tostring(isKnown0), tostring(isKnown1), tostring(areBothSensed))
             -- if prevPathPoint.observedIdx or pathPoint.observedIdx then
