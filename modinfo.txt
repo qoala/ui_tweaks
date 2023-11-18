@@ -1,5 +1,5 @@
 name = UI Tweaks Reloaded
 author = osheroff,qoalabear,RolandJ,Hekateras,Benjamin C. Lewis,Sizzlefrost
 icon = gui/icons/modicon_uitr.png
-version = 2.10.4
+version = 2.10.5
 workshop = 2660875942
