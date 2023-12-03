@@ -472,6 +472,7 @@ local old_hotkey_tooltip = abilityutil.hotkey_tooltip
 abilityutil.hotkey_tooltip = hotkey_tooltip
 
 hotkey_tooltip._uitrmeta_hotkeyTooltipBase = true
+hotkey_tooltip._supportsCanUseAbility = true
 
 function hotkey_tooltip:init(ability, sim, abilityOwner, tooltip)
     -- Meta shenanigans: override the cached base class on any hotkey_tooltip subclasses.
@@ -489,8 +490,15 @@ function hotkey_tooltip:init(ability, sim, abilityOwner, tooltip)
     -- Prepare the vanilla content as the first section of this tooltip
     -- ===
 
-    local enabled, reason = ability:canUseAbility(sim, abilityOwner)
-    local section
+    local enabled, reason
+    if self.canUseAbility then
+        -- Subclasses can define this method (and save enabled,reason prior to calling the superclass init)
+        -- if the ability's canUseAbility takes more arguments than the vanilla.
+        -- See below for a snippet that other modders can use to also be vanilla (non-UITR) compatible.
+        enabled, reason = self:canUseAbility()
+    else
+        enabled, reason = ability:canUseAbility(sim, abilityOwner)
+    end
     if reason then
         section = mui_tooltip_section(
                 self, util.toupper(ability.name),
@@ -500,6 +508,41 @@ function hotkey_tooltip:init(ability, sim, abilityOwner, tooltip)
     end
     self:addPrimarySection(section)
 end
+
+--[[
+-- For other modders that want to handle extended args for canUseAbility:
+
+-- === Patch abilityutil in your mod's `init` function.
+-- The if-check has this provide a vanilla patch only if UITR hasn't patched the class.
+-- (If your mod loads before UITR, UITR will overwrite this patch with its more complicated one above anyways.)
+
+if not abilityutil.hotkey_tooltip._supportsCanUseAbility then
+    function abilityutil.hotkey_tooltip:init( ability, sim, abilityOwner, tooltip )
+        local enabled, reason
+        if self.canUseAbility then
+            enabled, reason = self:canUseAbility()
+        else
+            enabled, reason = ability:canUseAbility( sim, abilityOwner )
+        end
+        if reason then
+            mui_tooltip.init( self, util.toupper( ability.name ), string.format( "%s\n<tthotkey><c:FF0000>%s</>", tooltip, reason ), ability.hotkey )
+        else
+            mui_tooltip.init( self, util.toupper( ability.name ), tooltip, ability.hotkey )
+        end
+    end
+end
+
+-- === In your tooltip class
+
+function my_tooltip:init(...) -- [replace with your args]
+   self._canUse, self._canUseReason = ability:canUseAbility(...) -- [replace with your args]
+   abilityutil.hotkey_tooltip.init( self, ability, sim, abilityOwner, tooltipText )
+   -- ...
+end
+function my_tooltip:canUseAbility()
+  return self._canUse, self._canUseReason
+end
+]]
 
 -- ===
 -- Wrapped onTooltip and acquireTargets for abilities that injects our custom tooltip warnings (installed by simability.create)
