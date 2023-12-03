@@ -474,7 +474,7 @@ abilityutil.hotkey_tooltip = hotkey_tooltip
 hotkey_tooltip._uitrmeta_hotkeyTooltipBase = true
 hotkey_tooltip._supportsCanUseAbility = true
 
-function hotkey_tooltip:init(ability, sim, abilityOwner, tooltip)
+function hotkey_tooltip:init(ability, sim, abilityOwner, tooltip, ...)
     -- Meta shenanigans: override the cached base class on any hotkey_tooltip subclasses.
     uitr_util.overwriteInheritance(
             getmetatable(self), old_hotkey_tooltip, hotkey_tooltip, "_uitrmeta_hotkeyTooltipBase",
@@ -497,7 +497,8 @@ function hotkey_tooltip:init(ability, sim, abilityOwner, tooltip)
         -- See below for a snippet that other modders can use to also be vanilla (non-UITR) compatible.
         enabled, reason = self:canUseAbility()
     else
-        enabled, reason = ability:canUseAbility(sim, abilityOwner)
+        -- Alternatively, additional args to init are interpreted as additional args to canUse.
+        enabled, reason = ability:canUseAbility(sim, abilityOwner, ...)
     end
     if reason then
         section = mui_tooltip_section(
