@@ -43,8 +43,9 @@ function _M.getColor(unit)
     if not traits.pathColor then
         simlog(
                 "[UITR][WARN] Assigning [%d] unit color from client. Colors may change on rewind/reload.%s",
-                tostring(unit and unit:getID()),
-                (uitr_util.canDebugTrace() and ("\n" .. debug.traceback()) or ""))
+                -- Only show trace if LOG FLAG is enabled. TODO: find the common cause of this warning)
+                tostring(unit and unit:getID()), (config.LOG_FLAGS["LOG_UITR"] and
+                        uitr_util.canDebugTrace() and ("\n" .. debug.traceback()) or ""))
         _M._assignColor(unit, traits)
     end
     return traits.pathColor
