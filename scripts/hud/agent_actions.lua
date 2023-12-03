@@ -310,6 +310,10 @@ local function isGuardEmitter(unit)
     end
 end
 
+local function isPathKnown(unit)
+    return (unit:getTraits().tagged or unit:getTraits().patrolObserved) and not unit:isDown()
+end
+
 local function addVisionActionsForUnit(hud, actions, targetUnit, isSeen, staleGhost)
     local localPlayer = hud._game:getLocalPlayer()
     local x, y
@@ -450,7 +454,7 @@ local function addVisionActionsForUnit(hud, actions, targetUnit, isSeen, staleGh
     end
 
     local pathRig = hud._game.boardRig:getPathRig()
-    if pathRig and targetUnit:getTraits().tagged or targetUnit:getTraits().patrolObserved then
+    if pathRig and isPathKnown(targetUnit) then
         local unitVisibility = pathRig:getUnitVisibility(targetUnit:getID())
         local doHide = not unitVisibility.hidePath
         table.insert(
