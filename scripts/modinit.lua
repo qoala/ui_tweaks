@@ -90,6 +90,23 @@ local function init(modApi)
         local debugDecoRig = include(modApi:getScriptPath() .. "/hud/uitrdebug_decorig")
         package.loaded["gameplay/uitrdebug_decorig"] = debugDecoRig
     end
+
+    do
+    local util = include("client_util")
+    local mainMenu = include("states/state-main-menu")
+
+    local function onClickEndCard()
+        local endCard = include(modApi:getScriptPath().."/state-end-card")()
+        endCard:show()
+    end
+
+    local oldMainMenuOnLoad = mainMenu.onLoad
+    function mainMenu:onLoad()
+        oldMainMenuOnLoad(self)
+
+        self.screen.binder.signUpBtn.onClick = onClickEndCard -- util.makeDelegate(nil, onClickEndCard, self)
+    end
+    end
 end
 
 --[[
@@ -108,6 +125,7 @@ local function unload(modApi)
 
     modApi:insertUIElements(include(scriptPath .. "/screens/base_screen_inserts"))
     modApi:modifyUIElements(include(scriptPath .. "/screens/base_screen_modifications"))
+    modApi:addNewUIScreen("modal-end-card.lua", scriptPath .. "/screens/modal-end-card")
 
     if uitr_util.checkEnabled() then
         modApi:insertUIElements(include(scriptPath .. "/screens/screen_inserts"))
