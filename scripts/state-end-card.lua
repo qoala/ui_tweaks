@@ -14,7 +14,7 @@ local simdefs = include( "sim/simdefs" )
 local endCard = class()
 
 function endCard:init()
-    self._screen = mui.createScreen("death-dialog.lua")
+	self._screen = mui.createScreen("death-dialog.lua")
 end
 
 function endCard:show()
@@ -22,17 +22,19 @@ function endCard:show()
 
 	MOAIFmodDesigner.stopMusic()
 	MOAIFmodDesigner.stopSound("theme")
-    self._screen.binder.pnl:setVisible(false)
+	self._screen.binder.pnl:setVisible(false)
+	-- self._screen.binder.blackbg:setVisible(false)
 	-- FMODMixer:pushMix("frontend")
 
     rig_util.wait(2.0 * cdefs.SECONDS)
 
 	MOAIFmodDesigner.playSound("SpySociety/Music/music_title","theme")
-    rig_util.wait(0.5 * cdefs.SECONDS)
+	-- MOAIFmodDesigner.playSound("SpySociety/Music/music_map","theme")
+	rig_util.wait(0.5 * cdefs.SECONDS)
 
-    local popup = mui.createScreen("modal-end-card.lua")
-    mui.activateScreen(popup)
-    MOAIFmodDesigner.playSound("SpySociety/HUD/gameplay/unlock_agent")
+	local popup = mui.createScreen("modal-end-card.lua")
+	mui.activateScreen(popup)
+	MOAIFmodDesigner.playSound("SpySociety/HUD/gameplay/unlock_agent")
 end
 
 function endCard:hide()
