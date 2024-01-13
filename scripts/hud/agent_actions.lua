@@ -311,7 +311,8 @@ local function isGuardEmitter(unit)
 end
 
 local function isPathKnown(unit)
-    return (unit:getTraits().tagged or unit:getTraits().patrolObserved) and not unit:isDown()
+    return (unit:getTraits().tagged or unit:getTraits().patrolObserved) and not unit:isDown() and
+                   not unit:getTraits().takenDrone
 end
 
 local function addVisionActionsForUnit(hud, actions, targetUnit, isSeen, staleGhost)
