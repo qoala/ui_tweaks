@@ -44,12 +44,17 @@ end
 
 local function patchObservePath()
     local observePath = abilitydefs.lookupAbility("observePath")
-    observePath.createToolTip = function( self, sim, abilityOwner, abilityUser, targetID )
+    observePath.createToolTip = function(self, sim, abilityOwner, abilityUser, targetID)
         local target = sim:getUnit(targetID)
-        local observe_title = STRINGS.ABILITIES.OBSERVE .. " " .. target:getUnitData().name
+        local observe_title = STRINGS.ABILITIES.OBSERVE
+        if target then
+            observe_title = observe_title .. " " .. target:getName()
+        end
         return abilityutil.formatToolTip(observe_title, STRINGS.ABILITIES.OBSERVE_DESC)
     end
 end
 
-return {patchOverwatchFlag = patchOverwatchFlag,
-        patchObservePath = patchObservePath}
+return { --
+    patchOverwatchFlag = patchOverwatchFlag,
+    patchObservePath = patchObservePath,
+}
