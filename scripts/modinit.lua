@@ -174,6 +174,7 @@ local function lateUnload(modApi, mod_options)
 
     local modAbilitydefs = include(scriptPath .. "/patches/abilitydefs")
     modAbilitydefs.patchOverwatchFlag()
+    modAbilitydefs.patchObservePath()
 
     if SCRIPT_PATHS.corp_neptune then
         local modPrefabs = include(scriptPath .. "/patches/prefabs_neptune")
