@@ -151,6 +151,10 @@ function options_dialog:show(...)
     self._uitr_tempID = 0
 
     local uitrResetBtn = self._screen.binder.uitrResetOptionsBtn
+    if uitrResetBtn.isnull then
+        simlog("[UITR] WARNING - Options UI failed to load. No sim constructor?")
+        return
+    end
     uitrResetBtn:setText(STRINGS.UITWEAKSR.UI.BTN_RESET_OPTIONS)
     uitrResetBtn.onClick = util.makeDelegate(nil, onClickUitrResetOptions, self)
 
@@ -223,6 +227,9 @@ function options_dialog:refreshUitrSettings(uitrSettings)
 end
 
 function options_dialog:retrieveUitrSettings(uitrSettings)
+    if self._screen.binder.uitrOptionsList.isnull then
+        return
+    end
     local items = self._screen.binder.uitrOptionsList:getItems()
 
     for _, item in ipairs(items) do
