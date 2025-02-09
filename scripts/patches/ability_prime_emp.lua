@@ -16,7 +16,12 @@ emp_tooltip.activate = function(self, ...)
     end
 
     local x0, y0 = self._unit:getLocation()
-    local radius = simdefs.SOUND_RANGE_1
+    local radius = nil
+    if self._emp:hasTrait("soundRange") then
+        radius = self._emp:getTraits().soundRange
+    else
+        radius = simdefs.SOUND_RANGE_1
+    end
     local sim = self._game.simCore
     local player = sim:getPC()
     local hearingUnits = {}
