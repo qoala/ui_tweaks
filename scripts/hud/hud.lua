@@ -1,5 +1,6 @@
 local mui_defs = include("mui/mui_defs")
 local mui_tooltip = include("mui/mui_tooltip")
+local mui_util = include("mui/mui_util")
 local cdefs = include("client_defs")
 local util = include("client_util")
 local simdefs = include("sim/simdefs")
@@ -267,6 +268,21 @@ end
 
 -- ===
 
+local STATE_REPLAYING = 9
+
+local function onClickTacticalToggle(self)
+    self.tacticalViewEnabled = not self.tacticalViewEnabled
+end
+
+function hudAppend:_onInputEvent_listenForTacticalToggle(event)
+    if uitr_util.checkOption("tacticalToggle") == 2 and self._state ~= STATE_REPLAYING and
+     event.eventType == mui_defs.EVENT_KeyDown and util.isKeyBindingEvent("toggleTactical", event) then
+        self.tacticalViewEnabled = not self.tacticalViewEnabled
+    end
+end
+
+-- ===
+
 local hud = include("hud/hud")
 local oldCreateHud = hud.createHud
 
@@ -334,6 +350,46 @@ hud.createHud = function(...)
             oldShowMovementRange(self, unit, ...)
 
             self:_showMovementRange_fixCloakDistance(unit)
+        end
+    end
+
+    do -- Tactical View Toggle
+        hudObject.tacticalViewEnabled = false
+
+        hudObject._screen.binder.btnToggleTac.onClick = util.makeDelegate(nil, onClickTacticalToggle, hudObject)
+
+        hudObject._onInputEvent_listenForTacticalToggle = hudAppend._onInputEvent_listenForTacticalToggle
+        local _onInputEvent = hudObject.onInputEvent
+        function hudObject:onInputEvent(event, ...)
+            _onInputEvent(self, event, ...)
+            self:_onInputEvent_listenForTacticalToggle(event)
+        end
+
+        function hudObject:refreshTacticalView()    
+            local isEnabled = self.tacticalViewEnabled -- 2, keybind and button toggled
+            if uitr_util.checkOption("tacticalToggle") == 1 then -- 1, keybind held, button toggled
+                isEnabled = self.tacticalViewEnabled ~= util.isKeyBindingDown("toggleTactical")
+            elseif not uitr_util.checkOption("tacticalToggle") then -- false, keybind and button held
+                isEnabled = util.isKeyBindingDown("toggleTactical") or self._screen.binder.btnToggleTac:isActive()
+            end
+            local soundEnabled = not uitr_util.checkOption("tacticalToggle")
+
+            if self._state == STATE_REPLAYING or self._isMainframe then
+                isEnabled = false
+            end
+
+            local gfxOptions = self._game:getGfxOptions()
+            if isEnabled ~= gfxOptions.bTacticalView then
+
+                if soundEnabled then
+                    MOAIFmodDesigner.playSound(isEnabled and
+                     "SpySociety/HUD/gameplay/TacticalView_Open" or
+                     "SpySociety/HUD/gameplay/TacticalView_Close")
+                end
+
+                gfxOptions.bTacticalView = isEnabled
+                self._game.boardRig:refresh()
+            end
         end
     end
 

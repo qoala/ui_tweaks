@@ -52,6 +52,13 @@ local UI_TWEAKS_STRINGS = {
             "ON",
             "ALWAYS",
         },
+        TACTICAL_TOGGLE = "Tactical View Toggle",
+        TACTICAL_TOGGLE_TIP = "How to activate Tactical View\nHELD: Only while hotkey or button are pressed\nMIXED: Button toggles tactical view, inverted while hotkey is pressed\nTOGGLE: Hotkey and button toggle tactical view\nCREDIT: Mobbstar",
+        TACTICAL_TOGGLE_OPTIONS = { --
+            "HELD/VANILLA",
+            "MIXED",
+            "TOGGLE",
+        },
         CLEAN_SHIFT = "SHIFT Hides Context Actions.",
         CLEAN_SHIFT_TIP = "Holding SHIFT hides targeted action icons, making it easier to select or move agents in crowded areas.\nThis is in addition to the vanilla keybinding where holding SHIFT highlights tiles watched by units under the cursor.",
         SPRINT_NOISE_PREVIEW = "Sprint Noise Preview",
