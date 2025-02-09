@@ -150,6 +150,14 @@ local UITR_OPTIONS = {
         strings = STRINGS.UITWEAKSR.OPTIONS.TACTICAL_CLOUD_OPTIONS,
     },
     {
+        id = "tacticalToggle",
+        name = STRINGS.UITWEAKSR.OPTIONS.TACTICAL_TOGGLE,
+        tip = STRINGS.UITWEAKSR.OPTIONS.TACTICAL_TOGGLE_TIP,
+        values = {false, 1, 2},
+        value = 1,
+        strings = STRINGS.UITWEAKSR.OPTIONS.TACTICAL_TOGGLE_OPTIONS,
+    },
+    {
         id = "cleanShift",
         name = STRINGS.UITWEAKSR.OPTIONS.CLEAN_SHIFT,
         tip = STRINGS.UITWEAKSR.OPTIONS.CLEAN_SHIFT_TIP,
