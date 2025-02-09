@@ -87,6 +87,8 @@ local function init(modApi)
 
     include(modApi:getScriptPath() .. "/hud/state-map-screen")
 
+    include(modApi:getScriptPath() .. "/patches/ability_prime_emp")
+
     if config.DEV then
         local debugDecoRig = include(modApi:getScriptPath() .. "/hud/uitrdebug_decorig")
         package.loaded["gameplay/uitrdebug_decorig"] = debugDecoRig
