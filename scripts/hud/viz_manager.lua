@@ -5,9 +5,9 @@ local function onUnitRefreshTracks(viz, eventData)
     local unitID = eventData
     local player = viz.game.boardRig:getLocalPlayer()
     local pathRig = viz.game.boardRig:getPathRig()
-    if pathRig:_shouldDrawTracks(unitID) then
+    if player and pathRig:_shouldDrawTracks(unitID) then
         pathRig:refreshTracks(unitID, player:getTracks(unitID))
-    elseif pathRig._tracks[unitID] then
+    elseif player and pathRig._tracks[unitID] then
         pathRig:refreshTrackProps(false, nil, nil, pathRig._tracks[unitID])
     end
 end
