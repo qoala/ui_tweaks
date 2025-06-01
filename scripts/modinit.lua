@@ -11,7 +11,17 @@ local function earlyInit(modApi)
         -- Extract upvalues from mission_scoring, so must load before any other appends.
         "Community Bug Fixes",
         "Escorts Fixed",
+        -- To patch broken anims.
+        "Cover overlays for agent mods",
     }
+end
+
+local function findModByName(name)
+    for i, modData in ipairs(mod_manager.mods) do
+        if name and modData.name == name then
+            return modData
+        end
+    end
 end
 
 local function forceClientUtilPackageLoad()
@@ -171,6 +181,11 @@ local function lateUnload(modApi, mod_options)
         local modPropDefs = include(scriptPath .. "/patches/propdefs")
         for name, propDef in pairs(modPropDefs.propdefsCoverTest) do
             modApi:addPropDef(name, propDef, false)
+        end
+    end
+    if findModByName("Cover overlays for agent mods") then
+        for name, animDef in pairs(modAnimdefs.animdefsShirshCoverOverlays) do
+            modApi:addAnimDef(name, animDef)
         end
     end
 

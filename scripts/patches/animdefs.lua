@@ -435,8 +435,22 @@ local animdefsCoverTest = {
     },
 }
 
+local animdefsShirshCoverOverlays = {
+    kanim_light_revolver = {
+        wireframe = {
+            "data/anims/characters/guns/gun_pistol_lowbore_overlay.abld",
+            "data/anims/characters/guns/gun_pistol_plasma_overlay.abld",
+        },
+        -- Current version of Cover Overlays For Agent Mods uses a table for build and grp_build.
+        build = "data/anims/characters/guns/gun_pistol_lowbore.abld",
+        grp_build = "data/anims/characters/guns/grp_gun_pistol_lowbore.abld",
+        anims = {},
+    },
+}
+
 return {
     animdefsFixup = animdefsFixup,
+    animdefsShirshCoverOverlays = animdefsShirshCoverOverlays,
     animdefsTactical = animdefsTactical,
     animdefsCoverTest = animdefsCoverTest,
 }
