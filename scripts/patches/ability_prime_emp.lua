@@ -4,7 +4,8 @@ local simquery = include("sim/simquery")
 local mathutil = include("modules/mathutil")
 local uitr_util = include(SCRIPT_PATHS.qed_uitr .. "/uitr_util")
 
-local emp_tooltip = uitr_util.extractUpvalue(abilitydefs._abilities.prime_emp.onTooltip, "emp_tooltip")
+local emp_tooltip = uitr_util.extractUpvalue(
+        abilitydefs._abilities.prime_emp.onTooltip, "emp_tooltip")
 
 local _activate = emp_tooltip.activate
 emp_tooltip.activate = function(self, ...)
@@ -28,20 +29,20 @@ emp_tooltip.activate = function(self, ...)
 
     local cells = simquery.rasterCircle(sim, x0, y0, radius)
     for i = 1, #cells, 2 do
-        local x1, y1 = cells[i], cells[i+1]
+        local x1, y1 = cells[i], cells[i + 1]
         local cellId = simquery.toCellID(x1, y1)
         if sim:canPlayerSee(player, x1, y1) then -- check real units
             for _, unit in ipairs(sim:getCell(x1, y1).units) do
                 if unit:getTraits().hasHearing and sim:canPlayerSeeUnit(player, unit) and
-                    unit:getPlayerOwner() ~= player and not unit:isDown() then
+                        unit:getPlayerOwner() ~= player and not unit:isDown() then
                     table.insert(hearingUnits, unit)
                 end
             end
         elseif player._ghost_cells[cellId] then -- check ghost units
             for _, ghostUnit in ipairs(player._ghost_cells[cellId].units) do
                 local unit = uitr_util.getKnownUnitFromGhost(sim, ghostUnit)
-                if unit and ghostUnit:getTraits().hasHearing and
-                    ghostUnit:getPlayerOwner() ~= player and not unit:isDown() then
+                if unit and ghostUnit:getTraits().hasHearing and ghostUnit:getPlayerOwner() ~=
+                        player and not unit:isDown() then
                     table.insert(hearingUnits, unit)
                 end
             end
