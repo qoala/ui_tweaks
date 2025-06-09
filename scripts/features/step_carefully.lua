@@ -119,6 +119,7 @@ function astar_handlers.handler:_handleNode(to_cell, from_node, goal_cell, ...)
 
         -- Check max MP against the real MP cost.
         if maxMP and maxMP < n.realCost then
+            self._maxMP = maxMP -- Finally: restore maxMP before return.
             return
         end
 
