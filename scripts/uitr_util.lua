@@ -128,6 +128,15 @@ local UITR_OPTIONS = {
         refreshTypes = {[REFRESH.BOARDRIG] = true},
     },
     {
+        id = "invisCountdown",
+        name = STRINGS.UITWEAKSR.OPTIONS.INVIS_COUNTDOWN,
+        tip = STRINGS.UITWEAKSR.OPTIONS.INVIS_COUNTDOWN_TIP,
+        values = {false, 1},
+        value = 1,
+        strings = STRINGS.UITWEAKSR.OPTIONS.INVIS_COUNTDOWN_OPTIONS,
+        refreshTypes = {[REFRESH.BOARDRIG] = true},
+    },
+    {
         id = "preciseIcons",
         name = STRINGS.UITWEAKSR.OPTIONS.PRECISE_ICONS,
         tip = STRINGS.UITWEAKSR.OPTIONS.PRECISE_ICONS_TIP,

@@ -41,6 +41,12 @@ local UI_TWEAKS_STRINGS = {
         PRECISE_AP = "Precise AP",
         PRECISE_AP_TIP = "Round AP to .5 instead of whole number",
         PRECISE_AP_HALF = "0.5",
+        INVIS_COUNTDOWN = "Invisibility Countdowns",
+        INVIS_COUNTDOWN_TIP = "Show turn and AP countdowns when agents are cloaked.",
+        INVIS_COUNTDOWN_OPTIONS = { --
+            "OFF/VANILLA",
+            "TOOLTIP",
+        },
         PRECISE_ICONS = "Precise Icons",
         PRECISE_ICONS_TIP = "Label stim, paralyzer, cloak, etc with the different level of item.\nCREDIT: RolandJ",
         TACTICAL_LAMP_VIEW = "Tactical Lamp View",
@@ -141,6 +147,10 @@ local UI_TWEAKS_STRINGS = {
         HOVER_EFFECT = "EFFECT: {1}",
         PULSE_EFFECT = "PULSE SCANNER: {1}",
         HOVER_INTEREST = "INTEREST: {1}",
+
+        INVIS_COUNTDOWN_TIP = "Invisible for <c:F4FF78>{1} {1:turn|turns}</c>",
+        INVIS_COUNTDOWN_TIP_EXACT_DIST = "Invisible for <c:F4FF78>{1} {1:turn|turns}</c> or <c:F4FF78>{2} {2:tile|tiles}</c>",
+        INVIS_COUNTDOWN_TIP_FUZZY_DIST = "Invisible for <c:F4FF78>{1} {1:turn|turns}</c> or <c:F4FF78>up to {2} {2:tile|tiles}</c>",
 
         MAP_TRAVEL_TIME = "{1}{1:h|h}",
 
