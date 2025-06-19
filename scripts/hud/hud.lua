@@ -3,6 +3,7 @@ local mui_tooltip = include("mui/mui_tooltip")
 local mui_util = include("mui/mui_util")
 local cdefs = include("client_defs")
 local util = include("client_util")
+local hudClass = include("hud/hud") -- Sim Constructor exposes the hud class directly.
 local simdefs = include("sim/simdefs")
 local simquery = include("sim/simquery")
 
@@ -36,9 +37,7 @@ local IMG_PATHTRACK_HL = {
 }
 
 -- ===
-
-local hudAppend = {}
-
+-- New methods and local helper functions
 -- ===
 
 local function onClickVisionToggle(hud)
@@ -52,7 +51,7 @@ local function visionModeTooltip(currentEnable)
                     STRINGS.UITWEAKSR.UI.BTN_VISIONMODE_ENABLE_TXT, "UITR_VISIONMODE")
 end
 
-function hudAppend:uitr_setVisionMode(doEnable)
+function hudClass:uitr_setVisionMode(doEnable)
     self._uitr_isVisionMode = doEnable
 
     local btnToggleVisionMode = self._screen.binder.topPnl.binder.btnToggleVisionMode
@@ -142,7 +141,7 @@ local function globalPathTrackCycleTooltip(pathVisible, trackVisible)
             STRINGS.UITWEAKSR.UI.BTN_GLOBAL_PT_CYCLE_HEADER, txt, "UITR_CYCLE_PATH_FOOTPRINT")
 end
 
-function hudAppend:uitr_refreshInfoGlobalButtons()
+function hudClass:uitr_refreshInfoGlobalButtons()
     local pathRig = self._game.boardRig:getPathRig()
     local arePathsShown = pathRig:getGlobalPathVisibility() == uitr_util.VISIBILITY.SHOW
     local areTracksShown = pathRig:getGlobalTrackVisibility() == uitr_util.VISIBILITY.SHOW
@@ -156,8 +155,6 @@ function hudAppend:uitr_refreshInfoGlobalButtons()
     btnCyclePathsTracks:setActiveImage(IMG_PATHTRACK_HL[arePathsShown][areTracksShown])
     btnCyclePathsTracks:setHoverImage(IMG_PATHTRACK_HL[arePathsShown][areTracksShown])
 end
-
--- ===
 
 -- ===
 
@@ -176,7 +173,7 @@ local function createGridCoordinate(self, x, y, labelText)
     return widget
 end
 
-function hudAppend:_refreshUITRGridCoordinatesAgentRelative()
+function hudClass:_refreshUITRGridCoordinatesAgentRelative()
     if self._game:isReplaying() then
         return
     end
@@ -228,7 +225,7 @@ function hudAppend:_refreshUITRGridCoordinatesAgentRelative()
     end
 end
 
-function hudAppend:_refreshUITRGridCoordinates()
+function hudClass:_refreshUITRGridCoordinates()
     self._world_hud:destroyWidgets(HUD_GRID_COORDS)
 
     local gridOption = uitr_util.checkOption("gridCoords")
@@ -237,7 +234,7 @@ function hudAppend:_refreshUITRGridCoordinates()
     end
 end
 
-function hudAppend:_showMovementRange_fixCloakDistance(unit)
+function hudClass:_showMovementRange_fixCloakDistance(unit)
     if self._cloakCells and unit:getTraits().cloakDistance and unit:getTraits().cloakDistance > 0 then
         local sim = self._game.simCore
         local simquery = sim:getQuery()
@@ -274,7 +271,7 @@ local function onClickTacticalToggle(self)
     self.tacticalViewEnabled = not self.tacticalViewEnabled
 end
 
-function hudAppend:_onInputEvent_listenForTacticalToggle(event)
+function hudClass:_onInputEvent_listenForTacticalToggle(event)
     if uitr_util.checkOption("tacticalToggle") == 2 and self._state ~= STATE_REPLAYING and
             event.eventType == mui_defs.EVENT_KeyDown and
             util.isKeyBindingEvent("toggleTactical", event) then
@@ -283,119 +280,97 @@ function hudAppend:_onInputEvent_listenForTacticalToggle(event)
 end
 
 -- ===
+-- Appends/overwrites
+-- ===
 
-local hud = include("hud/hud")
-local oldCreateHud = hud.createHud
-
-hud.createHud = function(...)
-    local hudObject = oldCreateHud(...)
-
-    local btnToggleVisionMode = hudObject._screen.binder.topPnl.binder.btnToggleVisionMode
-    if btnToggleVisionMode and not btnToggleVisionMode.isnull then -- Vision Mode
-        hudObject._uitr_isVisionMode = false
-        hudObject.uitr_setVisionMode = hudAppend.uitr_setVisionMode
-        hudObject.uitr_refreshInfoGlobalButtons = hudAppend.uitr_refreshInfoGlobalButtons
-
-        local oldOnSimEvent = hudObject.onSimEvent
-        function hudObject:onSimEvent(ev, ...)
-            local result = oldOnSimEvent(self, ev, ...)
-
-            if ev.eventType == simdefs.EV_TURN_END then
-                self._game.simCore:uitr_resetAllUnitVision()
-                if STICKY_VISIBILITY[uitr_util.checkOption("recentFootprintsMode")] then
-                    -- Global toggles are sticky.
-                    self._game.boardRig:getPathRig():resetTemporaryVisibility()
-                else
-                    self._game.boardRig:getPathRig():resetVisibility()
-                end
-                self._game.boardRig:getPathRig():refreshAllTracks()
-            end
-
-            return result
-        end
+local oldInit = hudClass.init
+function hudClass:init(...)
+    oldInit(self, ...)
+    -- Set up Vision Mode buttons, if loaded into screens.
+    local btnToggleVisionMode = self._screen.binder.topPnl.binder.btnToggleVisionMode
+    if btnToggleVisionMode and not btnToggleVisionMode.isnull then
+        self._uitr_isVisionMode = false
 
         btnToggleVisionMode:setTooltip(visionModeTooltip(false))
         btnToggleVisionMode:setHotkey("UITR_VISIONMODE")
-        btnToggleVisionMode.onClick = util.makeDelegate(nil, onClickVisionToggle, hudObject)
+        btnToggleVisionMode.onClick = util.makeDelegate(nil, onClickVisionToggle, self)
 
-        local btnHidePathsTracks = hudObject._screen.binder.topPnl.binder.btnInfoHidePathsTracks
-        btnHidePathsTracks.onClick = util.makeDelegate(nil, onClickHidePathsTracks, hudObject)
+        local btnHidePathsTracks = self._screen.binder.topPnl.binder.btnInfoHidePathsTracks
+        btnHidePathsTracks.onClick = util.makeDelegate(nil, onClickHidePathsTracks, self)
         btnHidePathsTracks:setTooltip(globalPathTrackHideTooltip())
-        local btnCyclePathsTracks = hudObject._screen.binder.topPnl.binder.btnInfoCyclePathsTracks
+        local btnCyclePathsTracks = self._screen.binder.topPnl.binder.btnInfoCyclePathsTracks
         btnCyclePathsTracks:setHotkey("UITR_CYCLE_PATH_FOOTPRINT")
-        btnCyclePathsTracks.onClick = util.makeDelegate(
-                nil, onClickPathTrackVisibilityCycle, hudObject)
-        hudObject:uitr_refreshInfoGlobalButtons()
+        btnCyclePathsTracks.onClick = util.makeDelegate(nil, onClickPathTrackVisibilityCycle, self)
+        self:uitr_refreshInfoGlobalButtons()
+    end
+    -- Tactical View Toggle
+    self.tacticalViewEnabled = false
+    self._screen.binder.btnToggleTac.onClick = util.makeDelegate(nil, onClickTacticalToggle, self)
+end
+
+local oldOnSimEvent = hudClass.onSimEvent
+function hudClass:onSimEvent(ev, ...)
+    local result = oldOnSimEvent(self, ev, ...)
+    if ev.eventType == simdefs.EV_TURN_END and self._uitr_isVisionMode ~= nil then
+        self._game.simCore:uitr_resetAllUnitVision()
+        if STICKY_VISIBILITY[uitr_util.checkOption("recentFootprintsMode")] then
+            -- Global toggles are sticky.
+            self._game.boardRig:getPathRig():resetTemporaryVisibility()
+        else
+            self._game.boardRig:getPathRig():resetVisibility()
+        end
+        self._game.boardRig:getPathRig():refreshAllTracks()
+    end
+    return result
+end
+
+local oldRefreshHud = hudClass.refreshHud
+function hudClass:refreshHud(...)
+    oldRefreshHud(self, ...)
+    -- Grid Coordinates, HUD-refresh for Info global buttons.
+    self:uitr_refreshInfoGlobalButtons()
+    self:_refreshUITRGridCoordinates()
+end
+
+local oldShowMovementRange = hudClass.showMovementRange
+function hudClass:showMovementRange(unit, ...)
+    oldShowMovementRange(self, unit, ...)
+    -- Cloak Distance
+    self:_showMovementRange_fixCloakDistance(unit)
+end
+
+local oldOnInputEvent = hudClass.onInputEvent
+function hudClass:onInputEvent(event, ...)
+    oldOnInputEvent(self, event, ...)
+    -- Tactical View Toggle
+    self:_onInputEvent_listenForTacticalToggle(event)
+end
+
+-- Overwrite vanilla refreshTacticalView.
+function hudClass:refreshTacticalView()
+    local isEnabled = self.tacticalViewEnabled -- 2, keybind and button toggled
+    if uitr_util.checkOption("tacticalToggle") == 1 then -- 1, keybind held, button toggled
+        isEnabled = self.tacticalViewEnabled ~= util.isKeyBindingDown("toggleTactical")
+    elseif not uitr_util.checkOption("tacticalToggle") then -- false, keybind and button held
+        isEnabled = util.isKeyBindingDown("toggleTactical") or
+                            self._screen.binder.btnToggleTac:isActive()
+    end
+    local soundEnabled = not uitr_util.checkOption("tacticalToggle")
+
+    if self._state == STATE_REPLAYING or self._isMainframe then
+        isEnabled = false
     end
 
-    do -- Grid Coordinates, HUD-refresh for Info global buttons.
-        hudObject._refreshUITRGridCoordinates = hudAppend._refreshUITRGridCoordinates
-        hudObject._refreshUITRGridCoordinatesAgentRelative =
-                hudAppend._refreshUITRGridCoordinatesAgentRelative
+    local gfxOptions = self._game:getGfxOptions()
+    if isEnabled ~= gfxOptions.bTacticalView then
 
-        local oldRefreshHud = hudObject.refreshHud
-        function hudObject:refreshHud(...)
-            oldRefreshHud(self, ...)
-
-            self:uitr_refreshInfoGlobalButtons()
-            self:_refreshUITRGridCoordinates()
+        if soundEnabled then
+            MOAIFmodDesigner.playSound(
+                    isEnabled and "SpySociety/HUD/gameplay/TacticalView_Open" or
+                            "SpySociety/HUD/gameplay/TacticalView_Close")
         end
+
+        gfxOptions.bTacticalView = isEnabled
+        self._game.boardRig:refresh()
     end
-
-    do -- Cloak Distance
-        hudObject._showMovementRange_fixCloakDistance =
-                hudAppend._showMovementRange_fixCloakDistance
-
-        local oldShowMovementRange = hudObject.showMovementRange
-        function hudObject:showMovementRange(unit, ...)
-            oldShowMovementRange(self, unit, ...)
-
-            self:_showMovementRange_fixCloakDistance(unit)
-        end
-    end
-
-    do -- Tactical View Toggle
-        hudObject.tacticalViewEnabled = false
-
-        hudObject._screen.binder.btnToggleTac.onClick = util.makeDelegate(
-                nil, onClickTacticalToggle, hudObject)
-
-        hudObject._onInputEvent_listenForTacticalToggle =
-                hudAppend._onInputEvent_listenForTacticalToggle
-        local _onInputEvent = hudObject.onInputEvent
-        function hudObject:onInputEvent(event, ...)
-            _onInputEvent(self, event, ...)
-            self:_onInputEvent_listenForTacticalToggle(event)
-        end
-
-        function hudObject:refreshTacticalView()
-            local isEnabled = self.tacticalViewEnabled -- 2, keybind and button toggled
-            if uitr_util.checkOption("tacticalToggle") == 1 then -- 1, keybind held, button toggled
-                isEnabled = self.tacticalViewEnabled ~= util.isKeyBindingDown("toggleTactical")
-            elseif not uitr_util.checkOption("tacticalToggle") then -- false, keybind and button held
-                isEnabled = util.isKeyBindingDown("toggleTactical") or
-                                    self._screen.binder.btnToggleTac:isActive()
-            end
-            local soundEnabled = not uitr_util.checkOption("tacticalToggle")
-
-            if self._state == STATE_REPLAYING or self._isMainframe then
-                isEnabled = false
-            end
-
-            local gfxOptions = self._game:getGfxOptions()
-            if isEnabled ~= gfxOptions.bTacticalView then
-
-                if soundEnabled then
-                    MOAIFmodDesigner.playSound(
-                            isEnabled and "SpySociety/HUD/gameplay/TacticalView_Open" or
-                                    "SpySociety/HUD/gameplay/TacticalView_Close")
-                end
-
-                gfxOptions.bTacticalView = isEnabled
-                self._game.boardRig:refresh()
-            end
-        end
-    end
-
-    return hudObject
 end
