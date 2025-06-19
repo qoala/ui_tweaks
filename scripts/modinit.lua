@@ -40,7 +40,6 @@ local function init(modApi)
     KLEIResourceMgr.MountPackage(dataPath .. "/gui.kwad", "data")
     KLEIResourceMgr.MountPackage(dataPath .. "/images.kwad", "data")
     KLEIResourceMgr.MountPackage(dataPath .. "/rrni_gui.kwad", "data")
-    KLEIResourceMgr.MountPackage(dataPath .. "/tlv_anims.kwad", "data")
 
     forceClientUtilPackageLoad()
 
