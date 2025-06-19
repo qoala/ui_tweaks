@@ -46,6 +46,7 @@ local UI_TWEAKS_STRINGS = {
         INVIS_COUNTDOWN_OPTIONS = { --
             "OFF/VANILLA",
             "TOOLTIP",
+            "PANEL",
         },
         PRECISE_ICONS = "Precise Icons",
         PRECISE_ICONS_TIP = "Label stim, paralyzer, cloak, etc with the different level of item.\nCREDIT: RolandJ",
@@ -151,6 +152,9 @@ local UI_TWEAKS_STRINGS = {
         INVIS_COUNTDOWN_TIP = "Invisible for <c:F4FF78>{1} {1:turn|turns}</c>",
         INVIS_COUNTDOWN_TIP_EXACT_DIST = "Invisible for <c:F4FF78>{1} {1:turn|turns}</c> or <c:F4FF78>{2} {2:tile|tiles}</c>",
         INVIS_COUNTDOWN_TIP_FUZZY_DIST = "Invisible for <c:F4FF78>{1} {1:turn|turns}</c> or <c:F4FF78>up to {2} {2:tile|tiles}</c>",
+        INVIS_COUNTDOWN_HEADER = "CLOAKED",
+        INVIS_COUNTDOWN_TURNS = "{1:TURN|TURNS}",
+        INVIS_COUNTDOWN_TURNS_SHORT = "T",
 
         MAP_TRAVEL_TIME = "{1}{1:h|h}",
 

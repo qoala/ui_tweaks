@@ -17,7 +17,7 @@ local function _calculateCloakDistance(unit)
     local diagFrac = math.sqrt(2) - 1
     if distFrac < diagFrac then
         return distFloor
-    elseif distFrac < 2 * diagFrac then
+    elseif (distFrac < 2 * diagFrac) or (distFloor < 2) then
         return distFloor + 0.5
     else
         return distFloor + 0.9
@@ -30,13 +30,13 @@ local function onAgentTooltip(tooltip, unit)
         local RJInvisTooltip =
                 (unit:getSim():getParams().difficultyOptions.RJ_InvisiTooltip_Enabled or {}).enabled
         local uitrInvisOption = uitr_util.checkOption("invisCountdown")
-        if not RJInvisTooltip and uitrInvisOption == 1 then
+        if not RJInvisTooltip and uitrInvisOption then
             local tileCount = _calculateCloakDistance(unit)
             if not tileCount then
                 tooltip:addLine(
                         util.sformat(
                                 STRINGS.UITWEAKSR.UI.INVIS_COUNTDOWN_TIP,
-                                unit:getTraits().invisDuration))
+                                unit:getTraits().invisDuration or '-'))
             elseif tileCount == 0 then
                 tooltip:addLine(
                         util.sformat(

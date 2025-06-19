@@ -14,6 +14,7 @@ local function earlyInit(modApi)
         -- To patch broken anims.
         "Cover overlays for agent mods",
     }
+    -- PE replaces hud/home_panel in earlyInit. Any load order is safe.
 end
 
 local function findModByName(name)
@@ -83,6 +84,7 @@ local function init(modApi)
     include(modApi:getScriptPath() .. "/hud/agentrig")
     include(modApi:getScriptPath() .. "/hud/boardrig")
     include(modApi:getScriptPath() .. "/hud/button_layout")
+    include(modApi:getScriptPath() .. "/hud/home_panel")
     include(modApi:getScriptPath() .. "/hud/hud")
     include(modApi:getScriptPath() .. "/hud/mainframe_panel")
     include(modApi:getScriptPath() .. "/hud/options_dialog")

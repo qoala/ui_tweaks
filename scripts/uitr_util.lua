@@ -131,7 +131,7 @@ local UITR_OPTIONS = {
         id = "invisCountdown",
         name = STRINGS.UITWEAKSR.OPTIONS.INVIS_COUNTDOWN,
         tip = STRINGS.UITWEAKSR.OPTIONS.INVIS_COUNTDOWN_TIP,
-        values = {false, 1},
+        values = {false, 1, 2},
         value = 1,
         strings = STRINGS.UITWEAKSR.OPTIONS.INVIS_COUNTDOWN_OPTIONS,
         refreshTypes = {[REFRESH.BOARDRIG] = true},

@@ -446,6 +446,143 @@ local infoModeInserts = {
     },
 }
 
+-- In-world HUD: Invisibility Countdown.
+local invisInserts = {
+    {
+        "hud.lua",
+        {"skins", 1, "children"}, -- TeamItem (left-side agent list)
+        {
+            name = [[uitrInvisHeader]],
+            isVisible = false,
+            noInput = false,
+            anchor = 1,
+            rotation = 0,
+            x = 124,
+            xpx = true,
+            y = 12,
+            ypx = true,
+            w = 100,
+            wpx = true,
+            h = 24,
+            hpx = true,
+            sx = 1,
+            sy = 1,
+            ctor = [[label]],
+            halign = MOAITextBox.LEFT_JUSTIFY,
+            valign = MOAITextBox.CENTER_JUSTIFY,
+            text_style = [[font1_16_l]],
+            -- rawstr = [[CLOAKED]], -- STRINGS.UITWEAKSR.INVIS_COUNTDOWN_HEADER,
+            color = {0.9, 0.9, 0.9, 1},
+        },
+    },
+    {
+        "hud.lua",
+        {"skins", 1, "children"}, -- TeamItem (left-side agent list)
+        {
+            name = [[uitrInvisTurnNum]],
+            isVisible = false,
+            noInput = false,
+            anchor = 1,
+            rotation = 0,
+            x = 60,
+            xpx = true,
+            y = -7,
+            ypx = true,
+            w = 50,
+            wpx = true,
+            h = 24,
+            hpx = true,
+            sx = 1,
+            sy = 1,
+            ctor = [[label]],
+            halign = MOAITextBox.RIGHT_JUSTIFY,
+            valign = MOAITextBox.CENTER_JUSTIFY,
+            text_style = [[font1_18_sb]],
+            color = {0.9, 0.9, 0.9, 1},
+        },
+    },
+    {
+        "hud.lua",
+        {"skins", 1, "children"}, -- TeamItem (left-side agent list)
+        {
+            name = [[uitrInvisTurnTxt]],
+            isVisible = false,
+            noInput = false,
+            anchor = 1,
+            rotation = 0,
+            x = 117,
+            xpx = true,
+            y = -7,
+            ypx = true,
+            w = 50,
+            wpx = true,
+            h = 24,
+            hpx = true,
+            sx = 1,
+            sy = 1,
+            ctor = [[label]],
+            halign = MOAITextBox.LEFT_JUSTIFY,
+            valign = MOAITextBox.CENTER_JUSTIFY,
+            text_style = [[font1_16_l]],
+            -- rawstr = [[T]], -- STRINGS.UITWEAKSR.INVIS_COUNTDOWN_TURNS_SHORT,
+            color = {0.9, 0.9, 0.9, 1},
+        },
+    },
+    {
+        "hud.lua",
+        {"skins", 1, "children"}, -- TeamItem (left-side agent list)
+        {
+            name = [[uitrInvisApNum]],
+            isVisible = false,
+            noInput = false,
+            anchor = 1,
+            rotation = 0,
+            x = 100,
+            xpx = true,
+            y = -7,
+            ypx = true,
+            w = 50,
+            wpx = true,
+            h = 24,
+            hpx = true,
+            sx = 1,
+            sy = 1,
+            ctor = [[label]],
+            halign = MOAITextBox.RIGHT_JUSTIFY,
+            valign = MOAITextBox.CENTER_JUSTIFY,
+            text_style = [[font1_18_sb]],
+            color = {0.9, 0.9, 0.9, 1},
+        },
+    },
+    {
+        "hud.lua",
+        {"skins", 1, "children"}, -- TeamItem (left-side agent list)
+        {
+            name = [[uitrInvisApTxt]],
+            isVisible = false,
+            noInput = false,
+            anchor = 1,
+            rotation = 0,
+            x = 122,
+            xpx = true,
+            y = -7,
+            ypx = true,
+            w = 50,
+            wpx = true,
+            h = 24,
+            hpx = true,
+            sx = 1,
+            sy = 1,
+            ctor = [[label]],
+            halign = MOAITextBox.RIGHT_JUSTIFY,
+            valign = MOAITextBox.CENTER_JUSTIFY,
+            text_style = [[font1_16_l]],
+            str = [[STR_6363215]], -- AP
+            color = {0.9, 0.9, 0.9, 1},
+        },
+    },
+}
+
 -- Mainframe HUD.
 local mainframeInserts = {
     {
@@ -686,6 +823,7 @@ local mapInserts = {
 
 local inserts = {}
 array.concat(inserts, infoModeInserts)
+array.concat(inserts, invisInserts)
 array.concat(inserts, mainframeInserts)
 array.concat(inserts, coordinateGridInserts)
 array.concat(inserts, mapInserts)
