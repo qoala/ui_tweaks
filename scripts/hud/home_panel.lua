@@ -3,6 +3,12 @@ local util = include("client_util")
 local panel = include("hud/home_panel").panel
 
 local uitr_util = include(SCRIPT_PATHS.qed_uitr .. "/uitr_util")
+local tooltipdefs = include(SCRIPT_PATHS.qed_uitr .. "/backend/tooltipdefs")
+
+local function generateCloakedAgentTooltip(hud, unit)
+    local txt = unit:getUnitData().toolTip .. "\n" .. tooltipdefs.agentCloakInfoText(unit)
+    return mui_tooltip(util.toupper(unit:getName()), txt, "cycleSelection")
+end
 
 local oldRefreshAgent = panel.refreshAgent
 function panel:refreshAgent(unit, ...)
@@ -56,6 +62,8 @@ function panel:_uitr_refreshAgentCloakInfo(unit, widget)
     widget.binder.uitrInvisApTxt:setVisible(cloakDist ~= nil)
 
     if isCloak then
+        widget:setTooltip(generateCloakedAgentTooltip(self._hud, unit))
+
         local cloakTurns = unit:getTraits().invisDuration
         cloakTurns = cloakTurns and math.max(math.floor(cloakTurns), 0)
 

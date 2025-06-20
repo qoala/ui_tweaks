@@ -13,6 +13,22 @@ local function _calculateCloakDistance(unit)
     return uitr_util.roundMP(dist)
 end
 
+local function agentCloakInfoText(unit)
+    local tileCount = _calculateCloakDistance(unit)
+    if not tileCount then
+        return util.sformat(
+                STRINGS.UITWEAKSR.UI.INVIS_COUNTDOWN_TIP, unit:getTraits().invisDuration or '-')
+    elseif tileCount == 0 then
+        return util.sformat(
+                STRINGS.UITWEAKSR.UI.INVIS_COUNTDOWN_TIP_EXACT_DIST, unit:getTraits().invisDuration,
+                tileCount)
+    else
+        return util.sformat(
+                STRINGS.UITWEAKSR.UI.INVIS_COUNTDOWN_TIP_FUZZY_DIST, unit:getTraits().invisDuration,
+                tileCount)
+    end
+end
+
 local function onAgentTooltip(tooltip, unit)
     if unit:getTraits().invisible then
         -- Check For RolandJ's original mod. Don't duplicate the tooltip if both are present.
@@ -20,25 +36,12 @@ local function onAgentTooltip(tooltip, unit)
                 (unit:getSim():getParams().difficultyOptions.RJ_InvisiTooltip_Enabled or {}).enabled
         local uitrInvisOption = uitr_util.checkOption("invisCountdown")
         if not RJInvisTooltip and uitrInvisOption then
-            local tileCount = _calculateCloakDistance(unit)
-            if not tileCount then
-                tooltip:addLine(
-                        util.sformat(
-                                STRINGS.UITWEAKSR.UI.INVIS_COUNTDOWN_TIP,
-                                unit:getTraits().invisDuration or '-'))
-            elseif tileCount == 0 then
-                tooltip:addLine(
-                        util.sformat(
-                                STRINGS.UITWEAKSR.UI.INVIS_COUNTDOWN_TIP_EXACT_DIST,
-                                unit:getTraits().invisDuration, tileCount))
-            else
-                tooltip:addLine(
-                        util.sformat(
-                                STRINGS.UITWEAKSR.UI.INVIS_COUNTDOWN_TIP_FUZZY_DIST,
-                                unit:getTraits().invisDuration, tileCount))
-            end
+            tooltip:addLine(agentCloakInfoText(unit))
         end
     end
 end
 
-return {onAgentTooltip = onAgentTooltip}
+return { --
+    agentCloakInfoText = agentCloakInfoText,
+    tooltips = {onAgentTooltip = onAgentTooltip},
+}

@@ -128,7 +128,7 @@ local function unload(modApi)
         modApi:modifyUIElements(include(scriptPath .. "/screens/screen_modifications"))
     end
 
-    modApi:addTooltipDef(include(scriptPath .. "/backend/tooltipdefs"))
+    modApi:addTooltipDef(include(scriptPath .. "/backend/tooltipdefs").tooltips)
 end
 
 local function load(modApi, options, params)
