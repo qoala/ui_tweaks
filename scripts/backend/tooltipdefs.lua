@@ -9,19 +9,8 @@ local function _calculateCloakDistance(unit)
 
     -- Cloak Distance causes cloaks to break when <= 0, but that's not how MP and ranges
     -- are calculated. The correct offset is an infinitesimal.
-    local dist = unit:getTraits().cloakDistance - 0.00001
-    if dist < 1 then
-        return 0 -- "0" is distinct from nil. Lets the player know that they shouldn't move.
-    end
-    local distFloor, distFrac = math.modf(dist)
-    local diagFrac = math.sqrt(2) - 1
-    if distFrac < diagFrac then
-        return distFloor
-    elseif (distFrac < 2 * diagFrac) or (distFloor < 2) then
-        return distFloor + 0.5
-    else
-        return distFloor + 0.9
-    end
+    local dist = math.max(unit:getTraits().cloakDistance - 0.00001, 0)
+    return uitr_util.roundMP(dist)
 end
 
 local function onAgentTooltip(tooltip, unit)

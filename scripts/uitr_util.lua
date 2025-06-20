@@ -621,6 +621,31 @@ local function playerKnowsUnit(player, unit)
 end
 
 -- ===
+-- HUD Utilities
+
+-- Rounds remaining-MP values to 0.5 for display.
+local _DIAG_FRAC = math.sqrt(2) - 1
+local _2DIAG_FRAC = 2 * _DIAG_FRAC
+local function roundMP(mp)
+    if type(mp) ~= "number" then
+        return mp
+    end
+    if mp < 0 then
+        return -1
+    elseif mp < 1 then
+        return 0
+    end
+    local mpFloor, mpFrac = math.modf(mp)
+    if mpFrac < _DIAG_FRAC then
+        return mpFloor
+    elseif (mpFrac < _2DIAG_FRAC) or (mpFloor < 2) then
+        return mpFloor + 0.5
+    else
+        return mpFloor + 0.9
+    end
+end
+
+-- ===
 
 return {
     DEBUG = DEBUG,
@@ -644,4 +669,6 @@ return {
 
     getKnownUnitFromGhost = getKnownUnitFromGhost,
     playerKnowsUnit = playerKnowsUnit,
+
+    roundMP = roundMP,
 }
