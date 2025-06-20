@@ -7,13 +7,32 @@ local uitr_util = include(SCRIPT_PATHS.qed_uitr .. "/uitr_util")
 local oldRefreshAgent = panel.refreshAgent
 function panel:refreshAgent(unit, ...)
     oldRefreshAgent(self, unit, ...)
+
     local widget = self:findAgentWidget(unit:getID())
     if widget == nil then
         return
     end
+    self:_uitr_refreshAgentAp(unit, widget)
+    self:_uitr_refreshAgentCloakInfo(unit, widget)
+end
 
+function panel:_uitr_refreshAgentAp(unit, widget)
+    if not uitr_util.checkOption("preciseAp") then
+        return
+    end
+
+    local mp = unit:getMP()
+    local movePreview = self._hud._movePreview
+    if movePreview and movePreview.unitID == unit:getID() and mp > movePreview.pathCost then
+        mp = mp - movePreview.pathCost
+    end
+    widget.binder.apNum:setText(uitr_util.roundMP(mp))
+end
+
+function panel:_uitr_refreshAgentCloakInfo(unit, widget)
     -- If cloaked and not down, show details.
-    -- If the agent is down, that text takes up all the space.
+    -- If the agent is down, that text takes up all the space instead.
+    -- Always runs, because we need to be able to hide previously shown info.
     local uitrInvisOption = uitr_util.checkOption("invisCountdown")
     local isCloak = (uitrInvisOption == 2) and (not unit:isDown()) and
                             (not not unit:getTraits().invisible)

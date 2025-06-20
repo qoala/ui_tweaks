@@ -125,6 +125,7 @@ local function unload(modApi)
 
     if uitr_util.checkEnabled() then
         modApi:insertUIElements(include(scriptPath .. "/screens/screen_inserts"))
+        modApi:modifyUIElements(include(scriptPath .. "/screens/screen_modifications"))
     end
 
     modApi:addTooltipDef(include(scriptPath .. "/backend/tooltipdefs"))

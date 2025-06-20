@@ -1,54 +1,8 @@
 local flagui = include('hud/flag_ui')
-local home_panel = include('hud/home_panel')
 
 local uitr_util = include(SCRIPT_PATHS.qed_uitr .. "/uitr_util")
 
-local function roundToPointFive(ap)
-    ap = math.max(0, ap)
-    return 0.5 * math.floor(ap / 0.5)
-end
-
-local function shiftWidgetRight(w, px)
-    local x, y = w:getPosition()
-    w:setPosition(x + px, nil)
-end
-
-local function adjustAgentAPWidgets(panel)
-    for i = 1, 10 do
-        local widget = panel.binder:tryBind("agent" .. i)
-        if widget and not widget.preciseAPAdjusted then
-            shiftWidgetRight(widget.binder.apNum, 5)
-            shiftWidgetRight(widget.binder.apTxt, 5)
-            widget.preciseAPAdjusted = true
-        end
-    end
-end
-
-local oldRefreshAgent = home_panel.panel.refreshAgent
-
-function home_panel.panel:refreshAgent(unit, ...)
-    oldRefreshAgent(self, unit, ...)
-
-    if not uitr_util.checkOption("preciseAp") then
-        return
-    end
-
-    adjustAgentAPWidgets(self._panel)
-
-    local widget = self:findAgentWidget(unit:getID())
-
-    if widget == nil then
-        return
-    end
-
-    local ap = unit:getMP()
-    if self._hud._movePreview and self._hud._movePreview.unitID == unit:getID() and ap >
-            self._hud._movePreview.pathCost then
-        ap = ap - self._hud._movePreview.pathCost
-    end
-
-    widget.binder.apNum:setText(roundToPointFive(ap))
-end
+-- Other half of the changes is in hud/home_panel.lua
 
 local oldRefreshFlag = flagui.refreshFlag
 
@@ -63,8 +17,9 @@ function flagui:refreshFlag(unit, isSelected)
 
     if not (unit:getPlayerOwner():isNPC() or unit:isKO() or unit:getTraits().takenDrone) then
         if sim:getCurrentPlayer() == unit:getPlayerOwner() then
-            local ap = roundToPointFive(unit:getMP() - (self._moveCost or 0))
-            self._widget.binder.meters.binder.APnum:setText(ap)
+            local mp = unit:getMP() - (self._moveCost or 0)
+            mp = uitr_util.roundMP(math.max(mp, 0))
+            self._widget.binder.meters.binder.APnum:setText(mp)
         end
     end
 end
