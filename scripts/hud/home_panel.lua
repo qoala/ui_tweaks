@@ -22,9 +22,21 @@ function panel:_uitr_refreshAgentAp(unit, widget)
     end
 
     local mp = unit:getMP()
-    local movePreview = self._hud._movePreview
+    local hud = self._hud
+    local movePreview = hud._movePreview
+    local abilPreview = hud._abilityPreviewData and hud._abilityPreviewData[unit:getID()]
     if movePreview and movePreview.unitID == unit:getID() and mp > movePreview.pathCost then
         mp = mp - movePreview.pathCost
+    elseif abilPreview and abilPreview.moveCost then
+        mp = mp - abilPreview.moveCost
+        if abilPreview.moveCost > 0 then
+            widget.binder.apNum:setColor(cdefs.AP_COLOR_PREVIEW:unpack())
+            widget.binder.apTxt:setColor(cdefs.AP_COLOR_PREVIEW:unpack())
+        elseif abilPreview.moveCost < 0 then
+            widget.binder.apNum:setColor(cdefs.AP_COLOR_PREVIEW_BONUS:unpack())
+            widget.binder.apTxt:setColor(cdefs.AP_COLOR_PREVIEW_BONUS:unpack())
+        end
+        -- No need to reset or color non-ability-preview cases. Vanilla refresh does so.
     end
     widget.binder.apNum:setText(uitr_util.roundMP(mp))
 end
@@ -50,6 +62,7 @@ function panel:_uitr_refreshAgentCloakInfo(unit, widget)
         local isBroken = false
         if cloakDist then
             cloakDist = math.max(cloakDist - 0.00001, 0.00001)
+            -- Cloak distance ONLY decreases with movePreview, not abilityPreview.
             if self._hud._movePreview and self._hud._movePreview.unitID == unit:getID() then
                 cloakDist = cloakDist - self._hud._movePreview.pathCost
                 if cloakDist <= 0 then

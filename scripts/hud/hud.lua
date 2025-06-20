@@ -306,6 +306,9 @@ function hudClass:init(...)
     -- Tactical View Toggle
     self.tacticalViewEnabled = false
     self._screen.binder.btnToggleTac.onClick = util.makeDelegate(nil, onClickTacticalToggle, self)
+    -- Ability MP-cost Preview, keyed by unit ID.
+    -- This is in addition to vanilla `self._movePreview` data and `self._abilityPreview` boolean.
+    self._abilityPreviewData = {}
 end
 
 local oldOnSimEvent = hudClass.onSimEvent
@@ -320,6 +323,10 @@ function hudClass:onSimEvent(ev, ...)
             self._game.boardRig:getPathRig():resetVisibility()
         end
         self._game.boardRig:getPathRig():refreshAllTracks()
+    end
+    if ev.eventType == simdefs.EV_TURN_END then
+        -- Reset at turn end for safety.
+        self._abilityPreviewData = {}
     end
     return result
 end
@@ -373,4 +380,15 @@ function hudClass:refreshTacticalView()
         gfxOptions.bTacticalView = isEnabled
         self._game.boardRig:refresh()
     end
+end
+
+local oldPreviewAbilityAP = hudClass.previewAbilityAP
+function hudClass:previewAbilityAP(unit, moveCost, ...)
+    if moveCost and moveCost ~= 0 then
+        self._abilityPreviewData[unit:getID()] = {moveCost = moveCost}
+    else
+        self._abilityPreviewData[unit:getID()] = nil
+    end
+    -- Set preview data above before vanilla refreshes home_panel for the agent.
+    oldPreviewAbilityAP(self, unit, moveCost, ...)
 end
