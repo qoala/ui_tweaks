@@ -41,8 +41,8 @@ local UI_TWEAKS_STRINGS = {
         PRECISE_AP = "Precise AP",
         PRECISE_AP_TIP = "Round AP to .5 instead of whole number",
         PRECISE_AP_HALF = "0.5",
-        INVIS_COUNTDOWN = "Invisibility Countdowns",
-        INVIS_COUNTDOWN_TIP = "Show turn and AP countdowns when agents are cloaked.",
+        INVIS_COUNTDOWN = "Cloak Countdowns",
+        INVIS_COUNTDOWN_TIP = "Show turn and movement-AP countdowns when agents are cloaked.",
         INVIS_COUNTDOWN_OPTIONS = { --
             "OFF/VANILLA",
             "TOOLTIP",
@@ -150,8 +150,8 @@ local UI_TWEAKS_STRINGS = {
         HOVER_INTEREST = "INTEREST: {1}",
 
         INVIS_COUNTDOWN_TIP = "Invisible for <c:F4FF78>{1} {1:turn|turns}</c>",
-        INVIS_COUNTDOWN_TIP_EXACT_DIST = "Invisible for <c:F4FF78>{1} {1:turn|turns}</c> or <c:F4FF78>{2} {2:tile|tiles}</c>",
-        INVIS_COUNTDOWN_TIP_FUZZY_DIST = "Invisible for <c:F4FF78>{1} {1:turn|turns}</c> or <c:F4FF78>up to {2} {2:tile|tiles}</c>",
+        INVIS_COUNTDOWN_TIP_EXACT_DIST = "Invisible for <c:F4FF78>{1} {1:turn|turns}</c> or <c:F4FF78>{2} AP</c> of movement",
+        INVIS_COUNTDOWN_TIP_FUZZY_DIST = "Invisible for <c:F4FF78>{1} {1:turn|turns}</c> or <c:F4FF78>up to {2} AP</c> of movement",
         INVIS_COUNTDOWN_HEADER = "CLOAKED",
         INVIS_COUNTDOWN_TURNS = "{1:TURN|TURNS}",
         INVIS_COUNTDOWN_TURNS_SHORT = "T",
