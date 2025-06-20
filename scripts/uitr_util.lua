@@ -128,6 +128,12 @@ local UITR_OPTIONS = {
         refreshTypes = {[REFRESH.BOARDRIG] = true},
     },
     {
+        id = "agentStatusIcons",
+        name = STRINGS.UITWEAKSR.OPTIONS.AGENT_STATUS_ICONS,
+        tip = STRINGS.UITWEAKSR.OPTIONS.AGENT_STATUS_ICONS_TIP,
+        check = true,
+    },
+    {
         id = "invisCountdown",
         name = STRINGS.UITWEAKSR.OPTIONS.INVIS_COUNTDOWN,
         tip = STRINGS.UITWEAKSR.OPTIONS.INVIS_COUNTDOWN_TIP,

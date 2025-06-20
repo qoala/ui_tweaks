@@ -446,8 +446,101 @@ local infoModeInserts = {
     },
 }
 
--- In-world HUD: Invisibility Countdown.
+-- In-world HUD: Home Panel Agent Info.
+-- Ambush/Overwatch/Hacking status lights. Cloak Countdown.
 local invisInserts = {
+    {
+        "hud.lua",
+        {"skins", 1, "children"}, -- TeamItem (left-side agent list)
+        {
+            name = [[uitrStatusAmbush]],
+            isVisible = false,
+            noInput = false,
+            anchor = 1,
+            rotation = 0,
+            x = 60,
+            xpx = true,
+            y = 0,
+            ypx = true,
+            w = 24,
+            wpx = true,
+            h = 24,
+            hpx = true,
+            sx = 1,
+            sy = 1,
+            ctor = [[image]],
+            color = {244 / 255, 128 / 255, 17 / 255, 1},
+            images = {
+                { --
+                    -- file = [[gui/items/icon-tazer-ftm.png]],
+                    file = [[gui/items/icon-action_fist.png]],
+                    name = [[]],
+                    color = {244 / 255, 128 / 255, 17 / 255, 1},
+                },
+            },
+        },
+    },
+    {
+        "hud.lua",
+        {"skins", 1, "children"}, -- TeamItem (left-side agent list)
+        {
+            name = [[uitrStatusOverwatch]],
+            isVisible = false,
+            noInput = false,
+            anchor = 1,
+            rotation = 0,
+            x = 60,
+            xpx = true,
+            y = 0,
+            ypx = true,
+            w = 36, -- StatusCombat icon has significant margins.
+            wpx = true,
+            h = 36,
+            hpx = true,
+            sx = 1,
+            sy = 1,
+            ctor = [[image]],
+            color = {244 / 255, 128 / 255, 17 / 255, 1},
+            images = {
+                { --
+                    file = [[gui/hud3/status_combat.png]],
+                    -- file = [[gui/items/icon-skill_overwatch.png]],
+                    name = [[]],
+                    color = {244 / 255, 128 / 255, 17 / 255, 1},
+                },
+            },
+        },
+    },
+    {
+        "hud.lua",
+        {"skins", 1, "children"}, -- TeamItem (left-side agent list)
+        {
+            name = [[uitrStatusHacking]],
+            isVisible = false,
+            noInput = false,
+            anchor = 1,
+            rotation = 0,
+            x = 60,
+            xpx = true,
+            y = 0,
+            ypx = true,
+            w = 24,
+            wpx = true,
+            h = 24,
+            hpx = true,
+            sx = 1,
+            sy = 1,
+            ctor = [[image]],
+            color = {140 / 255, 1, 1, 1},
+            images = {
+                { --
+                    file = [[gui/items/icon-laptop.png]],
+                    name = [[]],
+                    color = {140 / 255, 1, 1, 1},
+                },
+            },
+        },
+    },
     {
         "hud.lua",
         {"skins", 1, "children"}, -- TeamItem (left-side agent list)

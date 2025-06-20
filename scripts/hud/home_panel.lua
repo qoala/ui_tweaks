@@ -1,3 +1,4 @@
+local mui_tooltip = include("mui/mui_tooltip")
 local cdefs = include("client_defs")
 local util = include("client_util")
 local panel = include("hud/home_panel").panel
@@ -19,6 +20,7 @@ function panel:refreshAgent(unit, ...)
         return
     end
     self:_uitr_refreshAgentAp(unit, widget)
+    self:_uitr_refreshAgentStatus(unit, widget)
     self:_uitr_refreshAgentCloakInfo(unit, widget)
 end
 
@@ -45,6 +47,29 @@ function panel:_uitr_refreshAgentAp(unit, widget)
         -- No need to reset or color non-ability-preview cases. Vanilla refresh does so.
     end
     widget.binder.apNum:setText(uitr_util.roundMP(mp))
+end
+
+local function isHacking(unit)
+    return unit:getTraits().data_hacking or unit:getTraits().monster_hacking or
+                   unit:getTraits().mod_data_hacking
+end
+
+function panel:_uitr_refreshAgentStatus(unit, widget)
+    local stat = nil
+    if not uitr_util.checkOption("agentStatusIcons") then
+        -- No lights.
+    elseif unit:getTraits().isMeleeAiming then
+        stat = 1
+        -- screens rotation value is unused, so set it here.
+        -- widget.binder.uitrStatusAmbush:setRotation(-90)
+    elseif unit:isAiming() then
+        stat = 2
+    elseif isHacking(unit) then
+        stat = 3
+    end
+    widget.binder.uitrStatusAmbush:setVisible(stat == 1)
+    widget.binder.uitrStatusOverwatch:setVisible(stat == 2)
+    widget.binder.uitrStatusHacking:setVisible(stat == 3)
 end
 
 function panel:_uitr_refreshAgentCloakInfo(unit, widget)
