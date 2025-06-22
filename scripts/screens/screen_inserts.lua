@@ -493,7 +493,7 @@ local homePanelInserts = {
             xpx = true,
             y = 0,
             ypx = true,
-            w = 36, -- StatusCombat icon has significant margins.
+            w = 36, -- icon has significant margins.
             wpx = true,
             h = 36,
             hpx = true,
@@ -534,9 +534,70 @@ local homePanelInserts = {
             color = {140 / 255, 1, 1, 1},
             images = {
                 { --
-                    file = [[gui/items/icon-laptop.png]],
+                    -- file = [[gui/items/icon-laptop.png]],
+                    file = [[gui/items/icon-action_hack-console.png]],
                     name = [[]],
                     color = {140 / 255, 1, 1, 1},
+                },
+            },
+        },
+    },
+    {
+        "hud.lua",
+        {"skins", 1, "children"}, -- TeamItem (left-side agent list)
+        {
+            name = [[uitrStatusSprint]],
+            isVisible = false,
+            noInput = false,
+            anchor = 1,
+            rotation = 0,
+            x = 90,
+            xpx = true,
+            y = 0,
+            ypx = true,
+            w = 36, -- icon has significant margins.
+            wpx = true,
+            h = 36,
+            hpx = true,
+            sx = 1,
+            sy = 1,
+            ctor = [[image]],
+            color = {244 / 255, 128 / 255, 17 / 255, 1},
+            images = {
+                { --
+                    file = [[gui/items/icon-item_motion.png]],
+                    name = [[]],
+                    color = {244 / 255, 128 / 255, 17 / 255, 1},
+                },
+            },
+        },
+    },
+    {
+        "hud.lua",
+        {"skins", 1, "children"}, -- TeamItem (left-side agent list)
+        {
+            name = [[uitrStatusPEPoison]],
+            isVisible = false,
+            noInput = false,
+            anchor = 1,
+            rotation = 0,
+            x = 60,
+            xpx = true,
+            y = 0,
+            ypx = true,
+            w = 34, -- icon has significant margins.
+            wpx = true,
+            h = 34,
+            hpx = true,
+            sx = 1,
+            sy = 1,
+            ctor = [[image]],
+            color = {128 / 255, 17 / 255, 128 / 255, 1},
+            images = {
+                { --
+                    file = [[gui/hud3/status_dead.png]],
+                    name = [[]],
+                    color = {128 / 255, 17 / 255, 128 / 255, 1},
                 },
             },
         },

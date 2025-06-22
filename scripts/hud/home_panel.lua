@@ -11,6 +11,12 @@ local function generateCloakedAgentTooltip(hud, unit)
     return mui_tooltip(util.toupper(unit:getName()), txt, "cycleSelection")
 end
 
+local STATUS_OFFSET_START = 60
+local STATUS_OFFSET_INC = 26
+-- Cloak status is always offset enough for 1 other light.
+local STATUS_CLOAK_MIN = STATUS_OFFSET_START + STATUS_OFFSET_INC
+local STATUS_CLOAK_SPACER = 30 - STATUS_OFFSET_INC
+
 local oldRefreshAgent = panel.refreshAgent
 function panel:refreshAgent(unit, ...)
     oldRefreshAgent(self, unit, ...)
@@ -20,8 +26,9 @@ function panel:refreshAgent(unit, ...)
         return
     end
     self:_uitr_refreshAgentAp(unit, widget)
-    self:_uitr_refreshAgentStatus(unit, widget)
-    self:_uitr_refreshAgentCloakInfo(unit, widget, widget.binder.uitrStatusCloak)
+    local offset = STATUS_OFFSET_START
+    offset = self:_uitr_refreshAgentStatus(unit, widget, offset)
+    offset = self:_uitr_refreshAgentCloakInfo(unit, widget, widget.binder.uitrStatusCloak, offset)
 end
 
 function panel:_uitr_refreshAgentAp(unit, widget)
@@ -50,18 +57,26 @@ function panel:_uitr_refreshAgentAp(unit, widget)
 end
 
 local function isHacking(unit)
-    return unit:getTraits().data_hacking or unit:getTraits().monster_hacking or
-                   unit:getTraits().mod_data_hacking
+    return unit:getTraits().data_hacking or unit:getTraits().monster_hacking
+    -- Manual Hacking uses both mod_data_hacking trait and data_hacking
+    -- MM uses data_hacking for CameraDB scrub and monster_hacking for Informant objective.
 end
 
-function panel:_uitr_refreshAgentStatus(unit, widget)
+function panel:_uitr_refreshAgentStatus(unit, widget, offset)
+    if not uitr_util.checkOption("agentStatusIcons") or unit:isDown() then
+        -- No status lights.
+        widget.binder.uitrStatusAmbush:setVisible(false)
+        widget.binder.uitrStatusOverwatch:setVisible(false)
+        widget.binder.uitrStatusHacking:setVisible(false)
+        widget.binder.uitrStatusSprint:setVisible(false)
+        widget.binder.uitrStatusPEPoison:setVisible(false)
+        return offset
+    end
+
+    -- Mutually-exclusive trio.
     local stat = nil
-    if not uitr_util.checkOption("agentStatusIcons") then
-        -- No lights.
-    elseif unit:getTraits().isMeleeAiming then
+    if unit:getTraits().isMeleeAiming then
         stat = 1
-        -- screens rotation value is unused, so set it here.
-        -- widget.binder.uitrStatusAmbush:setRotation(-90)
     elseif unit:isAiming() then
         stat = 2
     elseif isHacking(unit) then
@@ -70,9 +85,32 @@ function panel:_uitr_refreshAgentStatus(unit, widget)
     widget.binder.uitrStatusAmbush:setVisible(stat == 1)
     widget.binder.uitrStatusOverwatch:setVisible(stat == 2)
     widget.binder.uitrStatusHacking:setVisible(stat == 3)
+    if stat ~= nil then
+        offset = offset + STATUS_OFFSET_INC
+    end
+
+    -- Sprinting
+    if not unit:getTraits().sneaking then
+        widget.binder.uitrStatusSprint:setPosition(offset, nil)
+        widget.binder.uitrStatusSprint:setVisible(true)
+        offset = offset + STATUS_OFFSET_INC
+    else
+        widget.binder.uitrStatusSprint:setVisible(false)
+    end
+
+    -- Poisoned (Programs Extended)
+    if unit:getTraits().poisoned then
+        widget.binder.uitrStatusPEPoison:setPosition(offset, nil)
+        widget.binder.uitrStatusPEPoison:setVisible(true)
+        offset = offset + STATUS_OFFSET_INC
+    else
+        widget.binder.uitrStatusPEPoison:setVisible(false)
+    end
+
+    return offset
 end
 
-function panel:_uitr_refreshAgentCloakInfo(unit, agentWidget, widget)
+function panel:_uitr_refreshAgentCloakInfo(unit, agentWidget, widget, offset)
     -- If cloaked and not down, show details.
     -- If the agent is down, that text takes up all the space instead.
     -- Always runs, because we need to be able to hide previously shown info.
@@ -84,6 +122,7 @@ function panel:_uitr_refreshAgentCloakInfo(unit, agentWidget, widget)
 
     if isCloak then
         agentWidget:setTooltip(generateCloakedAgentTooltip(self._hud, unit))
+        widget:setPosition(math.max(STATUS_CLOAK_MIN, offset) + STATUS_CLOAK_SPACER, nil)
 
         local cloakTurns = unit:getTraits().invisDuration
         cloakTurns = cloakTurns and math.max(math.floor(cloakTurns), 0)
