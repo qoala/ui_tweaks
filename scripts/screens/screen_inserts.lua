@@ -473,7 +473,8 @@ local homePanelInserts = {
             images = {
                 { --
                     -- file = [[gui/items/icon-tazer-ftm.png]],
-                    file = [[gui/items/icon-action_fist.png]],
+                    -- file = [[gui/items/icon-action_fist.png]],
+                    file = [[gui/hud3/uitr-status-ambush.png]],
                     name = [[]],
                     color = {244 / 255, 128 / 255, 17 / 255, 1},
                 },
@@ -535,7 +536,8 @@ local homePanelInserts = {
             images = {
                 { --
                     -- file = [[gui/items/icon-laptop.png]],
-                    file = [[gui/items/icon-action_hack-console.png]],
+                    -- file = [[gui/items/icon-action_hack-console.png]],
+                    file = [[gui/hud3/uitr-status-hack.png]],
                     name = [[]],
                     color = {140 / 255, 1, 1, 1},
                 },
@@ -555,9 +557,9 @@ local homePanelInserts = {
             xpx = true,
             y = 0,
             ypx = true,
-            w = 36, -- icon has significant margins.
+            w = 24,
             wpx = true,
-            h = 36,
+            h = 24,
             hpx = true,
             sx = 1,
             sy = 1,
@@ -565,7 +567,8 @@ local homePanelInserts = {
             color = {244 / 255, 128 / 255, 17 / 255, 1},
             images = {
                 { --
-                    file = [[gui/items/icon-item_motion.png]],
+                    -- file = [[gui/items/icon-item_motion.png]],
+                    file = [[gui/hud3/uitr-status-sprint.png]],
                     name = [[]],
                     color = {244 / 255, 128 / 255, 17 / 255, 1},
                 },
@@ -585,9 +588,9 @@ local homePanelInserts = {
             xpx = true,
             y = 0,
             ypx = true,
-            w = 34, -- icon has significant margins.
+            w = 24,
             wpx = true,
-            h = 34,
+            h = 24,
             hpx = true,
             sx = 1,
             sy = 1,
@@ -595,7 +598,8 @@ local homePanelInserts = {
             color = {128 / 255, 17 / 255, 128 / 255, 1},
             images = {
                 { --
-                    file = [[gui/hud3/status_dead.png]],
+                    -- file = [[gui/hud3/status_dead.png]],
+                    file = [[gui/hud3/uitr-status-poison.png]],
                     name = [[]],
                     color = {128 / 255, 17 / 255, 128 / 255, 1},
                 },
