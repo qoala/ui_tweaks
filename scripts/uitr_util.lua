@@ -629,7 +629,15 @@ end
 -- ===
 -- HUD Utilities
 
+-- Round down to the nearest 0.5 increment.
+-- Used for MP(AP) display, to retain accuracy with PE Resonance.
+local function roundPointFive(mp)
+    mp = math.max(0, mp)
+    return 0.5 * math.floor(mp / 0.5)
+end
+
 -- Rounds remaining-MP values to 0.5 for display.
+-- Used for MP-like values (cloak distance).
 local _DIAG_FRAC = math.sqrt(2) - 1
 local _2DIAG_FRAC = 2 * _DIAG_FRAC
 local function roundMP(mp)
@@ -676,5 +684,6 @@ return {
     getKnownUnitFromGhost = getKnownUnitFromGhost,
     playerKnowsUnit = playerKnowsUnit,
 
+    roundPointFive = roundPointFive,
     roundMP = roundMP,
 }

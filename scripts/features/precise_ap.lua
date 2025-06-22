@@ -18,7 +18,7 @@ function flagui:refreshFlag(unit, isSelected)
     if not (unit:getPlayerOwner():isNPC() or unit:isKO() or unit:getTraits().takenDrone) then
         if sim:getCurrentPlayer() == unit:getPlayerOwner() then
             local mp = unit:getMP() - (self._moveCost or 0)
-            mp = uitr_util.roundMP(math.max(mp, 0))
+            mp = uitr_util.roundPointFive(math.max(mp, 0))
             self._widget.binder.meters.binder.APnum:setText(mp)
         end
     end

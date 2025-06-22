@@ -46,7 +46,7 @@ function panel:_uitr_refreshAgentAp(unit, widget)
         end
         -- No need to reset or color non-ability-preview cases. Vanilla refresh does so.
     end
-    widget.binder.apNum:setText(uitr_util.roundMP(mp))
+    widget.binder.apNum:setText(uitr_util.roundPointFive(mp))
 end
 
 local function isHacking(unit)
