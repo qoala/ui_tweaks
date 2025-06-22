@@ -4,8 +4,8 @@ local simquery = include("sim/simquery")
 local mathutil = include("modules/mathutil")
 local uitr_util = include(SCRIPT_PATHS.qed_uitr .. "/uitr_util")
 
-local emp_tooltip = uitr_util.extractUpvalue(
-        abilitydefs._abilities.prime_emp.onTooltip, "emp_tooltip")
+local prime_emp = abilitydefs.lookupAbility("prime_emp")
+local emp_tooltip = uitr_util.extractUpvalue(prime_emp.onTooltip, "emp_tooltip")
 
 local _activate = emp_tooltip.activate
 emp_tooltip.activate = function(self, ...)

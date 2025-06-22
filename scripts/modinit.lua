@@ -78,6 +78,14 @@ local function init(modApi)
     -- inter-mission data layer
     include(modApi:getScriptPath() .. "/backend/mission_scoring")
 
+    -- Abilities (in sim-layer but includes tooltip code and similar)
+    include(modApi:getScriptPath() .. "/abilities/prime_emp")
+    include(modApi:getScriptPath() .. "/abilities/observePath")
+    do
+        local modAbilitydefs = include(modApi:getScriptPath() .. "/patches/abilitydefs")
+        modAbilitydefs.patchOverwatchFlag()
+    end
+
     -- hud & gameplay (high-level graphical controllers)
     include(modApi:getScriptPath() .. "/hud/agent_actions")
     include(modApi:getScriptPath() .. "/hud/agent_panel")
@@ -97,8 +105,6 @@ local function init(modApi)
     include(modApi:getScriptPath() .. "/hud/viz/reveal_path")
 
     include(modApi:getScriptPath() .. "/hud/state-map-screen")
-
-    include(modApi:getScriptPath() .. "/patches/ability_prime_emp")
 
     if config.DEV then
         local debugDecoRig = include(modApi:getScriptPath() .. "/hud/uitrdebug_decorig")
@@ -192,10 +198,6 @@ local function lateUnload(modApi, mod_options)
             modApi:addAnimDef(name, animDef)
         end
     end
-
-    local modAbilitydefs = include(scriptPath .. "/patches/abilitydefs")
-    modAbilitydefs.patchOverwatchFlag()
-    modAbilitydefs.patchObservePath()
 
     if SCRIPT_PATHS.corp_neptune then
         local modPrefabs = include(scriptPath .. "/patches/prefabs_neptune")

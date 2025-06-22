@@ -1,6 +1,5 @@
 local abilityutil = include("sim/abilities/abilityutil")
 local abilitydefs = include("sim/abilitydefs")
-local simquery = include("sim/simquery")
 
 local TRIGGERS_OVERWATCH_ABILITIES = {
     "compile_software",
@@ -27,6 +26,7 @@ local TRIGGERS_OVERWATCH_FUNCTIONS = {
     useInvisiCloak = abilityutil.triggersOverwatchAfterCloaking,
 }
 
+-- Add the triggersOverwatch flag/fn property to vanilla abilities.
 local function patchOverwatchFlag()
     for _, abilityID in ipairs(TRIGGERS_OVERWATCH_ABILITIES) do
         local ability = abilitydefs.lookupAbility(abilityID)
@@ -42,19 +42,6 @@ local function patchOverwatchFlag()
     end
 end
 
-local function patchObservePath()
-    local observePath = abilitydefs.lookupAbility("observePath")
-    observePath.createToolTip = function(self, sim, abilityOwner, abilityUser, targetID)
-        local target = sim:getUnit(targetID)
-        local observe_title = STRINGS.ABILITIES.OBSERVE
-        if target then
-            observe_title = observe_title .. " " .. target:getName()
-        end
-        return abilityutil.formatToolTip(observe_title, STRINGS.ABILITIES.OBSERVE_DESC)
-    end
-end
-
 return { --
     patchOverwatchFlag = patchOverwatchFlag,
-    patchObservePath = patchObservePath,
 }
