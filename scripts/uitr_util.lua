@@ -140,7 +140,7 @@ local UITR_OPTIONS = {
         values = {false, 1, 2},
         value = 1,
         strings = STRINGS.UITWEAKSR.OPTIONS.INVIS_COUNTDOWN_OPTIONS,
-        refreshTypes = {[REFRESH.BOARDRIG] = true},
+        refreshTypes = {[REFRESH.HUD] = true, [REFRESH.BOARDRIG] = true},
     },
     {
         id = "preciseIcons",
