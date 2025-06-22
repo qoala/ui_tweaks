@@ -21,7 +21,7 @@ function panel:refreshAgent(unit, ...)
     end
     self:_uitr_refreshAgentAp(unit, widget)
     self:_uitr_refreshAgentStatus(unit, widget)
-    self:_uitr_refreshAgentCloakInfo(unit, widget)
+    self:_uitr_refreshAgentCloakInfo(unit, widget, widget.binder.uitrStatusCloak)
 end
 
 function panel:_uitr_refreshAgentAp(unit, widget)
@@ -72,7 +72,7 @@ function panel:_uitr_refreshAgentStatus(unit, widget)
     widget.binder.uitrStatusHacking:setVisible(stat == 3)
 end
 
-function panel:_uitr_refreshAgentCloakInfo(unit, widget)
+function panel:_uitr_refreshAgentCloakInfo(unit, agentWidget, widget)
     -- If cloaked and not down, show details.
     -- If the agent is down, that text takes up all the space instead.
     -- Always runs, because we need to be able to hide previously shown info.
@@ -80,14 +80,10 @@ function panel:_uitr_refreshAgentCloakInfo(unit, widget)
     local isCloak = (uitrInvisOption == 2) and (not unit:isDown()) and
                             (not not unit:getTraits().invisible)
     local cloakDist = isCloak and unit:getTraits().cloakDistance or nil
-    widget.binder.uitrInvisHeader:setVisible(isCloak)
-    widget.binder.uitrInvisTurnNum:setVisible(isCloak)
-    widget.binder.uitrInvisTurnTxt:setVisible(isCloak)
-    widget.binder.uitrInvisApNum:setVisible(cloakDist ~= nil)
-    widget.binder.uitrInvisApTxt:setVisible(cloakDist ~= nil)
+    widget:setVisible(isCloak)
 
     if isCloak then
-        widget:setTooltip(generateCloakedAgentTooltip(self._hud, unit))
+        agentWidget:setTooltip(generateCloakedAgentTooltip(self._hud, unit))
 
         local cloakTurns = unit:getTraits().invisDuration
         cloakTurns = cloakTurns and math.max(math.floor(cloakTurns), 0)
@@ -105,33 +101,33 @@ function panel:_uitr_refreshAgentCloakInfo(unit, widget)
                 end
             end
 
-            widget.binder.uitrInvisApNum:setText(uitr_util.roundMP(cloakDist))
+            widget.binder.apNum:setText(uitr_util.roundMP(cloakDist))
             -- Insufficient space for "TURN(S)"
-            widget.binder.uitrInvisTurnTxt:setText(STRINGS.UITWEAKSR.UI.INVIS_COUNTDOWN_TURNS_SHORT)
+            widget.binder.turnTxt:setText(STRINGS.UITWEAKSR.UI.INVIS_COUNTDOWN_TURNS_SHORT)
         else
             -- Pluralize
-            widget.binder.uitrInvisTurnTxt:setText(
+            widget.binder.turnTxt:setText(
                     util.sformat(
                             STRINGS.UITWEAKSR.UI.INVIS_COUNTDOWN_TURNS, cloakTurns or 0))
         end
 
-        widget.binder.uitrInvisTurnNum:setText(cloakTurns or '-')
-        widget.binder.uitrInvisStrikethrough:setVisible(isBroken)
+        widget.binder.turnNum:setText(cloakTurns or '-')
+        widget.binder.apNum:setVisible(cloakDist ~= nil)
+        widget.binder.apTxt:setVisible(cloakDist ~= nil)
+        widget.binder.strikethrough:setVisible(isBroken)
         if isBroken then
             local clr = cdefs.COLOR_CORP_WARNING
-            widget.binder.uitrInvisHeader:setColor(clr.r, clr.g, clr.b, 1)
-            widget.binder.uitrInvisTurnNum:setColor(clr.r, clr.g, clr.b, 1)
-            widget.binder.uitrInvisTurnTxt:setColor(clr.r, clr.g, clr.b, 1)
-            widget.binder.uitrInvisApNum:setColor(clr.r, clr.g, clr.b, 1)
-            widget.binder.uitrInvisApTxt:setColor(clr.r, clr.g, clr.b, 1)
+            widget.binder.header:setColor(clr.r, clr.g, clr.b, 1)
+            widget.binder.turnNum:setColor(clr.r, clr.g, clr.b, 1)
+            widget.binder.turnTxt:setColor(clr.r, clr.g, clr.b, 1)
+            widget.binder.apNum:setColor(clr.r, clr.g, clr.b, 1)
+            widget.binder.apTxt:setColor(clr.r, clr.g, clr.b, 1)
         else
-            widget.binder.uitrInvisHeader:setColor(0.9, 0.9, 0.9, 1)
-            widget.binder.uitrInvisTurnNum:setColor(0.9, 0.9, 0.9, 1)
-            widget.binder.uitrInvisTurnTxt:setColor(0.9, 0.9, 0.9, 1)
-            widget.binder.uitrInvisApNum:setColor(0.9, 0.9, 0.9, 1)
-            widget.binder.uitrInvisApTxt:setColor(0.9, 0.9, 0.9, 1)
+            widget.binder.header:setColor(0.9, 0.9, 0.9, 1)
+            widget.binder.turnNum:setColor(0.9, 0.9, 0.9, 1)
+            widget.binder.turnTxt:setColor(0.9, 0.9, 0.9, 1)
+            widget.binder.apNum:setColor(0.9, 0.9, 0.9, 1)
+            widget.binder.apTxt:setColor(0.9, 0.9, 0.9, 1)
         end
-    else
-        widget.binder.uitrInvisStrikethrough:setVisible(false)
     end
 end
