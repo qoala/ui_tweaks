@@ -33,9 +33,9 @@ function panel:_uitr_refreshAgentAp(unit, widget)
     local hud = self._hud
     local movePreview = hud._movePreview
     local abilPreview = hud._abilityPreviewData and hud._abilityPreviewData[unit:getID()]
-    if movePreview and movePreview.unitID == unit:getID() and mp > movePreview.pathCost then
+    if movePreview and movePreview.unitID == unit:getID() and mp >= movePreview.pathCost then
         mp = mp - movePreview.pathCost
-    elseif abilPreview and abilPreview.moveCost then
+    elseif abilPreview and abilPreview.moveCost and mp >= abilPreview.moveCost then
         mp = mp - abilPreview.moveCost
         if abilPreview.moveCost > 0 then
             widget.binder.apNum:setColor(cdefs.AP_COLOR_PREVIEW:unpack())

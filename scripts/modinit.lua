@@ -66,7 +66,7 @@ local function init(modApi)
     include(modApi:getScriptPath() .. "/features/xu_shank")
 
     -- sim-layer
-    include(modApi:getScriptPath() .. "/backend/abilityutil")
+    include(modApi:getScriptPath() .. "/backend/abilityutil") -- Before simability and abilities.
     include(modApi:getScriptPath() .. "/backend/commondefs")
     include(modApi:getScriptPath() .. "/backend/engine")
     include(modApi:getScriptPath() .. "/backend/mission_util")

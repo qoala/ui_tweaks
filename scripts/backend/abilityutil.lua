@@ -546,6 +546,54 @@ end
 ]]
 
 -- ===
+-- Pre-made tooltip subclass for abilities with AP bonuses
+-- Mostly mimics the appearance of the auto-formatting used by createToolTip
+-- instead of the appearance of hotkey_tooltip.
+--
+-- Unlike createToolTip and hotkey_tooltip, caller is responsible for calling canUseAbility
+-- with appropriate args, and passing any returned reason in.
+--
+-- apCostByUnit is a table with unit instances as keys and AP Cost for that unit as values.
+-- (Really more of a list-of-two-element-tuples.)
+--
+-- Usage:
+-- onTooltip = function(self, hud, sim, abilityOwner, abilityUser)
+--   local title, body = "Ability Title", "Body Text"
+--   local _, reason = abilityUser:canUseAbility( sim, self, abilityOwner )
+--   return abilityutil.uitr_ap_tooltip( hud, title, body, reason, {{unit=abilityUser, apCost=1}} )
+-- end
+-- ===
+
+local uitr_ap_tooltip = class(delayed_tooltip)
+abilityutil.uitr_ap_tooltip = uitr_ap_tooltip
+
+function uitr_ap_tooltip:init(hud, title, body, cantUseReason, unitApCosts, hotkey)
+    delayed_tooltip.init(self, hud._screen, hud._game)
+    self._unitApCosts = unitApCosts or {}
+
+    if cantUseReason then
+        body = body .. "\n<c:ff0000>" .. cantUseReason .. "</>"
+    end
+    self:addPrimarySection(mui_tooltip_section(self, title, body, hotkey))
+end
+
+function uitr_ap_tooltip:activate(screen, ...)
+    delayed_tooltip.activate(self, screen, ...)
+    for _, data in pairs(self._unitApCosts) do
+        local unit = data.unit
+        local apCost = data.apCost
+        local apCost = (apCost and unit:getMP() >= apCost) and apCost or 0
+        self._game.hud:previewAbilityAP(unit, apCost)
+    end
+end
+function uitr_ap_tooltip:deactivate(...)
+    delayed_tooltip.deactivate(self, ...)
+    for _, data in pairs(self._unitApCosts) do
+        self._game.hud:previewAbilityAP(data.unit, 0)
+    end
+end
+
+-- ===
 -- Wrapped onTooltip and acquireTargets for abilities that injects our custom tooltip warnings (installed by simability.create)
 -- ===
 
