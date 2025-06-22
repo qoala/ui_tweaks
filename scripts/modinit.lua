@@ -79,8 +79,9 @@ local function init(modApi)
     include(modApi:getScriptPath() .. "/backend/mission_scoring")
 
     -- Abilities (in sim-layer but includes tooltip code and similar)
-    include(modApi:getScriptPath() .. "/abilities/prime_emp")
     include(modApi:getScriptPath() .. "/abilities/observePath")
+    include(modApi:getScriptPath() .. "/abilities/prime_emp")
+    include(modApi:getScriptPath() .. "/abilities/use_stim")
     do
         local modAbilitydefs = include(modApi:getScriptPath() .. "/patches/abilitydefs")
         modAbilitydefs.patchOverwatchFlag()

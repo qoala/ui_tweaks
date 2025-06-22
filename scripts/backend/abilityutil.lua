@@ -580,16 +580,19 @@ end
 function uitr_ap_tooltip:activate(screen, ...)
     delayed_tooltip.activate(self, screen, ...)
     for _, data in pairs(self._unitApCosts) do
-        local unit = data.unit
-        local apCost = data.apCost
-        local apCost = (apCost and unit:getMP() >= apCost) and apCost or 0
-        self._game.hud:previewAbilityAP(unit, apCost)
+        local unit, apCost = data.unit, data.apCost
+        if unit then
+            local apCost = (apCost and unit:getMP() >= apCost) and apCost or 0
+            self._game.hud:previewAbilityAP(unit, apCost)
+        end
     end
 end
 function uitr_ap_tooltip:deactivate(...)
     delayed_tooltip.deactivate(self, ...)
     for _, data in pairs(self._unitApCosts) do
-        self._game.hud:previewAbilityAP(data.unit, 0)
+        if data.unit then
+            self._game.hud:previewAbilityAP(data.unit, 0)
+        end
     end
 end
 
