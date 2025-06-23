@@ -36,7 +36,9 @@ local function onAgentTooltip(tooltip, unit)
                 (unit:getSim():getParams().difficultyOptions.RJ_InvisiTooltip_Enabled or {}).enabled
         local uitrInvisOption = uitr_util.checkOption("invisCountdown")
         if not RJInvisTooltip and uitrInvisOption then
-            tooltip:addAbility(STRINGS.UITWEAKSR.UI.INVIS_COUNTDOWN_HEADER, agentCloakInfoText(unit), "gui/items/icon-cloak.png")
+            tooltip:addAbility(
+                    STRINGS.UITWEAKSR.UI.INVIS_COUNTDOWN_HEADER, agentCloakInfoText(unit),
+                    "gui/items/icon-cloak.png")
         end
     end
 end
