@@ -501,6 +501,66 @@ local function addVisionActionsForUnit(hud, actions, targetUnit, isSeen, staleGh
     end
 end
 
+local function addAlwaysActionsForUnit(hud, actions, targetUnit, isSeen, staleGhost)
+    local x, y
+    if staleGhost then
+        x, y = staleGhost:getLocation()
+    else
+        x, y = targetUnit:getLocation()
+    end
+    local z = targetUnit:getTraits().breakIceOffset -- nil for most units. Z offset for cameras.
+
+    if targetUnit:getUnitData().type == "eyeball" then
+        return
+    end
+
+    if not staleGhost and targetUnit:hasTrait("range") and
+            (isExplodingUnit(targetUnit) or isMainframeEmitter(targetUnit)) then
+        table.insert(
+                actions, {
+                    txt = "",
+                    icon = ICON_EXPLODE,
+                    x = x,
+                    y = y,
+                    z = z,
+                    enabled = false,
+                    layoutID = targetUnit:getID(),
+                    tooltip = explode_tooltip(hud, targetUnit),
+                    priority = 9,
+                })
+    end
+    if not staleGhost and isGuardEmitter(targetUnit) then
+        local trait = isGuardEmitter(targetUnit)
+        table.insert(
+                actions, {
+                    txt = "",
+                    icon = ICON_EXPLODE,
+                    x = x,
+                    y = y,
+                    z = z,
+                    enabled = false,
+                    layoutID = targetUnit:getID(),
+                    tooltip = explode_tooltip(hud, targetUnit, trait),
+                    priority = 9,
+                })
+    end
+    if not staleGhost and targetUnit:getTraits().pulseScan and targetUnit:isNPC() and
+            targetUnit:getTraits().range > 0 then
+        table.insert(
+                actions, {
+                    txt = "",
+                    icon = ICON_SCAN,
+                    x = x,
+                    y = y,
+                    z = z,
+                    enabled = false,
+                    layoutID = targetUnit:getID(),
+                    tooltip = pulse_scan_tooltip(hud, targetUnit),
+                    priority = 8,
+                })
+    end
+end
+
 local function resolveGhost(sim, unitID, ghostUnit)
     local unit = sim:getUnit(ghostUnit:getID())
     if not unit then
@@ -587,12 +647,32 @@ end
 -- Appends
 -- ===
 
+-- ===
+
 local oldGeneratePotentialActions = agent_actions.generatePotentialActions
 function agent_actions.generatePotentialActions(hud, actions, unit, cellx, celly, ...)
     if hud._uitr_isVisionMode then
         return
     end
-    return oldGeneratePotentialActions(hud, actions, unit, cellx, celly, ...)
+    oldGeneratePotentialActions(hud, actions, unit, cellx, celly, ...)
+
+    -- Add some vision actions to the normal potential actions view for improved discoverability.
+    -- Do this when checking for actions at +0, +0 from the agent's current location.
+    local x0, y0 = unit:getLocation()
+    local localPlayer = hud._game:getLocalPlayer()
+    if x0 ~= cellx or y0 ~= celly or not localPlayer then
+        return
+    end
+    local sim = hud._game.simCore
+    for i, targetUnit in ipairs(localPlayer:getSeenUnits()) do
+        addAlwaysActionsForUnit(hud, actions, targetUnit, true, false)
+    end
+    for unitID, ghostUnit in pairs(localPlayer._ghost_units) do
+        local targetUnit, isStale = resolveGhost(sim, unitID, ghostUnit)
+        if targetUnit then
+            addAlwaysActionsForUnit(hud, actions, targetUnit, false, isStale and ghostUnit)
+        end
+    end
 end
 
 local oldShouldShowProxyAbility = agent_actions.shouldShowProxyAbility
