@@ -234,6 +234,103 @@ function mui_tooltip_section:setPosition(tx, ty)
 end
 
 -- ===
+-- Tooltip section that only has the mui_tooltip-style hotkey info.
+-- Depends on another tooltip section for width.
+-- ===
+
+local DEFAULT_HOTKEY_TOOLTIP = nil
+
+local hotkey_section = class() -- ducktypes like util.tooltip_section for being a tooltip's child but shares no inheritance
+abilityutil.hotkey_section = hotkey_section
+
+function hotkey_section:init(parentSection, hotkey)
+    self._tooltipWidget = nil
+
+    self._parent = parentSection
+    self._hotkey = hotkey
+end
+
+function hotkey_section:activate(screen)
+    if DEFAULT_HOTKEY_TOOLTIP == nil then
+        DEFAULT_HOTKEY_TOOLTIP = screen:createFromSkin("tooltip")
+    end
+    self._screen = screen
+    self._tooltipWidget = DEFAULT_HOTKEY_TOOLTIP
+    self._screen:addWidget(self._tooltipWidget)
+    self._tooltipWidget:updatePriority(mui_tooltip.TOOLTIP_PRIORITY)
+
+    self._tooltipWidget.binder.label:setVisible(false)
+    self._tooltipWidget.binder.bg:setVisible(false)
+
+    local hotkeyLabel = self._tooltipWidget.binder.hotkey
+    local controllerHotkeyImg = self._tooltipWidget.binder.controllerHotkey
+    local hasControllerHotkey = false
+    local binding = util.getKeyBinding(self._hotkey)
+    if binding then
+        local hotkeyName = mui_util.getBindingName(binding)
+        hotkeyLabel:setText(
+                string.format(
+                        "%s: <tthotkey>[ %s ]</>", STRINGS.UI.HUD_HOTKEY, hotkeyName))
+        hasHotkey = true
+
+        local ctrlBinding = util.getControllerBindingImage and
+                                    util.getControllerBindingImage(binding)
+        if ctrlBinding and not controllerHotkeyImg.isnull then
+            controllerHotkeyImg:setImage(ctrlBinding)
+            hasControllerHotkey = true
+        end
+    else
+        hotkeyLabel:setText(nil)
+    end
+
+    -- Parent width
+    local W, H = self._screen:getResolution()
+    local tw, _ = self._parent:getSize()
+    local th = 0
+
+    -- Adjust upwards if necessary
+    local xmin_hotkey, ymin_hotkey, xmax_hotkey, ymax_hotkey = hotkeyLabel:getStringBounds()
+    local controllerHotkeyW = hasControllerHotkey and (24 + 2 * 4) / H or 0
+    tw = math.max(tw, xmax_hotkey - xmin_hotkey + controllerHotkeyW)
+
+    local footer = self._tooltipWidget.binder.border
+    local footerH = ymax_hotkey - ymin_hotkey
+    local footerY
+    if hasControllerHotkey then
+        footerH = math.max(footerH, 25 / H * (footerH >= 0 and 1 or -1))
+        controllerHotkeyImg:setVisible(true)
+    elseif not controllerHotkeyImg.isnull then
+        controllerHotkeyImg:setVisible(false)
+    end
+
+    th = th + 2 * footerH
+    footerY = H * (-th + math.abs(footerH))
+
+    footer:setVisible(true)
+    footer:setSize(W * tw, H * footerH + 8)
+    footer:setPosition(W * tw / 2, footerY)
+    hotkeyLabel:setPosition(nil, footerY)
+    if hasControllerHotkey then
+        controllerHotkeyImg:setPosition(W * tw - 12 - 4, footerY)
+    end
+
+    self._w, self._h = tw, th
+end
+
+function hotkey_section:deactivate()
+    self._screen:removeWidget(self._tooltipWidget)
+    self._screen = nil
+end
+
+function hotkey_section:getSize()
+    return self._w, self._h
+end
+
+function hotkey_section:setPosition(tx, ty)
+    self._tooltipWidget:setPosition(tx, ty)
+end
+
+-- ===
 -- Tooltip section that delays all its calls until activate.
 -- Because util.tooltip_section expects its parent to have a screen at init time, but hotkey_tooltip doesn't have a screen until activate.
 -- ===
@@ -451,8 +548,8 @@ function delayed_tooltip:deactivate(...)
     util.tooltip.deactivate(self, ...)
 end
 
-function delayed_tooltip:addSection()
-    local section = delayed_tooltip_section(self)
+function delayed_tooltip:addSection(section)
+    local section = section or delayed_tooltip_section(self)
     table.insert(self._sections, section)
     return section
 end

@@ -2,13 +2,17 @@ local mui_tooltip = include("mui/mui_tooltip")
 local cdefs = include("client_defs")
 local util = include("client_util")
 local panel = include("hud/home_panel").panel
+local abilityutil = include("sim/abilities/abilityutil")
 
 local uitr_util = include(SCRIPT_PATHS.qed_uitr .. "/uitr_util")
 local tooltipdefs = include(SCRIPT_PATHS.qed_uitr .. "/backend/tooltipdefs")
 
-local function generateCloakedAgentTooltip(hud, unit)
-    local txt = unit:getUnitData().toolTip .. "\n" .. tooltipdefs.agentCloakInfoText(unit)
-    return mui_tooltip(util.toupper(unit:getName()), txt, "cycleSelection")
+local function generateAgentTooltip(hud, unit)
+    local tooltip = abilityutil.delayed_tooltip(hud._screen)
+    local section = tooltip:addSection()
+    unit:getUnitData().onWorldTooltip(section, unit, hud)
+    tooltip:addSection(abilityutil.hotkey_section(section, "cycleSelection"))
+    return tooltip
 end
 
 local STATUS_OFFSET_START = 60
@@ -29,6 +33,7 @@ function panel:refreshAgent(unit, ...)
     local offset = STATUS_OFFSET_START
     offset = self:_uitr_refreshAgentStatus(unit, widget, offset)
     offset = self:_uitr_refreshAgentCloakInfo(unit, widget, widget.binder.uitrStatusCloak, offset)
+    widget:setTooltip(generateAgentTooltip(self._hud, unit))
 end
 
 function panel:_uitr_refreshAgentAp(unit, widget)
@@ -121,7 +126,6 @@ function panel:_uitr_refreshAgentCloakInfo(unit, agentWidget, widget, offset)
     widget:setVisible(isCloak)
 
     if isCloak then
-        agentWidget:setTooltip(generateCloakedAgentTooltip(self._hud, unit))
         widget:setPosition(math.max(STATUS_CLOAK_MIN, offset) + STATUS_CLOAK_SPACER, nil)
 
         local cloakTurns = unit:getTraits().invisDuration
