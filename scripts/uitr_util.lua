@@ -67,6 +67,15 @@ local UITR_OPTIONS = {
             return {[true] = value}
         end,
     },
+    { -- UI layout tweaks
+        sectionHeader = true,
+
+        id = "moveResourcesBottom",
+        name = STRINGS.UITWEAKSR.OPTIONS.MOVE_RESOURCES_BOTTOM,
+        tip = STRINGS.UITWEAKSR.OPTIONS.MOVE_RESOURCES_BOTTOM_TIP,
+        check = true,
+        value = false,
+    },
     { -- Paths and Tracks
         -- Full tracks departs sufficiently from the base game that they're "seen only" by default.
         -- Show them first to be easier for players to enable.

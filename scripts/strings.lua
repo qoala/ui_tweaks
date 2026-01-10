@@ -3,6 +3,9 @@ local UI_TWEAKS_STRINGS = {
         MOD_ENABLED = "Enabled",
         VANILLA = "OFF/VANILLA",
 
+        MOVE_RESOURCES_BOTTOM = "Move the Resource Display",
+        MOVE_RESOURCES_BOTTOM_TIP = "Move the resource display (PWR/CR display) from the top left to the bottom right of the screen.",
+
         RECENT_FOOTPRINTS = "Guard Trails",
         RECENT_FOOTPRINTS_TIP = ("Trail footprints behind guards that you see or otherwise sense walking.\n" ..
                 "SEEN ONLY: Only show seen or otherwise directly observed (TAG, etc) tracks.\n" ..
