@@ -778,9 +778,12 @@ function abilityutil.uitr_wrappedOnTooltip(self, hud, sim, abilityOwner, ability
     return tooltip
 end
 
-function wrappedTargetingGenerateTooltip(self, x, y, ...)
+local function wrappedTargetingGenerateTooltip(self, x, y, ...)
     local result = self:_uitr_oldGenerateTooltip(x, y, ...)
-    if not type(result) == "string" then
+    if result == nil then
+        result = "" -- hud:onTooltip defaults to empty string if targeter returns nil.
+    end
+    if type(result) ~= "string" then
         return result
     end
     local tooltip = delayed_tooltip()
