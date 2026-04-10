@@ -158,16 +158,17 @@ function hudClass:uitr_refreshInfoGlobalButtons()
     -- Move Resource Panel ("PWR CR HASH" display) if requested in options.
     local resourcePanel = self._screen.binder.resourcePnl
     if uitr_util.checkOption("moveResourcesBottom") then
-        resourcePanel._cont._anchor = 7  -- Bottom Right
+        resourcePanel._cont._anchor = 7 -- Bottom Right
         local hasPeAi = self._game.params.difficultyOptions.W93_AI
-        local hasPeAi = hasPeAi and self._game.simCore:getNPC():hasMainframeAbility("W93_AI_assembly")
+        local hasPeAi = hasPeAi and
+                                self._game.simCore:getNPC():hasMainframeAbility("W93_AI_assembly")
         if hasPeAi then
             resourcePanel:setPosition(775, 67)
         else
             resourcePanel:setPosition(625, 67)
         end
     else
-        resourcePanel._cont._anchor = 3  -- Top Left
+        resourcePanel._cont._anchor = 3 -- Top Left
         resourcePanel:setPosition(14, 9)
     end
 end
