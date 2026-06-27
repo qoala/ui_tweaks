@@ -173,6 +173,11 @@ function PathRig:_updateTrackProp(prop, point0, point1, tex, clr, parity)
     return prop, (isDiag and (parity * -1) or parity)
 end
 
+-- Returns false if two consecutive points are non-adjacent (e.g. a Facility Flux warp)
+local function isAdjacent(prevPoint, nextPoint)
+    return math.abs(prevPoint.x - nextPoint.x) <= 1 and math.abs(prevPoint.y - nextPoint.y)
+end
+
 -- UITR: (New) Based on vanilla :refreshProps
 --
 -- For each segment, if either the previous point or current point were sensed by the player, it is
@@ -239,7 +244,8 @@ function PathRig:refreshTrackProps(optFootprints, unit, pathPoints, props)
                 while obsIdx <= prevPathPoint.observedIdx do
                     local prevObsPoint, obsPoint = obsPoints[obsIdx - 1], obsPoints[obsIdx]
                     -- simlog("[UITR] guess [%d] #%d %d,%d-%d,%d known=%s,%s", unit:getID(), obsIdx, prevObsPoint.x, prevObsPoint.y, obsPoint.x, obsPoint.y, tostring(prevObsPoint.isObserved), tostring(obsPoint.isObserved))
-                    if prevObsPoint.isObserved or obsPoint.isObserved then
+                    if (prevObsPoint.isObserved or obsPoint.isObserved) and
+                            isAdjacent(prevObsPoint, obsPoint) then
                         props[j], obsParity = self:_updateTrackProp(
                                 props[j], prevObsPoint, obsPoint, texGuess, unitColor, obsParity)
                         j = j + 1
@@ -256,7 +262,7 @@ function PathRig:refreshTrackProps(optFootprints, unit, pathPoints, props)
             -- if prevPathPoint.observedIdx or pathPoint.observedIdx then
             --     simlog("[UITR]                   guessed as %s-%s", prevPathPoint.observedIdx or "/", pathPoint.observedIdx or "/")
             -- end
-            if isKnown0 or isKnown1 or areBothSensed then
+            if (isKnown0 or isKnown1 or areBothSensed) and isAdjacent(prevPathPoint, pathPoint) then
                 props[j], parity = self:_updateTrackProp(
                         props[j], prevPathPoint, pathPoint, texTrack, unitColor, parity)
                 j = j + 1
@@ -279,7 +285,8 @@ function PathRig:refreshTrackProps(optFootprints, unit, pathPoints, props)
             while obsIdx <= #obsPoints do
                 local prevObsPoint, obsPoint = obsPoints[obsIdx - 1], obsPoints[obsIdx]
                 -- simlog("[UITR] guess [%d] #%d %d,%d-%d,%d", unit:getID(), obsIdx, prevObsPoint.x, prevObsPoint.y, obsPoint.x, obsPoint.y, tostring(prevObsPoint.isObserved), tostring(obsPoint.isObserved))
-                if prevObsPoint.isObserved or obsPoint.isObserved then
+                if (prevObsPoint.isObserved or obsPoint.isObserved) and
+                        isAdjacent(prevObsPoint, obsPoint) then
                     props[j], obsParity = self:_updateTrackProp(
                             props[j], prevObsPoint, obsPoint, texGuess, unitColor, obsParity)
                     j = j + 1
