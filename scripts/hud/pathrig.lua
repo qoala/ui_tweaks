@@ -175,7 +175,7 @@ end
 
 -- Returns false if two consecutive points are non-adjacent (e.g. a Facility Flux warp)
 local function isAdjacent(prevPoint, nextPoint)
-    return math.abs(prevPoint.x - nextPoint.x) <= 1 and math.abs(prevPoint.y - nextPoint.y)
+    return math.abs(prevPoint.x - nextPoint.x) <= 1 and math.abs(prevPoint.y - nextPoint.y) <= 1
 end
 
 -- UITR: (New) Based on vanilla :refreshProps
